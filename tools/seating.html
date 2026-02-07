@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Seating Chart</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #020617;
+      --panel: #0f172a;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --border: #1e293b;
+      --table-bg: #1e293b;
+      --table-border: #334155;
+      --seat-bg: #0f172a;
+      --seat-border: #475569;
+      --seat-text: #e2e8f0;
+      --shadow: rgba(0, 0, 0, 0.5);
+      --drag-bg: rgba(59, 130, 246, 0.2);
+      --drop-hover: rgba(59, 130, 246, 0.4);
+    }
+
+    html.light {
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --border: #e2e8f0;
+      --table-bg: #e2e8f0;
+      --table-border: #cbd5e1;
+      --seat-bg: #ffffff;
+      --seat-border: #94a3b8;
+      --seat-text: #1e293b;
+      --shadow: rgba(0, 0, 0, 0.1);
+      --drag-bg: rgba(37, 99, 235, 0.1);
+      --drop-hover: rgba(37, 99, 235, 0.2);
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    /* Login Required */
+    .login-required {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 50px 40px;
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 10px 40px var(--shadow);
+    }
+
+    .login-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+    }
+
+    .login-btn {
+      display: inline-block;
+      padding: 14px 32px;
+      background: var(--accent);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      margin-top: 15px;
+    }
+
+    /* Main App */
+    #app {
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, var(--accent), #60a5fa);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header p {
+      color: var(--text-muted);
+    }
+
+    .edit-btn {
+      margin-top: 15px;
+      padding: 10px 24px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      display: none;
+    }
+
+    .edit-btn.visible {
+      display: inline-block;
+    }
+
+    /* Desktop: Table sideways (landscape), seats on top and bottom */
+    .seating-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 30px;
+    }
+
+    .seats-row {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+    }
+
+    .table {
+      width: 500px;
+      height: 180px;
+      background: var(--table-bg);
+      border: 3px solid var(--table-border);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 40px var(--shadow);
+    }
+
+    .table-label {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      opacity: 0.4;
+    }
+
+    .seat {
+      width: 100px;
+      height: 100px;
+      background: var(--seat-bg);
+      border: 2px solid var(--seat-border);
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 8px;
+      font-weight: 600;
+      color: var(--seat-text);
+      box-shadow: 0 4px 12px var(--shadow);
+      position: relative;
+    }
+
+    .seat-number {
+      position: absolute;
+      top: -8px;
+      left: -8px;
+      width: 26px;
+      height: 26px;
+      background: var(--accent);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .seat-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+      font-size: 0.85rem;
+    }
+
+    /* Mobile: Table at top, two rows under */
+    @media (max-width: 768px) {
+      .seating-container {
+        gap: 20px;
+      }
+
+      .seats-row {
+        gap: 12px;
+        flex-wrap: wrap;
+        max-width: 360px;
+      }
+
+      .table {
+        width: 280px;
+        height: 120px;
+        order: -1;
+      }
+
+      .seat {
+        width: 70px;
+        height: 70px;
+      }
+
+      .seat-number {
+        width: 20px;
+        height: 20px;
+        font-size: 0.7rem;
+      }
+
+      .seat-name {
+        font-size: 0.7rem;
+      }
+    }
+
+    /* Edit Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 100;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 30px;
+      max-width: 900px;
+      width: 95%;
+      margin: 20px auto;
+    }
+
+    .modal h2 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .modal-subtitle {
+      text-align: center;
+      color: var(--text-muted);
+      margin-bottom: 25px;
+      font-size: 0.9rem;
+    }
+
+    .edit-layout {
+      display: flex;
+      gap: 40px;
+    }
+
+    /* Preview - sideways table */
+    .preview-side {
+      flex: 0 0 320px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .preview-title {
+      font-size: 1rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .preview-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .preview-row-seats {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .mini-table-h {
+      width: 280px;
+      height: 100px;
+      background: var(--table-bg);
+      border: 2px solid var(--table-border);
+      border-radius: 10px;
+    }
+
+    .mini-seat {
+      width: 50px;
+      height: 50px;
+      background: var(--seat-bg);
+      border: 2px solid var(--seat-border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      position: relative;
+      transition: all 0.2s;
+    }
+
+    .mini-seat.drag-over {
+      background: var(--drop-hover);
+      border-color: var(--accent);
+      transform: scale(1.1);
+    }
+
+    .mini-seat .mini-number {
+      position: absolute;
+      top: -5px;
+      left: -5px;
+      width: 18px;
+      height: 18px;
+      background: var(--accent);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.6rem;
+      font-weight: 700;
+    }
+
+    /* Form side - drag handles here */
+    .form-side {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .seat-edit {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 15px 20px;
+      background: var(--bg);
+      border-radius: 10px;
+      border: 2px solid var(--border);
+      transition: all 0.2s;
+    }
+
+    .seat-edit.drag-over {
+      background: var(--drop-hover);
+      border-color: var(--accent);
+    }
+
+    .seat-edit-number {
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .seat-edit input {
+      flex: 1;
+      padding: 12px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 1rem;
+    }
+
+    .seat-edit input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    /* Drag handle by the name */
+    .drag-handle {
+      width: 30px;
+      height: 40px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 4px;
+      cursor: grab;
+      padding: 5px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+
+    .drag-handle:active {
+      cursor: grabbing;
+    }
+
+    .drag-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--text-muted);
+      border-radius: 50%;
+    }
+
+    .seat-edit.dragging .drag-handle {
+      cursor: grabbing;
+      background: var(--accent);
+    }
+
+    .seat-edit.dragging .drag-dot {
+      background: white;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 15px;
+      margin-top: 25px;
+    }
+
+    .modal-btn {
+      flex: 1;
+      padding: 14px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .modal-btn.primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .modal-btn.secondary {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    /* Mobile modal */
+    @media (max-width: 768px) {
+      .modal {
+        padding: 20px;
+      }
+
+      .edit-layout {
+        flex-direction: column;
+        gap: 25px;
+      }
+
+      .preview-side {
+        flex: none;
+        width: 100%;
+        order: -1;
+      }
+
+      .mini-table-h {
+        width: 200px;
+        height: 80px;
+      }
+
+      .mini-seat {
+        width: 40px;
+        height: 40px;
+        font-size: 0.6rem;
+      }
+
+      .form-side {
+        gap: 10px;
+      }
+
+      .seat-edit {
+        padding: 12px;
+      }
+
+      .drag-handle {
+        width: 26px;
+        height: 34px;
+        gap: 3px;
+      }
+
+      .drag-dot {
+        width: 5px;
+        height: 5px;
+      }
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div id="content"></div>
+
+  <div class="modal-overlay" id="editModal">
+    <div class="modal">
+      <h2>✏️ Edit Seating Chart</h2>
+      <p class="modal-subtitle">Drag the 6 dots to swap seats • Edit names directly</p>
+      <div class="edit-layout">
+        <div class="preview-side">
+          <div class="preview-title">Preview</div>
+          <div class="preview-container" id="previewContainer"></div>
+        </div>
+        <div class="form-side" id="seatList"></div>
+      </div>
+      <div class="modal-buttons">
+        <button class="modal-btn primary" onclick="saveSeats()">💾 Save Changes</button>
+        <button class="modal-btn secondary" onclick="closeModal()">❌ Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+    const supabase = createClient(
+      "https://mdymxbgwhauapvphscrr.supabase.co",
+      "sb_publishable_nOrq936I1SMh4v21KzE2og_tAEbcAzK"
+    );
+
+    function getCookie(name) {
+      return document.cookie.split("; ").find(r => r.startsWith(name + "="))?.split("=")[1] || null;
+    }
+
+    function applyTheme() {
+      if (getCookie("theme") === "light") {
+        document.documentElement.classList.add("light");
+      } else {
+        document.documentElement.classList.remove("light");
+      }
+    }
+
+    applyTheme();
+
+    const uuid = getCookie("uuid");
+    const username = getCookie("username");
+    const content = document.getElementById("content");
+
+    let seats = [];
+    let canEdit = false;
+    let draggedIndex = null;
+
+    if (!uuid || !username) {
+      content.innerHTML = `
+        <div class="login-required">
+          <div class="login-card">
+            <div class="login-icon">🪑</div>
+            <h1>Access Required</h1>
+            <p>Please log in to view the Seating Chart.</p>
+            <a href="/" class="login-btn">Sign In</a>
+          </div>
+        </div>
+      `;
+    } else {
+      content.innerHTML = `
+        <div id="app">
+          <div class="header">
+            <h1>🪑 Seating Chart</h1>
+            <p>Lunch Table Seating Arrangement</p>
+            <button class="edit-btn" id="editBtn" onclick="openEditModal()">✏️ Edit Seating</button>
+          </div>
+          <div class="loading" id="loading">Loading...</div>
+          <div class="seating-container" id="seatingContainer" style="display: none;">
+            <div class="seats-row" id="topRow"></div>
+            <div class="table"><span class="table-label">TABLE</span></div>
+            <div class="seats-row" id="bottomRow"></div>
+          </div>
+        </div>
+      `;
+      loadData();
+    }
+
+    async function loadData() {
+      try {
+        const { data: userData } = await supabase.from("users").select("rank").eq("uuid", uuid).single();
+        
+        if (!userData) {
+          content.innerHTML = `<div class="login-required"><div class="login-card"><h1>Session Expired</h1><a href="/login.html" class="login-btn">Sign In</a></div></div>`;
+          return;
+        }
+
+        canEdit = ['owner', 'manager', 'admin'].includes(userData.rank.toLowerCase());
+        if (canEdit) document.getElementById('editBtn').classList.add('visible');
+
+        const { data: seatingData } = await supabase.from("seating").select("*").order("seat_number");
+        seats = seatingData || Array.from({ length: 12 }, (_, i) => ({ seat_number: i + 1, name: 'Empty' }));
+        
+        renderSeats();
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('seatingContainer').style.display = 'flex';
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function renderSeats() {
+      const topRow = document.getElementById('topRow');
+      const bottomRow = document.getElementById('bottomRow');
+      topRow.innerHTML = '';
+      bottomRow.innerHTML = '';
+
+      // Top row: seats 1-6
+      seats.filter(s => s.seat_number <= 6).forEach(seat => {
+        topRow.appendChild(createSeat(seat));
+      });
+
+      // Bottom row: seats 7-12
+      seats.filter(s => s.seat_number > 6).forEach(seat => {
+        bottomRow.appendChild(createSeat(seat));
+      });
+    }
+
+    function createSeat(seat) {
+      const div = document.createElement('div');
+      div.className = 'seat';
+      div.innerHTML = `<span class="seat-number">${seat.seat_number}</span><span class="seat-name">${escapeHtml(seat.name)}</span>`;
+      return div;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    window.openEditModal = function() {
+      if (!canEdit) return;
+      
+      const seatList = document.getElementById('seatList');
+      const previewContainer = document.getElementById('previewContainer');
+      
+      seatList.innerHTML = '';
+      previewContainer.innerHTML = '';
+
+      // Build form with drag handles
+      seats.forEach((seat, index) => {
+        const div = document.createElement('div');
+        div.className = 'seat-edit';
+        div.dataset.index = index;
+        div.draggable = true;
+        div.innerHTML = `
+          <div class="seat-edit-number">${seat.seat_number}</div>
+          <input type="text" id="seat-input-${index}" value="${escapeHtml(seat.name)}" placeholder="Name">
+          <div class="drag-handle">
+            <div class="drag-dot"></div><div class="drag-dot"></div><div class="drag-dot"></div>
+            <div class="drag-dot"></div><div class="drag-dot"></div><div class="drag-dot"></div>
+          </div>
+        `;
+
+        // Drag events on the whole row
+        div.addEventListener('dragstart', (e) => handleDragStart(e, index));
+        div.addEventListener('dragend', handleDragEnd);
+        div.addEventListener('dragover', handleDragOver);
+        div.addEventListener('dragleave', handleDragLeave);
+        div.addEventListener('drop', (e) => handleDrop(e, index));
+
+        seatList.appendChild(div);
+      });
+
+      updatePreview();
+      document.getElementById('editModal').classList.add('active');
+    };
+
+    function updatePreview() {
+      const container = document.getElementById('previewContainer');
+      container.innerHTML = '';
+
+      const topRow = document.createElement('div');
+      topRow.className = 'preview-row-seats';
+      
+      const bottomRow = document.createElement('div');
+      bottomRow.className = 'preview-row-seats';
+
+      // Top: seats 1-6
+      for (let i = 0; i < 6; i++) {
+        const input = document.getElementById(`seat-input-${i}`);
+        const name = input ? input.value.trim() || 'Empty' : seats[i].name;
+        topRow.appendChild(createMiniSeat(i, seats[i].seat_number, name));
+      }
+
+      // Bottom: seats 7-12
+      for (let i = 6; i < 12; i++) {
+        const input = document.getElementById(`seat-input-${i}`);
+        const name = input ? input.value.trim() || 'Empty' : seats[i].name;
+        bottomRow.appendChild(createMiniSeat(i, seats[i].seat_number, name));
+      }
+
+      container.appendChild(topRow);
+      container.appendChild(document.createElement('div')).className = 'mini-table-h';
+      container.appendChild(bottomRow);
+    }
+
+    function createMiniSeat(index, number, name) {
+      const div = document.createElement('div');
+      div.className = 'mini-seat';
+      div.dataset.index = index;
+      div.innerHTML = `<span class="mini-number">${number}</span><span>${escapeHtml(name.substring(0, 3))}</span>`;
+      return div;
+    }
+
+    function handleDragStart(e, index) {
+      draggedIndex = index;
+      e.target.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function handleDragEnd(e) {
+      e.target.classList.remove('dragging');
+      document.querySelectorAll('.seat-edit').forEach(el => el.classList.remove('drag-over'));
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+      const target = e.target.closest('.seat-edit');
+      if (target && parseInt(target.dataset.index) !== draggedIndex) {
+        target.classList.add('drag-over');
+      }
+    }
+
+    function handleDragLeave(e) {
+      const target = e.target.closest('.seat-edit');
+      if (target) target.classList.remove('drag-over');
+    }
+
+    function handleDrop(e, dropIndex) {
+      e.preventDefault();
+      document.querySelectorAll('.seat-edit').forEach(el => el.classList.remove('drag-over'));
+      
+      if (draggedIndex === null || draggedIndex === dropIndex) return;
+      
+      swapSeats(draggedIndex, dropIndex);
+    }
+
+    function swapSeats(from, to) {
+      // Swap data
+      const temp = seats[from];
+      seats[from] = seats[to];
+      seats[to] = temp;
+      
+      // Keep seat numbers in position order (1-6 top, 7-12 bottom)
+      // Reassign seat numbers based on position
+      for (let i = 0; i < 12; i++) {
+        seats[i].seat_number = i + 1;
+      }
+      
+      // Rebuild
+      window.openEditModal();
+    }
+
+    window.closeModal = function() {
+      document.getElementById('editModal').classList.remove('active');
+      draggedIndex = null;
+    };
+
+    window.saveSeats = async function() {
+      // Get names from inputs
+      seats.forEach((seat, index) => {
+        const input = document.getElementById(`seat-input-${index}`);
+        if (input) seat.name = input.value.trim() || 'Empty';
+      });
+
+      // Sort by seat number
+      seats.sort((a, b) => a.seat_number - b.seat_number);
+
+      try {
+        const updates = seats.map(s => ({
+          seat_number: s.seat_number,
+          name: s.name,
+          updated_at: new Date().toISOString()
+        }));
+
+        const { error } = await supabase.from("seating").upsert(updates, { onConflict: 'seat_number' });
+        if (error) throw error;
+
+        renderSeats();
+        closeModal();
+      } catch (err) {
+        console.error(err);
+        alert("Failed to save");
+      }
+    };
+
+    document.getElementById('editModal')?.addEventListener('click', (e) => {
+      if (e.target.id === 'editModal') closeModal();
+    });
+  </script>
+</body>
+</html>
