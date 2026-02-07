@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encryptor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #020617;
+            --panel: #0f172a;
+            --text: #ffffff;
+            --text-muted: #94a3b8;
+            --accent: #2563eb;
+            --accent-hover: #1d4ed8;
+            --border: #1e293b;
+            --input-bg: #1e293b;
+            --success: #22c55e;
+            --error: #ef4444;
+        }
+
+        html.light {
+            --bg: #f8fafc;
+            --panel: #ffffff;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --accent: #2563eb;
+            --accent-hover: #1d4ed8;
+            --border: #e2e8f0;
+            --input-bg: #f1f5f9;
+            --success: #16a34a;
+            --error: #dc2626;
+        }
+
+        body {
+            min-height: 100vh;
+            background: var(--bg);
+            color: var(--text);
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--panel);
+            border-radius: 16px;
+            padding: 30px;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section:last-of-type {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 5px;
+        }
+
+        .btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: var(--input-bg);
+        }
+
+        .output-box {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            min-height: 50px;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: var(--text);
+        }
+
+        .output-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .status {
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .status.show {
+            opacity: 1;
+        }
+
+        .status.success {
+            background: var(--success);
+            color: white;
+        }
+
+        .status.error {
+            background: var(--error);
+            color: white;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .login-message {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .login-message h1 {
+            margin-bottom: 15px;
+        }
+
+        .login-message p {
+            color: var(--text-muted);
+            margin-bottom: 25px;
+        }
+
+        .login-btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: var(--accent);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .login-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .user-info {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: var(--input-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .user-info .name {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .user-info .rank {
+            font-size: 0.8rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="app">
+        <!-- Content loaded by JS -->
+    </div>
+
+    <script type="module">
+        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+        const supabase = createClient(
+            "https://mdymxbgwhauapvphscrr.supabase.co",
+            "sb_publishable_nOrq936I1SMh4v21KzE2og_tAEbcAzK"
+        );
+
+        function getCookie(name) {
+            return document.cookie
+                .split("; ")
+                .find(r => r.startsWith(name + "="))
+                ?.split("=")[1] || null;
+        }
+
+        function applyTheme() {
+            if (getCookie("theme") === "light") {
+                document.documentElement.classList.add("light");
+            } else {
+                document.documentElement.classList.remove("light");
+            }
+        }
+
+        applyTheme();
+
+        const uuid = getCookie("uuid");
+        const username = getCookie("username");
+        const app = document.getElementById("app");
+
+        if (!uuid || !username) {
+            // Not logged in - show login message
+            app.innerHTML = `
+                <div class="login-message">
+                    <h1>🔐 Encryptor</h1>
+                    <p>Please log in to access the encryption tool.</p>
+                    <a href="/" class="login-btn">Go to Login</a>
+                </div>
+            `;
+        } else {
+            // Logged in - show encryptor
+            // Fetch user data to display
+            const { data, error } = await supabase
+                .from("users")
+                .select("rank, name")
+                .eq("uuid", uuid)
+                .single();
+
+            const displayName = data?.name || username;
+            const rank = data?.rank || "User";
+
+            app.innerHTML = `
+                <div class="user-info">
+                    <div class="name">${displayName}</div>
+                    <div class="rank">${rank}</div>
+                </div>
+
+                <!-- Encrypt Section -->
+                <div class="section">
+                    <h1>🔐 Encrypt</h1>
+                    
+                    <div class="input-group">
+                        <label>Message</label>
+                        <input type="text" id="inputText" placeholder="Enter your message">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Key (Number)</label>
+                        <input type="number" id="keyInput" placeholder="Enter a number key" min="0">
+                    </div>
+
+                    <button class="btn" onclick="encryptText()">Encrypt Message</button>
+
+                    <div class="output-label">
+                        <label>Encrypted Result</label>
+                        <span class="status" id="encryptStatus">Copied!</span>
+                    </div>
+                    <div class="output-box" id="outputText">Your encrypted message will appear here...</div>
+                    <button class="btn btn-secondary" onclick="copyText('outputText', 'encryptStatus')">📋 Copy to Clipboard</button>
+                </div>
+
+                <!-- Decrypt Section -->
+                <div class="section">
+                    <h1>🔓 Decrypt</h1>
+                    
+                    <div class="input-group">
+                        <label>Encrypted Message</label>
+                        <input type="text" id="encryptedInput" placeholder="Enter encrypted text">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Key</label>
+                        <input type="number" id="decryptKey" placeholder="Enter key" min="0">
+                    </div>
+
+                    <button class="btn" onclick="decryptText()">Decrypt Message</button>
+
+                    <div class="output-label">
+                        <label>Decrypted Result</label>
+                        <span class="status" id="decryptStatus">Copied!</span>
+                    </div>
+                    <div class="output-box" id="decryptedText">Your decrypted message will appear here...</div>
+                    <button class="btn btn-secondary" onclick="copyText('decryptedText', 'decryptStatus')">📋 Copy to Clipboard</button>
+                </div>
+
+                <div class="footer">
+                    Made by Curtis Gann
+                </div>
+            `;
+
+            // Add event listeners for Enter key
+            setTimeout(() => {
+                document.getElementById("inputText")?.addEventListener("keypress", (e) => {
+                    if (e.key === "Enter") window.encryptText();
+                });
+                document.getElementById("keyInput")?.addEventListener("keypress", (e) => {
+                    if (e.key === "Enter") window.encryptText();
+                });
+                document.getElementById("encryptedInput")?.addEventListener("keypress", (e) => {
+                    if (e.key === "Enter") window.decryptText();
+                });
+                document.getElementById("decryptKey")?.addEventListener("keypress", (e) => {
+                    if (e.key === "Enter") window.decryptText();
+                });
+            }, 0);
+        }
+
+        // Make functions global
+        window.encryptText = function() {
+            const input = document.getElementById("inputText")?.value.toLowerCase();
+            const key = parseInt(document.getElementById("keyInput")?.value);
+            const outputEl = document.getElementById("outputText");
+            
+            if (!input) {
+                outputEl.textContent = "Please enter a message to encrypt";
+                return;
+            }
+            
+            if (isNaN(key) || key < 0) {
+                outputEl.textContent = "Please enter a valid number (0 or higher) for the key.";
+                return;
+            }
+
+            let currentKey = key;
+            let keyPrefix = (parseInt("11111", 2) - currentKey).toString(2).padStart(5, "0");
+            let encrypted = keyPrefix;
+            const spaceCode = "00000";
+
+            for (let i = 0; i < input.length; i++) {
+                if (input[i] === " ") {
+                    encrypted += ` ${spaceCode} `;
+                } else if (input[i] >= "a" && input[i] <= "z") {
+                    let charCode = input.charCodeAt(i) - 96;
+                    let binary = (charCode + currentKey).toString(2).padStart(5, "0");
+                    encrypted += ` ${binary} `;
+                    currentKey++;
+                }
+            }
+
+            outputEl.textContent = encrypted.trim();
+        };
+
+        window.copyText = function(elementId, statusId) {
+            const text = document.getElementById(elementId)?.textContent;
+            const statusEl = document.getElementById(statusId);
+            
+            if (!text || text.includes("will appear here") || text.includes("Please enter")) {
+                statusEl.textContent = "Nothing to copy!";
+                statusEl.className = "status error show";
+                setTimeout(() => statusEl.classList.remove("show"), 2000);
+                return;
+            }
+
+            navigator.clipboard.writeText(text).then(() => {
+                statusEl.textContent = "Copied!";
+                statusEl.className = "status success show";
+                setTimeout(() => statusEl.classList.remove("show"), 2000);
+            }).catch(() => {
+                statusEl.textContent = "Failed to copy";
+                statusEl.className = "status error show";
+                setTimeout(() => statusEl.classList.remove("show"), 2000);
+            });
+        };
+
+        window.decryptText = function() {
+            const encrypted = document.getElementById("encryptedInput")?.value.trim();
+            const userKey = parseInt(document.getElementById("decryptKey")?.value);
+            const outputEl = document.getElementById("decryptedText");
+
+            if (!encrypted) {
+                outputEl.textContent = "Please enter encrypted text";
+                return;
+            }
+
+            if (isNaN(userKey) || userKey < 0) {
+                outputEl.textContent = "Please enter a valid key";
+                return;
+            }
+
+            let currentKey = userKey;
+            let expectedPrefix = (parseInt("11111", 2) - currentKey).toString(2).padStart(5, "0");
+            let parts = encrypted.split(" ").filter(p => p);
+            let extractedKey = parts.shift();
+
+            if (extractedKey !== expectedPrefix) {
+                outputEl.textContent = "❌ Incorrect key";
+                return;
+            }
+
+            let decrypted = "";
+            for (let i = 0; i < parts.length; i++) {
+                if (parts[i] === "00000") {
+                    decrypted += " ";
+                } else {
+                    let num = parseInt(parts[i], 2) - currentKey;
+                    if (num < 1 || num > 26) {
+                        outputEl.textContent = "❌ Invalid encrypted data";
+                        return;
+                    }
+                    decrypted += String.fromCharCode(num + 96);
+                    currentKey++;
+                }
+            }
+
+            outputEl.textContent = decrypted;
+        };
+    </script>
+</body>
+</html>

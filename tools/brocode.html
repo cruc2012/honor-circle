@@ -1,103 +1,531 @@
 <!DOCTYPE html>
-<html>
-<head>
-  <title>Bro Code</title>
-<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<style>
-  body {
-    margin: 0;
-    padding: 0;
-    font-family: Arial, sans-serif;
-    background: #f0f0f0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    text-align: center;
-  }
-  .bro-code-container {
-    background: #fff;
-    padding: 30px 40px;
-    border-radius: 12px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.1);
-    max-width: 900px;
-    width: 90%;
-  }
-  h2 {
-    margin-top: 25px;
-    margin-bottom: 15px;
-  }
-  h3 {
-    margin-top: 15px;
-    margin-bottom: 10px;
-    color: #444;
-  }
-  p {
-    margin: 8px 0 12px;
-    line-height: 1.6;
-  }
-  .signature {
-    margin-top: 40px;
-  }
-  .signature-line {
-    display: block;
-    margin: 15px auto;
-    width: 300px;
-    border-bottom: 1px solid #000;
-    height: 1px;
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bro Code</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #020617;
+            --panel: #0f172a;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --border: #1e293b;
+            --section-bg: #0f172a;
+            --hover-bg: #1e293b;
+        }
+
+        html.light {
+            --bg: #f8fafc;
+            --panel: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --accent: #2563eb;
+            --border: #e2e8f0;
+            --section-bg: #f1f5f9;
+            --hover-bg: #e2e8f0;
+        }
+
+        body {
+            min-height: 100vh;
+            background: var(--bg);
+            color: var(--text);
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.7;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .page-wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* Login Required State */
+        .login-required {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 50px 40px;
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .login-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .login-card h1 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: var(--text);
+        }
+
+        .login-card p {
+            color: var(--text-muted);
+            margin-bottom: 30px;
+            font-size: 1rem;
+        }
+
+        .login-btn {
+            display: inline-block;
+            padding: 14px 32px;
+            background: var(--accent);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+        }
+
+        /* Main Content */
+        .document-header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding-bottom: 30px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .document-header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--accent), #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .document-meta {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .section {
+            background: var(--section-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            transition: all 0.2s;
+        }
+
+        .section:hover {
+            border-color: var(--accent);
+        }
+
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-number {
+            background: var(--accent);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .subsection {
+            margin-bottom: 20px;
+            padding-left: 15px;
+            border-left: 3px solid var(--border);
+            transition: border-color 0.2s;
+        }
+
+        .subsection:hover {
+            border-left-color: var(--accent);
+        }
+
+        .subsection:last-child {
+            margin-bottom: 0;
+        }
+
+        .subsection-header {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .subsection p {
+            text-align: left;
+            color: var(--text);
+            font-size: 0.95rem;
+            line-height: 1.8;
+        }
+
+        /* Signature Section */
+        .signature-section {
+            margin-top: 60px;
+            padding-top: 40px;
+            border-top: 2px solid var(--border);
+            text-align: center;
+        }
+
+        .signature-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 40px;
+            color: var(--text);
+        }
+
+        .signature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .signature-block {
+            text-align: left;
+        }
+
+        .signature-line {
+            border-bottom: 2px solid var(--text);
+            height: 40px;
+            margin-bottom: 10px;
+        }
+
+        .signature-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .document-footer {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid var(--border);
+        }
+
+        .author-credit {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            padding: 10px 20px;
+            background: var(--hover-bg);
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+
+        /* Mobile */
+        @media (max-width: 640px) {
+            .page-wrapper {
+                padding: 20px 15px;
+            }
+
+            .document-header h1 {
+                font-size: 1.8rem;
+            }
+
+            .section {
+                padding: 20px;
+            }
+
+            .section-title {
+                font-size: 1.1rem;
+            }
+
+            .subsection {
+                padding-left: 10px;
+            }
+
+            .login-card {
+                padding: 40px 25px;
+            }
+
+            .login-icon {
+                font-size: 3rem;
+            }
+
+            .login-card h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="bro-code-container">
-
-    <h2>Bro Code Agreement</h2>
-
-    <h3>1. What you should do if you’re a new member</h3>
-    <p><strong>1.1</strong> The first thing you should do if you a new in the agreement is that you should always listen to the others that have been in the group longer with more experience and respect to gain respect in the group. This means if someone has only been in the group for a little longer than you, they don’t have control but if there is a highly respected member and they ask you to do something than you must listen unless if it’s in a jokingly way or if you got a good reason to not listen then just explain it to them, they will listen that’s the reason they are there in begin with.</p>
-    <p><strong>1.2</strong> The second thing you should do if you’re new in the agreement is that you should always be able to take the court seriously. This means if you are asked to show up on a court date to be on jury duty or for another reason it’s a requirement to show up unless you are sick or another good reason. If you are in the group and get convicted, you must be able to show up and listen and defend yourself but also to be able to take the punishment given.</p>
-
-    <h3>2. Explanation on how the government runs</h3>
-    <p><strong>2.1</strong> The first explanation of the agreement will be your job as a member. First people who are in the group for a long time and are heavily respected and will have more authority. This means that people who are in the group with respect will be more eligible to be a part of the government than others.</p>
-    <p><strong>2.2</strong> The second explanation of the agreement will explain the power of government. The first explanation on how the government runs is that the government does not try to control it but rather have a meeting with everyone to vote and talk. But there is a loophole where if they absolutely must, they do have the power to remove and control members. If anyone does want to join the government, you will have to be proven close friends with most the people in the group and be friends with all existing governments.</p>
-    <p><strong>2.3</strong> The third explanation of the agreement will explain how meetings are handled. The first explanation of how meetings are handled is talking about jury duty. There should always be a jury team ready in which they are required to stay quiet and listen then vote on one of the options towards end of the court date provided by the judge. The second explanation of how meetings are handled is talking about the witnesses. The witnesses will explain what happened; there won’t always be witnesses but they are sometimes there. The third explanation of how meetings are handled is talking about judges. There are always only one Judge, and their job is to judge the situation fairly and listen then they will give the options to the jury duty. The last explanation of how meetings are handled is talking about lawyers. Lawyers aren’t a requirement but are recommended their job is to defend and help you win your case.</p>
-
-    <h3>3. Duties of being a member</h3>
-    <p><strong>3.1</strong> The first duty of the agreement is that at the lunch table everyone will follow their seating charts. This means sitting in the seat you have been given but if you want you can request a different spot. You can also sit in available seats if you have been given permission. Please understand that the chart is to prevent conflict, to help know who’s here and not, and to help with optimal seats for talk.</p>
-    <p><strong>3.2</strong> The second duty of the agreement is to show up for jury duty. This means if the court asks you to be on jury duty it is a requirement to show up unless if you are sick or for another good reason you also can request to go but you will not be obligated.</p>
-    <p><strong>3.3</strong> The third duty of the agreement is to show up for court dates if you have been convicted. If a member gets convicted, they will have the option to switch the court date up to a week from the original court date scheduled.</p>
-
-    <h3>4. Members powers and freedoms</h3>
-    <p><strong>4.1</strong> The first freedom of the agreement is the right to have a lawyer. This means you can either defend yourself or have a lawyer and if you don’t have one the court will assign you with a public defender.</p>
-    <p><strong>4.2</strong> The second freedom of the agreement is the right to request. This means any member can request a game, change anything, court meeting, etc.</p>
-
-    <h3>5. Perks of being in the group</h3>
-    <p><strong>5.1</strong> The first perk of the agreement is games. The games are hosted basically every day, and anyone is allowed to request a game that people like, but the main rule is that if there is a game a few people don’t like, and they have given it a chance then there should be a different game chosen.</p>
-    <p><strong>5.2</strong> The second perk of the agreement is immunity. On the archive of dirt, it won’t have any information uploaded, for example pictures, text, videos, etc. Unless of your veto.</p>
-    <p><strong>5.3</strong> The third perk of the agreement is protection from other group members. This means people in the group will try their best in their ability, including you, to protect each other.</p>
-    <p><strong>5.4</strong> The fourth perk of the agreement is access to the Bro Code web site found at (link). This website will include updates, dirt on people, voting, etc.</p>
-    <p><strong>5.5</strong> The fifth perk of the agreement is our allies. This includes different groups that we have made allies with, and you will not be able to be at war with any of them.</p>
-
-    <h3>6. Bro Code</h3>
-    <p><strong>6.1</strong> We the men have many things in common, but this document will help us all when it comes to how we treat each other, girlfriends, and how we act in family matters. The first code is addressing girlfriends or code number one. This means you cannot ever steal or speak badly to bros girlfriend unless if bros okay with it. The second code or code number 2 is to never talk to bros girl unless you have to. This means avoid talking to her and only do it if bro tells you to but if you do you have to make sure to be nice and have respect if the girl asks you a question answer it but after that don’t keep trying to talk to her. The last code is code number 3 and it is don’t give anything to bros girl unless if bro tells you to. This means don’t give the girl a jacket, shoes, and more but if it’s Christmas just go to bro and ask him if you can give his girl money or something else for Christmas.</p>
-    <p><strong>6.2</strong> Next this section is goanna be addressing about bros family and what to do and what not to do around them because if they don’t like you, it will be very tough being around them. The fourth code or code number 4 states that you cannot hurt or be rude to bros family. Second this section is code number 5, and it says that you cannot talk about bro affront of his family or tell on him if he has done something bad. The third code about family is code number 6 and it states that you cannot get with any of bros sisters, cousins and more unless if bro is ok with it.</p>
-    <p><strong>6.3</strong> Next this section is goanna be talking about how we treat each other as friends and what we should say and do. The first section is on how we treat each other, or code number 7 and it states that we should not actually hurt each other in a way that is not jokingly this can include mentally or physically hurting. The second section is do not tell on each other or code number 8 and it states we do not tell on bros if they have done anything wrong unless if they are breaking bro code if so, you can tell other bros for example this can include stealing bros girl, hurting a family member and more. The third section is talking about each other, or code number 9 and it states we do not talk bad about each other unless it’s jokingly and everyone knows that this can include saying someone is fat, dumb, has a disability and more. The last section is on defending each other or code number 10 and it states that try your best in your ability to defend and help bros that are for example getting bullied, trash talked, getting hurt by others and more.</p>
-    <p><strong>6.4</strong> In conclusion if any member breaks even one of these codes you should judge the situation fairly and help avoid a toxic friendship, lastly in order to be eligible to have or read this document you must be a boy and be 10 and older with a mature mind and know how to be a good friend.</p>
-
-    <div class="signature">
-      <span class="signature-line"></span>
-      <p>Signature</p>
-      <span class="signature-line"></span>
-      <p>Government Signature</p>
-      <p>This document was written and signed by Curtis Gann.</p>
+    <div id="app">
+        <!-- Content loaded by JavaScript -->
     </div>
 
-  </div>
-</body>
-</html>
+    <script type="module">
+        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+        const supabase = createClient(
+            "https://mdymxbgwhauapvphscrr.supabase.co",
+            "sb_publishable_nOrq936I1SMh4v21KzE2og_tAEbcAzK"
+        );
+
+        function getCookie(name) {
+            return document.cookie
+                .split("; ")
+                .find(r => r.startsWith(name + "="))
+                ?.split("=")[1] || null;
+        }
+
+        function applyTheme() {
+            if (getCookie("theme") === "light") {
+                document.documentElement.classList.add("light");
+            } else {
+                document.documentElement.classList.remove("light");
+            }
+        }
+
+        applyTheme();
+
+        const uuid = getCookie("uuid");
+        const username = getCookie("username");
+        const app = document.getElementById("app");
+
+        if (!uuid || !username) {
+            // Not logged in
+            app.innerHTML = `
+                <div class="login-required">
+                    <div class="login-card">
+                        <div class="login-icon">📜</div>
+                        <h1>Bro Code</h1>
+                        <p>This document contains confidential agreements. Please log in to view.</p>
+                        <a href="/login.html" class="login-btn">Sign In</a>
+                    </div>
+                </div>
+            `;
+        } else {
+            // Check if account is valid
+            const { data, error } = await supabase
+                .from("users")
+                .select("rank")
+                .eq("uuid", uuid)
+                .single();
+
+            if (error || !data) {
+                // Invalid account
+                app.innerHTML = `
+                    <div class="login-required">
+                        <div class="login-card">
+                            <div class="login-icon">⚠️</div>
+                            <h1>Access Denied</h1>
+                            <p>Your session has expired or your account is invalid. Please log in again.</p>
+                            <a href="/login.html" class="login-btn">Sign In</a>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Valid account - show Bro Code (available to all ranks)
+                app.innerHTML = `
+                    <div class="page-wrapper">
+                        <div class="document-header">
+                            <h1>Bro Code Agreement</h1>
+                            <p class="document-meta">The official code of conduct for all members</p>
+                        </div>
+
+                        <div class="section">
+                            <h2 class="section-title">
+                                <span class="section-number">1</span>
+                                What you should do if you're a new member
+                            </h2>
+                            
+                            <div class="subsection">
+                                <div class="subsection-header">Section 1.1</div>
+                                <p>The first thing you should do if you are new in the agreement is that you should always listen to the others that have been in the group longer with more experience and respect to gain respect in the group. This means if someone has only been in the group for a little longer than you, they don't have control but if there is a highly respected member and they ask you to do something than you must listen unless if it's in a jokingly way or if you got a good reason to not listen then just explain it to them, they will listen that's the reason they are there in begin with.</p>
+                            </div>
+                            
+                            <div class="subsection">
+                                <div class="subsection-header">Section 1.2</div>
+                                <p>The second thing you should do if you're new in the agreement is that you should always be able to take the court seriously. This means if you are asked to show up on a court date to be on jury duty or for another reason it's a requirement to show up unless you are sick or another good reason. If you are in the group and get convicted, you must be able to show up and listen and defend yourself but also to be able to take the punishment given.</p>
+                            </div>
+                        </div>
+
+                        <div class="section">
+                            <h2 class="section-title">
+                                <span class="section-number">2</span>
+                                Explanation on how the government runs
+                            </h2>
+                            
+                            <div class="subsection">
+                                <div class="subsection-header">Section 2.1</div>
+                                <p>The first explanation of the agreement will be your job as a member. First people who are in the group for a long time and are heavily respected and will have more authority. This means that people who are in the group with respect will be more eligible to be a part of the government than others.</p>
+                            </div>
+                            
+                            <div class="subsection">
+                                <div class="subsection-header">Section 2.2</div>
+                                <p>The second explanation of the agreement will explain the power of government. The first explanation on how the government runs is that the government does not try to control it but rather have a meeting with everyone to vote and talk. But there is a loophole where if they absolutely must, they do have the power to remove and control members. If anyone does want to join the government, you will have to be proven close friends with most the people in the group and be friends with all existing governments.</p>
+                            </div>
+                            
+                            <div class="subsection">
+                                <div class="subsection-header">Section 2.3</div>
+                                <p>The third explanation of the agreement will explain how meetings are handled. The first explanation of how meetings are handled is talking about jury duty. There should always be a jury team ready in which they are required to stay quiet and listen then vote on one of the options towards end of the court date provided by the judge. The second explanation of how meetings are handled is talking about the witnesses. The witnesses will explain what happened; there won't always be witnesses but they are sometimes there. The third explanation of how meetings are handled is talking about judges. There are always only one Judge, and their job is to judge the situation fairly and listen then they will give the options to the jury duty. The last explanation of how meetings are handled is talking about lawyers. Lawyers aren't a requirement but are recommended their job is to defend and help you win your case.</p>
+                            </div>
+                        </div>
+
+                        <div class="section">
+                            <h2 class="section-title">
+                                <span class="section-number">3</span>
+                                Duties of being a member
+                            </h2>
+                            
+                            <div class="subsection">
+                                <div class="subsection-header">Section 3.1</div>
+                                <p>The first duty of the agreement is that at the lunch table everyone will follow their seating charts. This means sitting in the seat you have been given but if you want you can request a different spot. You can also sit in available seats if you have been given permission. Please understand that the chart is to prevent conflict, to help know who's here and not, and to help with optimal seats for talk.</p>
+                            </div>
+                            
+                            <div class="subsection">
+                                <div class="subsection-header">Section 3.2</div>
+                                <p>The second duty of the agreement is to show up for jury duty. This means if the court asks you to be on jury duty it is a requirement to show up unless if you are sick or for another good reason you also can request to go but you will not be obligated.</p>
+                            </div>
+                            
+                            <div class="subsection">
+                                <div class="subsection-header">Section 3.3</div>
+                                <p>The third duty of the agreement is to show up for court dates if you have been convicted. If a member gets convicted, they will have the option to switch the court date up to a week from the original court date scheduled.</p>
+                            </div>
+                        </div>
+
+                        <div class="section">
+                            <h2 class="section-title">
+                                <span class="section-number">4</span>
+                                Members powers and freedoms
+                            </h2>
+                            
+                            <div class="subsection">
+                                <div class="subsection-header">Section 4.1</div>
+                                <p>The first freedom of the agreement is the right to have a lawyer. This means you can either defend yourself or have a lawyer and if you don't have one the court will assign you with a public defender.</p>
+                            </div>
+                            
+                            <div class="subsection">
+                                <div class="subsection-header">Section 4.2</div>
+                                <p>The second freedom of the agreement is the right to request. This means any member can request a game, change anything, court meeting, etc.</p>
+                            </div>
+                        </div>
+
+                        <div class="section">
+                            <h2 class="section-title">
+                                <span class="section-number">5</span>
+                                Perks of being in the group
+                            </h2>
+                            
+                            <div class="subsection">
+                                <div class="subsection-header">Section 5.1</div>
+                                <p>The first perk of the agreement is games. The games are hosted basically every day, and anyone is allowed to request a game that people like, but the main rule is that if there is a game a few people don't like, and they have given it a chance then there should be a different game chosen.</p>
+                            </div>
+                            
+                            <div class="subsection">
+                                <div class="subsection-header">Section 5.2</div>
+                                <p>The second perk of the agreement is immunity. On the archive of dirt, it won't have any information uploaded, for example pictures, text, videos, etc. Unless of your veto.</p>
+                            </div>
+                            
+                            <div class="subsection">
+                                <div class="subsection-header">Section 5.3</div>
+                                <p>The third perk of the agreement is protection from other group members. This means people in the group will try their best in their ability, including you, to protect each other.</p>
+                            </div>
+                            
+                            <div class="subsection">
+                                <div class="subsection-header">Section 5.4</div>
+                                <p>The fourth perk of the agreement is access to the Bro Code web site found at (link). This website will include updates, dirt on people, voting, etc.</p>
+                            </div>
+                            
+                            <div class="subsection">
+                                <div class="subsection-header">Section 5.5</div>
+                                <p>The fifth perk of the agreement is our allies. This includes different groups that we have made allies with, and you will not be able to be at war with any of them.</p>
+                            </div>
+                        </div>
+
+                        <div class="section">
+                            <h2 class="section-title">
+                                <span class="section-number">6</span>
+                                Bro Code
+                            </h2>
+                            
+                            <div class="subsection">
+                                <div class="subsection-header">Section 6.1 — Girlfriends</div>
+                                <p>We the men have many things in common, but this document will help us all when it comes to how we treat each other, girlfriends, and how we act in family matters. The first code is addressing girlfriends or code number one. This means you cannot ever steal or speak badly to bros girlfriend unless if bros okay with it. The second code or code number 2 is to never talk to bros girl unless you have to. This means avoid talking to her and only do it if bro tells you to but if you do you have to make sure to be nice and have respect if the girl asks you a question answer it but after that don't keep trying to talk to her. The last code is code number 3 and it is don't give anything to bros girl unless if bro tells you to. This means don't give the girl a jacket, shoes, and more but if it's Christmas just go to bro and ask him if you can give his girl money or something else for Christmas.</p>
+                            </div>
+                            
+                            <div class="subsection">
+                                <div class="subsection-header">Section 6.2 — Family</div>
+                                <p>Next this section is goanna be addressing about bros family and what to do and what not to do around them because if they don't like you, it will be very tough being around them. The fourth code or code number 4 states that you cannot hurt or be rude to bros family. Second this section is code number 5, and it says that you cannot talk about bro affront of his family or tell on him if he has done something bad. The third code about family is code number 6 and it states that you cannot get with any of bros sisters, cousins and more unless if bro is ok with it.</p>
+                            </div>
+                            
+                            <div class="subsection">
+                                <div class="subsection-header">Section 6.3 — How We Treat Each Other</div>
+                                <p>Next this section is goanna be talking about how we treat each other as friends and what we should say and do. The first section is on how we treat each other, or code number 7 and it states that we should not actually hurt each other in a way that is not jokingly this can include mentally or physically hurting. The second section is do not tell on each other or code number 8 and it states we do not tell on bros if they have done anything wrong unless if they are breaking bro code if so, you can tell other bros for example this can include stealing bros girl, hurting a family member and more. The third section is talking about each other, or code number 9 and it states we do not talk bad about each other unless it's jokingly and everyone knows that this can include saying someone is fat, dumb, has a disability and more. The last section is on defending each other or code number 10 and it states that try your best in your ability to defend and help bros that are for example getting bullied, trash talked, getting hurt by others and more.</p>
+                            </div>
+                            
+                            <div class="subsection">
+                                <div class="subsection-header">Section 6.4 — Conclusion</div>
+                                <p>In conclusion if any member breaks even one of these codes you should judge the situation fairly and help avoid a toxic friendship, lastly in order to be eligible to have or read this document you must be a boy and be 10 and older with a mature mind and know how to be a good friend.</p>
+                            </div>
+                        </div>
+
+                        <div class="signature-section">
+                            <h2>Signatures</h2>
+                            <div class="signature-grid">
+                                <div class="signature-block">
+                                    <div class="signature-line"></div>
+                                    <div class="signature-label">Member Signature</div>
+                                </div>
+                                <div class="signature-block">
+                                    <div class="signature-line"></div>
+                                    <div class="signature-label">Government Signature</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="document-footer">
+                            <p>This document was written and established by</p>
+                            <div class="author-credit">
+                                <span>✍️</span>
+                                <span>Curtis Gann</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+    </script>
 </body>
 </html>
