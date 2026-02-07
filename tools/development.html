@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tool in Development</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #020617;
+            --panel: #0f172a;
+            --text: #ffffff;
+            --text-muted: #94a3b8;
+            --accent: #2563eb;
+            --border: #1e293b;
+        }
+
+        html.light {
+            --bg: #f8fafc;
+            --panel: #e2e8f0;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --accent: #2563eb;
+            --border: #cbd5e1;
+        }
+
+        body {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg);
+            color: var(--text);
+            font-family: system-ui, -apple-system, sans-serif;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .container {
+            text-align: center;
+            padding: 40px 20px;
+            max-width: 500px;
+        }
+
+        .icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 30px;
+            background: var(--panel);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            border: 2px solid var(--border);
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        p {
+            color: var(--text-muted);
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .status {
+            font-size: 0.85rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+        }
+
+        /* Mobile */
+        @media (max-width: 480px) {
+            .icon {
+                width: 60px;
+                height: 60px;
+                font-size: 30px;
+            }
+            
+            h1 {
+                font-size: 1.4rem;
+            }
+            
+            p {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">🚧</div>
+        <h1>Tool in Development</h1>
+        <p>This feature is currently being built by our team. Check back soon for updates!</p>
+        <div class="status">Coming Soon</div>
+    </div>
+
+    <script>
+        function getCookie(name) {
+            return document.cookie
+                .split("; ")
+                .find(r => r.startsWith(name + "="))
+                ?.split("=")[1] || null;
+        }
+
+        // Apply theme on load
+        const theme = getCookie("theme");
+        if (theme === "light") {
+            document.documentElement.classList.add("light");
+        }
+        
+        // Listen for theme changes from parent
+        window.addEventListener('message', (e) => {
+            if (e.data === 'themeChanged') {
+                const newTheme = getCookie("theme");
+                if (newTheme === "light") {
+                    document.documentElement.classList.add("light");
+                } else {
+                    document.documentElement.classList.remove("light");
+                }
+            }
+        });
+    </script>
+</body>
+</html>
