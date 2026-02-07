@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+        .modal-backdrop { background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px); }
+        
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .animate-spin-slow { animation: spin 2s linear infinite; }
+        
+        /* LIGHT THEME - Applied when html has class "light" */
+        html.light body { background: #f8fafc; color: #0f172a; }
+        html.light .bg-slate-950 { background: #f8fafc; }
+        html.light .bg-slate-900 { background: #e2e8f0; }
+        html.light .bg-slate-800 { background: #cbd5e1; }
+        html.light .border-slate-800 { border-color: #cbd5e1; }
+        html.light .border-slate-700 { border-color: #94a3b8; }
+        html.light .text-slate-200 { color: #1e293b; }
+        html.light .text-slate-400 { color: #64748b; }
+        html.light .text-slate-500 { color: #475569; }
+        html.light .text-slate-600 { color: #475569; }
+        html.light .modal-backdrop { background: rgba(0, 0, 0, 0.5); }
+        html.light .bg-slate-900\/50 { background: rgba(226, 232, 240, 0.5); }
+        html.light .bg-slate-900\/95 { background: rgba(226, 232, 240, 0.95); }
+        
+        /* Fix for message container to not go under input bar */
+        #messages-container {
+            padding-bottom: calc(1rem + 80px);
+        }
+        
+        @media (min-width: 768px) {
+            #messages-container {
+                padding-bottom: calc(1.5rem + 90px);
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-200 h-screen w-screen overflow-hidden flex flex-col transition-colors duration-300">
+
+    <header class="h-14 md:h-16 bg-slate-900 border-b border-slate-800 flex justify-between items-center px-4 md:px-6 shrink-0 z-30">
+        <div class="flex items-center gap-2 md:gap-3">
+            <button id="menu-toggle" class="md:hidden p-2 -ml-2 text-slate-400 hover:text-slate-200">
+                <i data-lucide="menu" class="w-5 h-5"></i>
+            </button>
+            <div class="w-7 h-7 md:w-8 md:h-8 bg-cyan-600 rounded-lg flex items-center justify-center font-bold text-sm md:text-base">C</div>
+            <h1 class="font-bold text-base md:text-lg">Chat</h1>
+            <span id="user-rank-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-400 uppercase hidden sm:inline">...</span>
+        </div>
+        <div class="text-right min-w-0">
+            <div id="header-username" class="text-sm font-semibold truncate max-w-[120px] md:max-w-[200px]">Loading...</div>
+            <div id="header-phone" class="text-xs text-slate-400 font-mono hidden sm:block">--</div>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden relative">
+        <aside id="sidebar" class="w-full md:w-80 bg-slate-900 border-r border-slate-800 flex flex-col absolute md:relative z-20 h-full transform -translate-x-full md:translate-x-0 transition-transform duration-300">
+            <div class="p-3 md:p-4 border-b border-slate-800 flex items-center justify-between">
+                <button id="new-chat-btn" class="flex-1 py-2.5 px-4 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-medium transition-all flex items-center justify-center gap-2 text-sm md:text-base">
+                    <i data-lucide="plus" class="w-4 h-4"></i> <span class="hidden sm:inline">New Chat</span><span class="sm:hidden">New</span>
+                </button>
+                <button id="close-sidebar" class="md:hidden ml-2 p-2 text-slate-400 hover:text-slate-200">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-2 space-y-1" id="chat-list">
+                <div class="text-center text-slate-500 mt-10 text-sm">Loading...</div>
+            </div>
+        </aside>
+
+        <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-10 hidden md:hidden" onclick="toggleSidebar()"></div>
+
+        <main class="flex-1 bg-slate-950 relative flex flex-col w-full h-full">
+            <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center text-slate-500 p-4 text-center z-0">
+                <i data-lucide="message-square" class="w-12 h-12 md:w-16 md:h-16 mb-4 opacity-20"></i>
+                <p class="text-base md:text-lg">Select a chat or start a new one</p>
+            </div>
+            
+            <div id="active-chat-container" class="hidden flex-col h-full w-full relative">
+                <!-- Chat Header -->
+                <div class="h-12 md:h-14 border-b border-slate-800 bg-slate-900/50 flex items-center px-3 md:px-6 justify-between shrink-0 z-20">
+                    <div class="flex items-center gap-2 md:gap-3 min-w-0">
+                        <button id="back-btn" class="md:hidden p-1 -ml-1 text-slate-400 hover:text-slate-200 mr-1">
+                            <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                        </button>
+                        <div class="w-7 h-7 md:w-8 md:h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold shrink-0" id="active-chat-avatar">?</div>
+                        <div class="min-w-0">
+                            <h3 class="text-sm font-bold text-slate-200 truncate max-w-[150px] md:max-w-[200px]" id="active-chat-name">User</h3>
+                            <p class="text-[10px] md:text-xs text-slate-400 font-mono" id="active-chat-phone">--</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Messages Area -->
+                <div id="messages-container" class="flex-1 overflow-y-auto p-3 md:p-6 space-y-3 md:space-y-4 z-10"></div>
+                
+                <!-- Input Area - Fixed at bottom -->
+                <div class="absolute bottom-0 left-0 right-0 p-2 md:p-4 border-t border-slate-800 bg-slate-900/95 backdrop-blur z-20">
+                    <form id="message-form" class="flex gap-2 max-w-4xl mx-auto">
+                        <input type="text" id="message-input" placeholder="Type a message..." 
+                            class="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 md:px-4 py-2.5 md:py-3 text-sm md:text-base text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 min-w-0">
+                        <button type="submit" class="bg-cyan-600 hover:bg-cyan-500 text-white p-2.5 md:p-3 rounded-xl shrink-0 transition-colors">
+                            <i data-lucide="send" class="w-4 h-4 md:w-5 md:h-5"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="add-chat-modal" class="fixed inset-0 z-50 hidden items-center justify-center modal-backdrop p-4">
+        <div class="bg-slate-900 border border-slate-700 w-full max-w-md rounded-2xl shadow-2xl p-5 md:p-6 relative transform scale-95 opacity-0 transition-all duration-200" id="modal-content">
+            <button id="close-modal" class="absolute top-3 right-3 md:top-4 md:right-4 text-slate-400 hover:text-slate-200 p-1 transition-colors">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            <h2 class="text-lg md:text-xl font-bold text-slate-200 mb-1">Start New Chat</h2>
+            <p class="text-xs md:text-sm text-slate-400 mb-4 md:mb-6">Enter the phone number of the user you wish to contact.</p>
+            <form id="add-chat-form" class="space-y-3 md:space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1 uppercase">Phone Number</label>
+                    <div class="relative">
+                        <i data-lucide="hash" class="absolute left-3 top-2.5 md:top-3 w-4 h-4 text-slate-500"></i>
+                        <input type="text" id="new-chat-phone" placeholder="1-000" 
+                            class="w-full bg-slate-950 border border-slate-700 rounded-lg pl-10 pr-4 py-2.5 md:py-3 text-sm md:text-base text-slate-200 font-mono focus:border-cyan-500 focus:outline-none">
+                    </div>
+                </div>
+                <div id="add-chat-error" class="hidden p-3 rounded bg-red-900/30 border border-red-800/50 text-red-400 text-xs md:text-sm"></div>
+                <button type="submit" class="w-full py-2.5 md:py-3 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-bold text-sm md:text-base transition-colors">
+                    Find User
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed bottom-4 md:bottom-6 right-4 md:right-6 transform translate-y-20 opacity-0 transition-all duration-300 z-50 bg-slate-800 border border-slate-700 text-slate-200 px-3 py-2 md:px-4 md:py-3 rounded-lg shadow-2xl flex items-center gap-2 md:gap-3 text-sm md:text-base">
+        <i data-lucide="info" class="w-4 h-4 md:w-5 md:h-5 text-cyan-400 shrink-0"></i>
+        <span id="toast-msg" class="font-medium">Notification</span>
+    </div>
+
+    <script type="module">
+        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+        function getCookie(name) {
+            return document.cookie.split("; ").find(r => r.startsWith(name + "="))?.split("=")[1];
+        }
+
+        // THEME DETECTION - Check for "theme" cookie
+        const theme = getCookie('theme');
+        console.log("Theme cookie:", theme);
+        
+        if (theme === 'light') {
+            document.documentElement.classList.add('light');
+            console.log("Applied light theme");
+        } else {
+            // Default to dark, remove light class if present
+            document.documentElement.classList.remove('light');
+            console.log("Applied dark theme (default)");
+        }
+
+        lucide.createIcons();
+
+        const supabase = createClient(
+            "https://mdymxbgwhauapvphscrr.supabase.co",
+            "sb_publishable_nOrq936I1SMh4v21KzE2og_tAEbcAzK"
+        );
+
+        let currentUser = null;
+        let currentChatId = null;
+        let recentChats = new Map();
+        let pollInterval = null;
+        let lastMessageIds = new Set();
+
+        const ALLOWED_RANKS = ['owner', 'manager', 'admin', 'tire 3', 'tire 2', 'tire 1', 'trusted'];
+
+        const sidebar = document.getElementById('sidebar');
+        const modal = document.getElementById('add-chat-modal');
+        const modalContent = document.getElementById('modal-content');
+        const chatListEl = document.getElementById('chat-list');
+        const messagesContainer = document.getElementById('messages-container');
+
+        async function init() {
+            const uuid = getCookie("uuid");
+            if (!uuid) { window.location.href = "/"; return; }
+
+            try {
+                const { data, error } = await supabase
+                    .from('users')
+                    .select('uuid, username, name, phone, rank')
+                    .eq('uuid', uuid)
+                    .single();
+
+                if (error) throw error;
+                if (!ALLOWED_RANKS.includes(data.rank.toLowerCase())) {
+                    document.body.innerHTML = '<div class="flex items-center justify-center h-screen text-red-500">Access Denied</div>';
+                    return;
+                }
+
+                currentUser = data;
+                document.getElementById('header-username').textContent = data.name || data.username;
+                document.getElementById('header-phone').textContent = data.phone;
+                document.getElementById('user-rank-badge').textContent = data.rank;
+
+                await loadRecentChats();
+                startPolling();
+                
+            } catch (err) {
+                console.error(err);
+                window.location.href = "/";
+            }
+        }
+
+        function startPolling() {
+            pollInterval = setInterval(async () => {
+                if (!currentUser) return;
+                
+                if (!currentChatId) {
+                    await loadRecentChats();
+                } else {
+                    await refreshMessages();
+                }
+            }, 3000);
+        }
+
+        async function loadRecentChats() {
+            const { data, error } = await supabase
+                .from('messages')
+                .select('sender_id, receiver_id, content, created_at')
+                .or(`sender_id.eq.${currentUser.uuid},receiver_id.eq.${currentUser.uuid}`)
+                .order('created_at', { ascending: false })
+                .limit(100);
+
+            if (error) return;
+
+            const conversations = new Map();
+            (data || []).forEach(msg => {
+                const partnerId = msg.sender_id === currentUser.uuid ? msg.receiver_id : msg.sender_id;
+                if (!conversations.has(partnerId)) {
+                    conversations.set(partnerId, msg);
+                }
+            });
+
+            const partnerIds = Array.from(conversations.keys());
+            if (partnerIds.length === 0) {
+                chatListEl.innerHTML = '<div class="text-center text-slate-500 mt-10 text-sm">No recent chats</div>';
+                recentChats.clear();
+                return;
+            }
+
+            const { data: users } = await supabase
+                .from('users')
+                .select('uuid, username, name, phone')
+                .in('uuid', partnerIds);
+
+            recentChats.clear();
+            
+            let position = 1;
+            (users || []).forEach(user => {
+                const msg = conversations.get(user.uuid);
+                recentChats.set(user.uuid, {
+                    user: user,
+                    lastMsg: msg.content,
+                    time: msg.created_at,
+                    position: position++
+                });
+            });
+
+            renderRecentChats();
+        }
+
+        function renderRecentChats() {
+            if (recentChats.size === 0) {
+                chatListEl.innerHTML = '<div class="text-center text-slate-500 mt-10 text-sm">No recent chats</div>';
+                return;
+            }
+
+            const sorted = Array.from(recentChats.entries()).sort((a, b) => a[1].position - b[1].position);
+            chatListEl.innerHTML = '';
+
+            sorted.forEach(([partnerId, chat]) => {
+                const div = document.createElement('div');
+                div.className = `group flex items-center justify-between p-2 md:p-3 rounded-lg hover:bg-slate-800 cursor-pointer transition-colors`;
+                div.onclick = () => {
+                    openChat(chat.user);
+                    if (window.innerWidth < 768) toggleSidebar();
+                };
+
+                const displayName = chat.user.name || chat.user.username;
+                const initials = displayName.substring(0, 2).toUpperCase();
+                const timeStr = new Date(chat.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+                div.innerHTML = `
+                    <div class="flex items-center gap-2 md:gap-3 overflow-hidden flex-1 min-w-0">
+                        <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-slate-700 flex-shrink-0 flex items-center justify-center text-xs font-bold text-cyan-400">${initials}</div>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center justify-between gap-2">
+                                <div class="text-sm font-bold text-slate-200 truncate">${displayName}</div>
+                                <div class="text-[10px] text-slate-500 shrink-0">${timeStr}</div>
+                            </div>
+                            <div class="text-[10px] md:text-xs text-slate-500 font-mono truncate">${chat.user.phone}</div>
+                            <div class="text-[10px] md:text-xs text-slate-400 truncate mt-0.5">${chat.lastMsg}</div>
+                        </div>
+                    </div>
+                `;
+                chatListEl.appendChild(div);
+            });
+            lucide.createIcons();
+        }
+
+        document.getElementById('new-chat-btn').onclick = () => {
+            document.getElementById('add-chat-error').classList.add('hidden');
+            document.getElementById('new-chat-phone').value = '';
+            openModal(modal, modalContent);
+        };
+        document.getElementById('close-modal').onclick = () => closeModal(modal, modalContent);
+        document.getElementById('menu-toggle').onclick = toggleSidebar;
+        document.getElementById('close-sidebar').onclick = toggleSidebar;
+        document.getElementById('back-btn').onclick = closeChat;
+
+        function toggleSidebar() {
+            const isOpen = !sidebar.classList.contains('-translate-x-full');
+            sidebar.classList.toggle('-translate-x-full');
+            document.getElementById('sidebar-overlay').classList.toggle('hidden', isOpen);
+        }
+
+        function openModal(modalEl, contentEl) {
+            modalEl.classList.remove('hidden');
+            modalEl.classList.add('flex');
+            requestAnimationFrame(() => {
+                contentEl.classList.remove('scale-95', 'opacity-0');
+                contentEl.classList.add('scale-100', 'opacity-100');
+            });
+        }
+
+        function closeModal(modalEl, contentEl) {
+            contentEl.classList.remove('scale-100', 'opacity-100');
+            contentEl.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modalEl.classList.add('hidden');
+                modalEl.classList.remove('flex');
+            }, 200);
+        }
+
+        document.getElementById('add-chat-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const phone = document.getElementById('new-chat-phone').value.trim();
+            const errorEl = document.getElementById('add-chat-error');
+
+            if (phone === currentUser.phone) {
+                errorEl.textContent = "You cannot chat with yourself.";
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            const { data, error } = await supabase.from('users').select('uuid, username, name, phone').eq('phone', phone).single();
+
+            if (error || !data) {
+                errorEl.textContent = "The number you entered doesn't exist";
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            closeModal(modal, modalContent);
+            
+            recentChats.set(data.uuid, {
+                user: data,
+                lastMsg: 'Start chatting...',
+                time: new Date().toISOString(),
+                position: 0
+            });
+            
+            let pos = 1;
+            Array.from(recentChats.entries())
+                .sort((a, b) => new Date(b[1].time) - new Date(a[1].time))
+                .forEach(([id, chat]) => { chat.position = pos++; });
+            
+            renderRecentChats();
+            openChat(data);
+        };
+
+        function openChat(user) {
+            currentChatId = user.uuid;
+            lastMessageIds.clear();
+            
+            document.getElementById('empty-state').classList.add('hidden');
+            document.getElementById('active-chat-container').classList.remove('hidden');
+            document.getElementById('active-chat-container').classList.add('flex');
+            
+            const displayName = user.name || user.username;
+            document.getElementById('active-chat-name').textContent = displayName;
+            document.getElementById('active-chat-phone').textContent = user.phone;
+            document.getElementById('active-chat-avatar').textContent = displayName.substring(0,2).toUpperCase();
+            
+            messagesContainer.innerHTML = '';
+            loadMessages(user.uuid);
+        }
+
+        function closeChat() {
+            currentChatId = null;
+            lastMessageIds.clear();
+            document.getElementById('active-chat-container').classList.add('hidden');
+            document.getElementById('active-chat-container').classList.remove('flex');
+            document.getElementById('empty-state').classList.remove('hidden');
+        }
+
+        async function loadMessages(partnerId) {
+            const { data, error } = await supabase
+                .from('messages')
+                .select('*')
+                .or(`and(sender_id.eq.${currentUser.uuid},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${currentUser.uuid})`)
+                .order('created_at', { ascending: true });
+
+            if (error) return;
+            
+            (data || []).forEach(msg => {
+                if (!lastMessageIds.has(msg.id)) {
+                    appendMessage(msg);
+                    lastMessageIds.add(msg.id);
+                }
+            });
+        }
+
+        async function refreshMessages() {
+            if (!currentChatId) return;
+            
+            const { data, error } = await supabase
+                .from('messages')
+                .select('*')
+                .or(`and(sender_id.eq.${currentUser.uuid},receiver_id.eq.${currentChatId}),and(sender_id.eq.${currentChatId},receiver_id.eq.${currentUser.uuid})`)
+                .order('created_at', { ascending: true });
+
+            if (error) return;
+            
+            let newMessagesAdded = false;
+            (data || []).forEach(msg => {
+                if (!lastMessageIds.has(msg.id)) {
+                    appendMessage(msg);
+                    lastMessageIds.add(msg.id);
+                    newMessagesAdded = true;
+                }
+            });
+            
+            if (newMessagesAdded) {
+                const scrollPos = messagesContainer.scrollTop;
+                const wasAtBottom = scrollPos >= (messagesContainer.scrollHeight - messagesContainer.clientHeight - 100);
+                if (wasAtBottom) {
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }
+            }
+        }
+
+        function appendMessage(msg) {
+            const isMe = msg.sender_id === currentUser.uuid;
+            const div = document.createElement('div');
+            div.className = `flex w-full ${isMe ? 'justify-end' : 'justify-start'}`;
+            div.setAttribute('data-msg-id', msg.id);
+
+            div.innerHTML = `
+                <div class="group flex items-end max-w-[85%] md:max-w-[70%] ${isMe ? 'flex-row-reverse' : ''}">
+                    <div class="px-3 py-2 md:px-4 rounded-xl ${isMe ? 'bg-cyan-600 text-white rounded-br-none' : 'bg-slate-800 text-slate-200 rounded-bl-none'} shadow-md">
+                        <p class="text-sm md:text-base break-words">${msg.content}</p>
+                        <div class="text-[10px] md:text-xs opacity-70 mt-1">${new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                    </div>
+                </div>
+            `;
+            messagesContainer.appendChild(div);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        document.getElementById('message-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const input = document.getElementById('message-input');
+            const text = input.value.trim();
+            if (!text || !currentChatId) return;
+
+            const { data, error } = await supabase.from('messages').insert({
+                sender_id: currentUser.uuid,
+                receiver_id: currentChatId,
+                content: text
+            }).select();
+
+            if (error) {
+                showToast('Failed to send');
+                return;
+            }
+
+            input.value = '';
+            
+            if (data && data[0]) {
+                if (!lastMessageIds.has(data[0].id)) {
+                    appendMessage(data[0]);
+                    lastMessageIds.add(data[0].id);
+                }
+            }
+            
+            const chat = recentChats.get(currentChatId);
+            if (chat) {
+                chat.lastMsg = text;
+                chat.time = new Date().toISOString();
+                renderRecentChats();
+            }
+        };
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').textContent = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
+        }
+
+        modal.onclick = (e) => { if(e.target === modal) closeModal(modal, modalContent); };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>

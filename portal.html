@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Honor Circle</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <style>
+    :root {
+      --bg: #020617;
+      --panel: #0f172a;
+      --text: #ffffff;
+      --accent: #2563eb;
+      --sidebar-width: 220px;
+    }
+
+    body.light {
+      --bg: #f8fafc;
+      --panel: #e5e7eb;
+      --text: #020617;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+    }
+
+    /* Mobile Menu Overlay */
+    .menu-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 99;
+    }
+
+    .menu-overlay.active {
+      display: block;
+    }
+
+    /* Sidebar - Desktop */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--panel);
+      padding: 20px 10px;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar h2 {
+      text-align: center;
+      margin: 0 0 20px;
+      font-size: 1.2rem;
+    }
+
+    .tool {
+      padding: 10px 10px 10px 15px;
+      margin-bottom: 5px;
+      cursor: pointer;
+      border-radius: 6px;
+      position: relative;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tool:hover {
+      background: rgba(255,255,255,0.08);
+    }
+
+    .tool.active {
+      background: rgba(37,99,235,0.2);
+    }
+
+    .tool.active::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--accent);
+      border-radius: 4px 0 0 4px;
+    }
+
+    /* Main Content */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    /* Header */
+    header {
+      height: 60px;
+      background: var(--panel);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 15px;
+      gap: 10px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 1.5rem;
+      padding: 5px;
+      cursor: pointer;
+    }
+
+    .header-title {
+      font-weight: 600;
+      font-size: 1.1rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    #username {
+      font-size: 0.85rem;
+      max-width: 100px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .rank {
+      background: var(--accent);
+      border-radius: 50%;
+      padding: 4px 8px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 1.1rem;
+      padding: 6px;
+      cursor: pointer;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 32px;
+      height: 32px;
+    }
+
+    .icon-btn:hover {
+      background: rgba(255,255,255,0.1);
+    }
+
+    .logout-btn {
+      background: var(--accent);
+      border: none;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    iframe {
+      flex: 1;
+      border: none;
+      width: 100%;
+    }
+
+    /* Mobile Styles */
+    @media (max-width: 768px) {
+      :root {
+        --sidebar-width: 280px;
+      }
+
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        z-index: 100;
+        transform: translateX(-100%);
+        box-shadow: 2px 0 10px rgba(0,0,0,0.3);
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .menu-btn {
+        display: flex;
+      }
+
+      .header-title {
+        font-size: 1rem;
+      }
+
+      #username {
+        display: none;
+      }
+
+      .rank {
+        padding: 3px 6px;
+        font-size: 0.65rem;
+      }
+
+      .icon-btn {
+        font-size: 1rem;
+        min-width: 28px;
+        height: 28px;
+        padding: 4px;
+      }
+
+      .logout-btn {
+        padding: 5px 8px;
+        font-size: 0.75rem;
+      }
+
+      /* Hide text on very small screens */
+      @media (max-width: 380px) {
+        .logout-btn {
+          padding: 5px;
+        }
+        .logout-btn::before {
+          content: "⏻";
+        }
+        .logout-btn {
+          font-size: 0;
+        }
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
+
+  <div class="sidebar" id="sidebar">
+    <h2>Honor Circle BETA</h2>
+    <div class="tool active" data-file="/tools/chat.html" onclick="selectTool(this)">Chat</div>
+    <div class="tool" data-file="/tools/transfer.html" onclick="selectTool(this)">Transfer</div>
+    <div class="tool" data-file="/tools/marketplace.html" onclick="selectTool(this)">Marketplace</div>
+    <div class="tool" data-file="/tools/brocode.html" onclick="selectTool(this)">Bro Code</div>
+    <div class="tool" data-file="/tools/records.html" onclick="selectTool(this)">Records</div>
+    <div class="tool" data-file="/tools/website-access.html" onclick="selectTool(this)">Website Access</div>
+    <div class="tool" data-file="/tools/game-rules.html" onclick="selectTool(this)">Game Rules</div>
+    <div class="tool" data-file="/tools/encryptor/index.html" onclick="selectTool(this)">Encryptor</div>
+    <div class="tool" data-file="/tools/seating.html" onclick="selectTool(this)">Seating</div>
+  </div>
+
+  <div class="main">
+    <header>
+      <div class="header-left">
+        <button class="menu-btn" onclick="toggleMenu()">☰</button>
+        <span class="header-title">Dashboard</span>
+      </div>
+      <div class="right">
+        <span id="username"></span>
+        <span class="rank" id="rank"></span>
+        <button class="icon-btn" onclick="location.href='/notifications'" title="Notifications">🔔</button>
+        <button class="icon-btn" onclick="toggleTheme()" title="Toggle Theme">🌓</button>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      </div>
+    </header>
+
+    <iframe id="frame" src="/tools/chat.html"></iframe>
+  </div>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+    const supabase = createClient(
+      "https://mdymxbgwhauapvphscrr.supabase.co",
+      "sb_publishable_nOrq936I1SMh4v21KzE2og_tAEbcAzK"
+    );
+
+    const allowedRanks = [
+      "owner","manager","admin",
+      "tire 3","tire 2","tire 1",
+      "trusted","user"
+    ];
+
+    function getCookie(name) {
+      return document.cookie
+        .split("; ")
+        .find(r => r.startsWith(name + "="))
+        ?.split("=")[1] || null;
+    }
+
+    function clearCookies() {
+      ["username","password","uuid","theme"].forEach(c =>
+        document.cookie = `${c}=; max-age=0; path=/`
+      );
+    }
+
+    const uuid = getCookie("uuid");
+    const username = getCookie("username");
+
+    if (!uuid || !username) {
+      clearCookies();
+      location.href = "/login.html";
+    }
+
+    document.getElementById("username").textContent = username;
+
+    const { data, error } = await supabase
+      .from("users")
+      .select("rank")
+      .eq("uuid", uuid)
+      .single();
+
+    if (error || !allowedRanks.includes(data?.rank)) {
+      clearCookies();
+      location.href = "/login.html";
+    }
+
+    document.getElementById("rank").textContent = data.rank;
+
+    // Tool selection
+    const sidebar = document.getElementById('sidebar');
+    const menuOverlay = document.getElementById('menuOverlay');
+    const frame = document.getElementById('frame');
+    const tools = document.querySelectorAll(".tool");
+
+    window.toggleMenu = () => {
+      sidebar.classList.toggle('open');
+      menuOverlay.classList.toggle('active');
+    };
+
+    window.closeMenu = () => {
+      sidebar.classList.remove('open');
+      menuOverlay.classList.remove('active');
+    };
+
+    window.selectTool = (tool) => {
+      tools.forEach(t => t.classList.remove("active"));
+      tool.classList.add("active");
+      frame.src = tool.dataset.file;
+      
+      // Close menu on mobile after selection
+      if (window.innerWidth <= 768) {
+        closeMenu();
+      }
+    };
+
+    // LOGOUT
+    window.logout = () => {
+      clearCookies();
+      location.href = "/login.html";
+    };
+
+    // THEME
+    window.toggleTheme = () => {
+      const currentTheme = getCookie("theme");
+      const newTheme = currentTheme === "light" ? "dark" : "light";
+      document.cookie = `theme=${newTheme}; path=/; max-age=604800`;
+      location.reload();
+    };
+
+    if (getCookie("theme") === "light") {
+      document.body.classList.add("light");
+    }
+  </script>
+
+</body>
+</html>

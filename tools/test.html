@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Honor Circle</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    :root {
+      --bg: #020617;
+      --panel: #0f172a;
+      --text: #ffffff;
+      --accent: #2563eb;
+    }
+
+    body.light {
+      --bg: #f8fafc;
+      --panel: #e5e7eb;
+      --text: #020617;
+    }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, sans-serif;
+    }
+
+    .sidebar {
+      width: 220px;
+      background: var(--panel);
+      padding: 20px 10px;
+    }
+
+    .sidebar h2 {
+      text-align: center;
+      margin: 0 0 20px;
+    }
+
+    .tool {
+      padding: 10px 10px 10px 15px;
+      margin-bottom: 5px;
+      cursor: pointer;
+      border-radius: 6px;
+      position: relative;
+    }
+
+    .tool:hover {
+      background: rgba(255,255,255,0.08);
+    }
+
+    .tool.active {
+      background: rgba(37,99,235,0.2);
+    }
+
+    .tool.active::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--accent);
+      border-radius: 4px 0 0 4px;
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      height: 60px;
+      background: var(--panel);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+    }
+
+    .right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .rank {
+      background: var(--accent);
+      border-radius: 50%;
+      padding: 6px 10px;
+      font-size: 0.8rem;
+    }
+
+    iframe {
+      flex: 1;
+      border: none;
+      width: 100%;
+    }
+
+    button {
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sidebar">
+    <h2>Honor Circle BETA</h2>
+    <div class="tool active" data-file="/tools/chat.html">Chat</div>
+    <div class="tool" data-file="/tools/transfer.html">Transfer</div>
+    <div class="tool" data-file="/tools/marketplace.html">Marketplace</div>
+    <div class="tool" data-file="/tools/brocode.html">Bro Code</div>
+    <div class="tool" data-file="/tools/records.html">Records</div>
+    <div class="tool" data-file="/tools/website-access.html">Website Access</div>
+    <div class="tool" data-file="/tools/game-rules.html">Game Rules</div>
+    <div class="tool" data-file="/tools/encryptor/index.html">Encryptor</div>
+    <div class="tool" data-file="/tools/seating.html">Seating</div>
+  </div>
+
+  <div class="main">
+    <header>
+      <div>Dashboard</div>
+      <div class="right">
+        <span id="username"></span>
+        <span class="rank" id="rank"></span>
+        <button onclick="location.href='/notifications'">🔔</button>
+        <button onclick="toggleTheme()">🌓</button>
+        <button onclick="logout()">Logout</button>
+      </div>
+    </header>
+
+    <iframe id="frame" src="/tools/chat.html"></iframe>
+  </div>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+    const supabase = createClient(
+      "https://mdymxbgwhauapvphscrr.supabase.co",
+      "sb_publishable_nOrq936I1SMh4v21KzE2og_tAEbcAzK"
+    );
+
+    const allowedRanks = [
+      "owner","manager","admin",
+      "tire 3","tire 2","tire 1",
+      "trusted","user"
+    ];
+
+    function getCookie(name) {
+      return document.cookie
+        .split("; ")
+        .find(r => r.startsWith(name + "="))
+        ?.split("=")[1] || null;
+    }
+
+    function clearCookies() {
+      ["username","password","uuid","theme"].forEach(c =>
+        document.cookie = `${c}=; max-age=0; path=/`
+      );
+    }
+
+    const uuid = getCookie("uuid");
+    const username = getCookie("username");
+
+    if (!uuid || !username) {
+      clearCookies();
+      location.href = "/login.html";
+    }
+
+    document.getElementById("username").textContent = username;
+
+    const { data, error } = await supabase
+      .from("users")
+      .select("rank")
+      .eq("uuid", uuid)
+      .single();
+
+    if (error || !allowedRanks.includes(data?.rank)) {
+      clearCookies();
+      location.href = "/login.html";
+    }
+
+    document.getElementById("rank").textContent = data.rank;
+
+    // TOOL SWITCHING + HIGHLIGHT
+    const tools = document.querySelectorAll(".tool");
+    const frame = document.getElementById("frame");
+
+    tools.forEach(tool => {
+      tool.addEventListener("click", () => {
+        tools.forEach(t => t.classList.remove("active"));
+        tool.classList.add("active");
+        frame.src = tool.dataset.file;
+      });
+    });
+
+    // LOGOUT
+    window.logout = () => {
+      clearCookies();
+      location.href = "/login.html";
+    };
+
+    // THEME - Changes cookie and refreshes page
+    window.toggleTheme = () => {
+      const currentTheme = getCookie("theme");
+      // Toggle between light and dark
+      const newTheme = currentTheme === "light" ? "dark" : "light";
+      // Set cookie for 7 days
+      document.cookie = `theme=${newTheme}; path=/; max-age=604800`;
+      // Refresh entire page
+      location.reload();
+    };
+
+    // Apply theme on load
+    if (getCookie("theme") === "light") {
+      document.body.classList.add("light");
+    }
+  </script>
+
+</body>
+</html>

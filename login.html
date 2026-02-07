@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Honor Circle Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    :root {
+      --bg: #020617;
+      --panel: #0f172a;
+      --text: white;
+    }
+
+    body.light {
+      --bg: #f8fafc;
+      --panel: #e5e7eb;
+      --text: #020617;
+    }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, sans-serif;
+    }
+
+    .box {
+      background: var(--panel);
+      padding: 30px;
+      border-radius: 12px;
+      width: 300px;
+      text-align: center;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 6px;
+      border: none;
+    }
+
+    button {
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+    }
+
+    #msg {
+      margin-top: 10px;
+      color: #f87171;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="box">
+    <h2>Honor Circle BETA</h2>
+    <input id="username" placeholder="Username">
+    <input id="password" type="password" placeholder="Password">
+    <button id="login">Login</button>
+    <button onclick="toggleTheme()">Toggle Theme</button>
+    <div id="msg"></div>
+  </div>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+    const supabase = createClient(
+      "https://mdymxbgwhauapvphscrr.supabase.co",
+      "sb_publishable_nOrq936I1SMh4v21KzE2og_tAEbcAzK"
+    );
+
+    function setCookie(name, value) {
+      document.cookie = `${name}=${value}; path=/; max-age=604800`;
+    }
+
+    function getCookie(name) {
+      return document.cookie.split("; ")
+        .find(r => r.startsWith(name + "="))
+        ?.split("=")[1];
+    }
+
+    if (getCookie("uuid")) location.href = "/portal.html";
+
+    document.getElementById("login").onclick = async () => {
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+
+      const { data, error } = await supabase
+        .from("users")
+        .select("uuid")
+        .eq("username", username)
+        .eq("password", password)
+        .single();
+
+      if (error || !data) {
+        document.getElementById("msg").textContent = "Incorrect login";
+        return;
+      }
+
+      setCookie("username", username);
+      setCookie("password", password);
+      setCookie("uuid", data.uuid);
+
+      location.href = "/portal.html";
+    };
+
+    window.toggleTheme = () => {
+      document.body.classList.toggle("light");
+      const mode = document.body.classList.contains("light") ? "light" : "dark";
+      document.cookie = `theme=${mode}; path=/; max-age=604800`;
+    };
+
+    if (getCookie("theme") === "light") {
+      document.body.classList.add("light");
+    }
+  </script>
+
+</body>
+</html>

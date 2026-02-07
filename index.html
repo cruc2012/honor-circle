@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/images/favicon.png" type="image/png">
+    <title>Honor Circle</title>
+    <style>
+        html, body {
+          margin: 0;
+          padding: 0;
+          height: 100%;
+          overflow: hidden;
+          font-family: Arial, sans-serif;
+        }
+        body {
+          display: flex;
+          flex-direction: column;
+        }
+        iframe {
+          border: none;
+          width: 100%;
+          flex: 1;
+        }
+        footer {
+          text-align: center;
+          padding: 12px;
+          font-size: 14px;
+          transition: all 0.3s;
+          border-top: 1px solid #ccc;
+        }
+        
+        /* Default/Dark mode styles */
+        footer {
+          background: #1e1e1e;
+          color: #eee;
+          border-top-color: #333;
+        }
+        footer a {
+          color: #60a5fa;
+          text-decoration: none;
+          font-weight: bold;
+        }
+        
+        /* Light mode styles (only applied when cookie is light) */
+        footer.light {
+          background: #f4f4f4;
+          color: #111;
+          border-top-color: #ccc;
+        }
+        footer.light a {
+          color: #2563eb;
+        }
+        
+        footer a:hover {
+          text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <iframe src="/login.html" id="appFrame"></iframe>
+    
+    <footer id="pageFooter">
+        This site was made by Curtis Gann <a href="https://www.curtishub.com" target="_blank">click here to learn more</a>
+    </footer>
+
+    <script>
+        function getCookie(name) {
+            return document.cookie
+                .split("; ")
+                .find(r => r.startsWith(name + "="))
+                ?.split("=")[1] || null;
+        }
+        
+        function updateTheme() {
+            const footer = document.getElementById('pageFooter');
+            const theme = getCookie('theme');
+            
+            // Default to dark mode if no cookie or cookie is not "light"
+            if (theme === 'light') {
+                footer.classList.add('light');
+                footer.classList.remove('dark');
+            } else {
+                // Dark mode (default when no cookie or theme=dark)
+                footer.classList.remove('light');
+                footer.classList.add('dark');
+            }
+        }
+        
+        // Check immediately on load
+        updateTheme();
+        
+        // Constantly check every 500ms for cookie changes
+        setInterval(updateTheme, 500);
+        
+        // Also listen for immediate updates from iframe
+        window.addEventListener('message', (e) => {
+            if (e.data === 'themeChanged') {
+                updateTheme();
+            }
+        });
+    </script>
+</body>
+</html>
