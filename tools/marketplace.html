@@ -114,7 +114,7 @@
       flex-wrap: wrap;
     }
 
-    .sell-btn, .owned-btn, .sold-btn, .pending-btn {
+    .sell-btn, .owned-btn, .orders-btn, .sold-btn {
       background: var(--accent);
       color: white;
       border: none;
@@ -129,19 +129,19 @@
       position: relative;
     }
 
-    .sell-btn:hover, .owned-btn:hover, .sold-btn:hover, .pending-btn:hover {
+    .sell-btn:hover, .owned-btn:hover, .orders-btn:hover, .sold-btn:hover {
       background: var(--accent-hover);
       transform: translateY(-2px);
       box-shadow: 0 8px 20px rgba(34, 197, 94, 0.3);
     }
 
-    .owned-btn, .sold-btn, .pending-btn {
+    .owned-btn, .orders-btn, .sold-btn {
       background: var(--panel);
       border: 2px solid var(--accent);
       color: var(--text);
     }
 
-    html.light .owned-btn, html.light .sold-btn, html.light .pending-btn {
+    html.light .owned-btn, html.light .orders-btn, html.light .sold-btn {
       background: var(--panel);
       color: var(--text);
     }
@@ -482,13 +482,13 @@
       color: var(--text);
     }
 
-    .owned-grid {
+    .games-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       gap: 20px;
     }
 
-    .owned-card {
+    .game-card {
       background: var(--bg);
       border: 1px solid var(--border);
       border-radius: 12px;
@@ -496,17 +496,17 @@
       text-align: center;
     }
 
-    .owned-image {
+    .game-image {
       width: 100%;
       aspect-ratio: 1;
       object-fit: cover;
     }
 
-    .owned-info {
+    .game-info {
       padding: 15px;
     }
 
-    .owned-title {
+    .game-title {
       font-weight: 600;
       margin-bottom: 10px;
       font-size: 0.95rem;
@@ -642,7 +642,7 @@
         padding: 20px;
       }
       
-      .products-grid, .owned-grid {
+      .products-grid, .games-grid {
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
         gap: 15px;
       }
@@ -723,19 +723,19 @@
             
             <div class="form-group">
               <label class="form-label">Game File Drive Link *</label>
-              <input type="url" class="form-input" id="gameLink" placeholder="https://drive.google.com/...">
+              <input type="url" class="form-input" id="gameLink" placeholder="https://drive.google.com/ ...">
             </div>
             
             <div class="form-group">
               <label class="form-label">Icon Image Drive Link *</label>
-              <input type="url" class="form-input" id="iconLink" placeholder="https://drive.google.com/...">
+              <input type="url" class="form-input" id="iconLink" placeholder="https://drive.google.com/ ...">
             </div>
           </div>
 
           <div id="physicalFields" style="display: none;">
             <div class="form-group">
               <label class="form-label">Image Link *</label>
-              <input type="url" class="form-input" id="physicalImageLink" required placeholder="https://example.com/image.jpg">
+              <input type="url" class="form-input" id="physicalImageLink" required placeholder="https://example.com/image.jpg ">
               <div class="help-text">Direct link to product image</div>
             </div>
             
@@ -751,12 +751,12 @@
     </div>
   </div>
 
-  <!-- Owned Items Modal -->
-  <div class="modal-overlay" id="ownedModal">
+  <!-- My Games Modal -->
+  <div class="modal-overlay" id="gamesModal">
     <div class="modal">
-      <button class="close-btn" onclick="closeOwnedModal()">×</button>
+      <button class="close-btn" onclick="closeGamesModal()">×</button>
       <h2 class="modal-title">My Games</h2>
-      <div id="ownedContent">
+      <div id="gamesContent">
         <div class="empty-state">
           <div style="width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
           <p>Loading your games...</p>
@@ -765,7 +765,7 @@
     </div>
   </div>
 
-  <!-- Sold Items Modal -->
+  <!-- Sold Items Modal (Physical Products Only) -->
   <div class="modal-overlay" id="soldModal">
     <div class="modal">
       <button class="close-btn" onclick="closeSoldModal()">×</button>
@@ -780,11 +780,11 @@
   </div>
 
   <!-- Pending Orders Modal -->
-  <div class="modal-overlay" id="pendingModal">
+  <div class="modal-overlay" id="ordersModal">
     <div class="modal">
-      <button class="close-btn" onclick="closePendingModal()">×</button>
+      <button class="close-btn" onclick="closeOrdersModal()">×</button>
       <h2 class="modal-title">Pending Orders</h2>
-      <div id="pendingContent">
+      <div id="ordersContent">
         <div class="empty-state">
           <div style="width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
           <p>Loading pending orders...</p>
@@ -794,10 +794,10 @@
   </div>
 
   <script type="module">
-    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2 ";
 
     const supabase = createClient(
-      "https://mdymxbgwhauapvphscrr.supabase.co",
+      "https://mdymxbgwhauapvphscrr.supabase.co ",
       "sb_publishable_nOrq936I1SMh4v21KzE2og_tAEbcAzK"
     );
 
@@ -820,10 +820,9 @@
     let currentUser = null;
     let selectedType = null;
     let products = [];
-    let myPurchases = [];
     let myGames = [];
-    let soldItemsCount = 0;
     let pendingOrdersCount = 0;
+    let soldItemsCount = 0;
 
     if (!uuid || !username) {
       content.innerHTML = `
@@ -853,14 +852,14 @@
           <div class="actions-bar">
             <div class="btn-group">
               <button class="sell-btn" onclick="openSellModal()">Sell</button>
-              <button class="owned-btn" onclick="openOwnedModal()">My Games</button>
+              <button class="owned-btn" onclick="openGamesModal()">My Games</button>
               <button class="sold-btn" onclick="openSoldModal()" id="soldBtn">
                 Sold
                 <span class="badge" id="soldBadge" style="display: none;">0</span>
               </button>
-              <button class="pending-btn" onclick="openPendingModal()" id="pendingBtn">
+              <button class="orders-btn" onclick="openOrdersModal()" id="ordersBtn">
                 Orders
-                <span class="badge" id="pendingBadge" style="display: none;">0</span>
+                <span class="badge" id="ordersBadge" style="display: none;">0</span>
               </button>
             </div>
             <a href="/tools/requests.html" class="requests-btn" id="requestsBtn">Requests</a>
@@ -895,7 +894,6 @@
         }
 
         await loadProducts();
-        await loadMyPurchases();
         await updateCounts();
 
       } catch (err) {
@@ -910,12 +908,15 @@
         .from("purchases")
         .select("*", { count: "exact", head: true })
         .eq("seller_uuid", uuid)
-        .eq("status", "pending");
+        .eq("status", "pending")
+        .eq("product.product_type", "physical");
 
       if (!soldError && soldCount > 0) {
         soldItemsCount = soldCount;
         document.getElementById("soldBadge").textContent = soldCount;
         document.getElementById("soldBadge").style.display = "block";
+      } else {
+        document.getElementById("soldBadge").style.display = "none";
       }
 
       // Get pending orders count (physical products bought by user that are pending)
@@ -927,8 +928,10 @@
 
       if (!pendingError && pendingCount > 0) {
         pendingOrdersCount = pendingCount;
-        document.getElementById("pendingBadge").textContent = pendingCount;
-        document.getElementById("pendingBadge").style.display = "block";
+        document.getElementById("ordersBadge").textContent = pendingCount;
+        document.getElementById("ordersBadge").style.display = "block";
+      } else {
+        document.getElementById("ordersBadge").style.display = "none";
       }
     }
 
@@ -944,19 +947,17 @@
       }
 
       products = data || [];
-      renderProducts();
-    }
-
-    async function loadMyPurchases() {
-      const { data, error } = await supabase
-        .from("purchases")
-        .select("product_id, product:product_id(*)")
-        .eq("buyer_uuid", uuid);
-
-      if (!error && data) {
-        myPurchases = data.map(p => p.product_id);
-        myGames = data.filter(p => p.product?.product_type === "game").map(p => p.product);
+      
+      // Get user's games to show "Owned" badge
+      const { data: itemsData, error: itemsError } = await supabase
+        .from("items")
+        .select("game_id")
+        .eq("owner_uuid", uuid);
+      
+      if (!itemsError && itemsData) {
+        myGames = itemsData.map(i => i.game_id);
       }
+      
       renderProducts();
     }
 
@@ -976,8 +977,8 @@
 
       grid.innerHTML = products.map(product => {
         const isMine = product.seller_uuid === uuid;
-        const isOwned = myPurchases.includes(product.id);
-        const isGame = product.product_type === "game";
+        const isOwned = myGames.includes(product.id);
+        const isGame = product.product_type === 'game';
         const inStock = isGame || product.stock > 0;
         
         let buttonText = "Buy";
@@ -1013,7 +1014,7 @@
 
         return `
           <div class="product-card">
-            <img src="${escapeHtml(product.image_path)}" alt="${escapeHtml(product.title)}" class="product-image" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect width=%22100%22 height=%22100%22 fill=%22%231e293b%22/><text x=%2250%22 y=%2250%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22 font-size=%2214%22>No Image</text></svg>'">
+            <img src="${escapeHtml(product.image_path)}" alt="${escapeHtml(product.title)}" class="product-image" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22  width=%22100%22 height=%22100%22><rect width=%22100%22 height=%22100%22 fill=%22%231e293b%22/><text x=%2250%22 y=%2250%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22 font-size=%2214%22>No Image</text></svg>'">
             <div class="product-info">
               <div>
                 <span class="product-type">${product.product_type}</span>
@@ -1121,31 +1122,33 @@
       }
     };
 
-    window.openOwnedModal = async function() {
-      document.getElementById("ownedModal").classList.add("show");
-      await loadOwnedGames();
+    // MY GAMES MODAL - Uses items table
+    window.openGamesModal = async function() {
+      document.getElementById("gamesModal").classList.add("show");
+      await loadMyGames();
     };
 
-    window.closeOwnedModal = function() {
-      document.getElementById("ownedModal").classList.remove("show");
+    window.closeGamesModal = function() {
+      document.getElementById("gamesModal").classList.remove("show");
     };
 
-    async function loadOwnedGames() {
-      const ownedContent = document.getElementById("ownedContent");
+    async function loadMyGames() {
+      const gamesContent = document.getElementById("gamesContent");
       
       try {
+        // Get games from items table
         const { data, error } = await supabase
-          .from("purchases")
-          .select("product:product_id(*)")
-          .eq("buyer_uuid", uuid)
-          .eq("product.product_type", "game");
+          .from("items")
+          .select("*")
+          .eq("owner_uuid", uuid)
+          .order("purchased_at", { ascending: false });
 
         if (error) throw error;
 
-        const games = data?.map(p => p.product) || [];
+        const games = data || [];
         
         if (games.length === 0) {
-          ownedContent.innerHTML = `
+          gamesContent.innerHTML = `
             <div class="empty-state">
               <div class="empty-icon">🎮</div>
               <h2>No games yet</h2>
@@ -1155,11 +1158,11 @@
           return;
         }
 
-        ownedContent.innerHTML = `<div class="owned-grid">${games.map(game => `
-          <div class="owned-card">
-            <img src="${escapeHtml(game.image_path)}" alt="${escapeHtml(game.title)}" class="owned-image" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect width=%22100%22 height=%22100%22 fill=%22%231e293b%22/></svg>'">
-            <div class="owned-info">
-              <div class="owned-title">${escapeHtml(game.title)}</div>
+        gamesContent.innerHTML = `<div class="games-grid">${games.map(game => `
+          <div class="game-card">
+            <img src="${escapeHtml(game.game_image)}" alt="${escapeHtml(game.game_title)}" class="game-image" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22  width=%22100%22 height=%22100%22><rect width=%22100%22 height=%22100%22 fill=%22%231e293b%22/></svg>'">
+            <div class="game-info">
+              <div class="game-title">${escapeHtml(game.game_title)}</div>
               <button class="play-btn" onclick="playGame('${escapeHtml(game.game_path)}')">▶ Play</button>
             </div>
           </div>
@@ -1167,7 +1170,7 @@
         
       } catch (err) {
         console.error(err);
-        ownedContent.innerHTML = `
+        gamesContent.innerHTML = `
           <div class="empty-state">
             <div class="empty-icon">⚠️</div>
             <h2>Error loading games</h2>
@@ -1181,7 +1184,7 @@
       window.location.href = gamePath;
     };
 
-    // SOLD ITEMS MODAL
+    // SOLD ITEMS MODAL - Physical Products Only
     window.openSoldModal = async function() {
       document.getElementById("soldModal").classList.add("show");
       await loadSoldItems();
@@ -1201,7 +1204,7 @@
           .select(`
             id,
             buyer:buyer_uuid(name),
-            product:product_id(title, price),
+            product:product_id(title, price, product_type),
             purchased_at
           `)
           .eq("seller_uuid", uuid)
@@ -1209,7 +1212,8 @@
 
         if (error) throw error;
 
-        const items = data || [];
+        // Filter for physical products only
+        const items = (data || []).filter(item => item.product?.product_type === 'physical');
         
         if (items.length === 0) {
           soldContent.innerHTML = `
@@ -1229,7 +1233,7 @@
               <div class="order-meta">Buyer: ${escapeHtml(item.buyer?.name || "Unknown")} • ${new Date(item.purchased_at).toLocaleDateString()}</div>
             </div>
             <div class="order-price">$${parseFloat(item.product?.price || 0).toFixed(2)}</div>
-            <button class="complete-btn" onclick="completeOrder(${item.id}, 'sold')">Complete</button>
+            <button class="complete-btn" onclick="completeOrder(${item.id})">Complete</button>
           </div>
         `).join("")}</div>`;
         
@@ -1245,18 +1249,42 @@
       }
     }
 
-    // PENDING ORDERS MODAL
-    window.openPendingModal = async function() {
-      document.getElementById("pendingModal").classList.add("show");
+    window.completeOrder = async function(purchaseId) {
+      if (!confirm("Mark this order as complete? This will finalize the sale.")) return;
+      
+      try {
+        // Delete the purchase record or update status to completed
+        const { error } = await supabase
+          .from("purchases")
+          .delete()
+          .eq("id", purchaseId);
+
+        if (error) throw error;
+
+        showToast("Order completed!", "success");
+        
+        // Refresh the modal and counts
+        await loadSoldItems();
+        await updateCounts();
+        
+      } catch (err) {
+        console.error(err);
+        showToast("Error completing order: " + err.message, "error");
+      }
+    };
+
+    // PENDING ORDERS MODAL - Uses purchases table (physical only)
+    window.openOrdersModal = async function() {
+      document.getElementById("ordersModal").classList.add("show");
       await loadPendingOrders();
     };
 
-    window.closePendingModal = function() {
-      document.getElementById("pendingModal").classList.remove("show");
+    window.closeOrdersModal = function() {
+      document.getElementById("ordersModal").classList.remove("show");
     };
 
     async function loadPendingOrders() {
-      const pendingContent = document.getElementById("pendingContent");
+      const ordersContent = document.getElementById("ordersContent");
       
       try {
         // Get physical products bought by current user that are pending
@@ -1276,7 +1304,7 @@
         const items = data || [];
         
         if (items.length === 0) {
-          pendingContent.innerHTML = `
+          ordersContent.innerHTML = `
             <div class="empty-state">
               <div class="empty-icon">📋</div>
               <h2>No pending orders</h2>
@@ -1286,7 +1314,7 @@
           return;
         }
 
-        pendingContent.innerHTML = `<div class="orders-list">${items.map(item => `
+        ordersContent.innerHTML = `<div class="orders-list">${items.map(item => `
           <div class="order-item">
             <div class="order-info">
               <div class="order-title">${escapeHtml(item.product?.title || "Unknown Product")}</div>
@@ -1299,7 +1327,7 @@
         
       } catch (err) {
         console.error(err);
-        pendingContent.innerHTML = `
+        ordersContent.innerHTML = `
           <div class="empty-state">
             <div class="empty-icon">⚠️</div>
             <h2>Error loading orders</h2>
@@ -1308,34 +1336,6 @@
         `;
       }
     }
-
-    window.completeOrder = async function(purchaseId, type) {
-      if (!confirm("Mark this order as complete? This will remove it from the system.")) return;
-      
-      try {
-        // Delete the purchase record completely
-        const { error } = await supabase
-          .from("purchases")
-          .delete()
-          .eq("id", purchaseId);
-
-        if (error) throw error;
-
-        showToast("Order completed!", "success");
-        
-        // Refresh the modal and counts
-        if (type === 'sold') {
-          await loadSoldItems();
-        } else {
-          await loadPendingOrders();
-        }
-        await updateCounts();
-        
-      } catch (err) {
-        console.error(err);
-        showToast("Error completing order: " + err.message, "error");
-      }
-    };
 
     window.buyProduct = async function(productId, price) {
       if (!confirm(`Buy this for $${price.toFixed(2)}?`)) return;
@@ -1378,16 +1378,16 @@
       if (e.target === document.getElementById("sellModal")) closeSellModal();
     });
     
-    document.getElementById("ownedModal")?.addEventListener("click", (e) => {
-      if (e.target === document.getElementById("ownedModal")) closeOwnedModal();
+    document.getElementById("gamesModal")?.addEventListener("click", (e) => {
+      if (e.target === document.getElementById("gamesModal")) closeGamesModal();
     });
 
     document.getElementById("soldModal")?.addEventListener("click", (e) => {
       if (e.target === document.getElementById("soldModal")) closeSoldModal();
     });
 
-    document.getElementById("pendingModal")?.addEventListener("click", (e) => {
-      if (e.target === document.getElementById("pendingModal")) closePendingModal();
+    document.getElementById("ordersModal")?.addEventListener("click", (e) => {
+      if (e.target === document.getElementById("ordersModal")) closeOrdersModal();
     });
   </script>
 </body>
