@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Marketplace</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #020617;
+      --panel: #0f172a;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --accent: #22c55e;
+      --accent-hover: #16a34a;
+      --border: #1e293b;
+      --input-bg: #1e293b;
+      --shadow: rgba(0, 0, 0, 0.5);
+      --danger: #ef4444;
+      --warning: #f59e0b;
+    }
+
+    html.light {
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --accent: #16a34a;
+      --accent-hover: #15803d;
+      --border: #e2e8f0;
+      --input-bg: #f1f5f9;
+      --shadow: rgba(0, 0, 0, 0.1);
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 30px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .balance-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 20px;
+      text-align: right;
+    }
+
+    .balance-label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .balance-amount {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .username {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 30px;
+    }
+
+    .actions-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .sell-btn, .owned-btn, .sold-btn, .pending-btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 15px 25px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      position: relative;
+    }
+
+    .sell-btn:hover, .owned-btn:hover, .sold-btn:hover, .pending-btn:hover {
+      background: var(--accent-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(34, 197, 94, 0.3);
+    }
+
+    .owned-btn, .sold-btn, .pending-btn {
+      background: var(--panel);
+      border: 2px solid var(--accent);
+      color: var(--text);
+    }
+
+    html.light .owned-btn, html.light .sold-btn, html.light .pending-btn {
+      background: var(--panel);
+      color: var(--text);
+    }
+
+    .badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: var(--danger);
+      color: white;
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 10px;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .requests-btn {
+      background: var(--panel);
+      color: var(--text);
+      border: 2px solid var(--accent);
+      border-radius: 12px;
+      padding: 12px 25px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: none;
+    }
+
+    .requests-btn:hover {
+      background: var(--accent);
+      color: white;
+    }
+
+    .requests-btn.show {
+      display: inline-block;
+    }
+
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 25px;
+    }
+
+    .product-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .product-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 40px var(--shadow);
+    }
+
+    .product-image {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      background: var(--bg);
+    }
+
+    .product-info {
+      padding: 20px;
+    }
+
+    .product-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .product-description {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 15px;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .product-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .product-price {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .buy-btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 25px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .buy-btn:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+
+    .buy-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .buy-btn.owned {
+      background: var(--text-muted);
+    }
+
+    .product-type {
+      display: inline-block;
+      background: var(--bg);
+      color: var(--text-muted);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .stock-badge {
+      display: inline-block;
+      background: var(--bg);
+      color: var(--accent);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      margin-left: 10px;
+    }
+
+    .out-of-stock {
+      display: inline-block;
+      background: var(--danger);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      margin-left: 10px;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 700px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .modal-title {
+      font-size: 1.5rem;
+      margin-bottom: 25px;
+      padding-right: 40px;
+    }
+
+    .type-selection {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .type-btn {
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 30px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .type-btn:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .type-btn.selected {
+      border-color: var(--accent);
+      background: rgba(34, 197, 94, 0.1);
+    }
+
+    .type-icon {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+
+    .type-label {
+      font-weight: 600;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-input, .form-textarea {
+      width: 100%;
+      padding: 15px;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+
+    .form-input:focus, .form-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .form-textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .instructions-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .instructions-title {
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: var(--accent);
+    }
+
+    .instructions-list {
+      list-style: none;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .instructions-list li {
+      margin-bottom: 8px;
+      padding-left: 20px;
+      position: relative;
+    }
+
+    .instructions-list li:before {
+      content: "→";
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 18px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .submit-btn:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 2rem;
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+    }
+
+    .close-btn:hover {
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .owned-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    .owned-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      text-align: center;
+    }
+
+    .owned-image {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+    }
+
+    .owned-info {
+      padding: 15px;
+    }
+
+    .owned-title {
+      font-weight: 600;
+      margin-bottom: 10px;
+      font-size: 0.95rem;
+    }
+
+    .play-btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .play-btn:hover {
+      background: var(--accent-hover);
+    }
+
+    /* Orders List Styles */
+    .orders-list {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .order-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .order-info {
+      flex: 1;
+    }
+
+    .order-title {
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 5px;
+    }
+
+    .order-meta {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .order-price {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-right: 20px;
+    }
+
+    .complete-btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .complete-btn:hover {
+      background: var(--accent-hover);
+    }
+
+    .pending-badge {
+      display: inline-block;
+      background: var(--warning);
+      color: black;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      margin-left: 10px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 15px 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px var(--shadow);
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 2000;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success {
+      border-color: var(--accent);
+    }
+
+    .toast.error {
+      border-color: var(--danger);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 768px) {
+      .header {
+        padding: 15px 20px;
+      }
+      
+      .container {
+        padding: 20px;
+      }
+      
+      .products-grid, .owned-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 15px;
+      }
+
+      .actions-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .btn-group {
+        justify-content: center;
+      }
+
+      .order-item {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+      }
+
+      .order-price {
+        margin-right: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="content"></div>
+  <div class="toast" id="toast"></div>
+
+  <!-- Sell Modal -->
+  <div class="modal-overlay" id="sellModal">
+    <div class="modal">
+      <button class="close-btn" onclick="closeSellModal()">×</button>
+      <h2 class="modal-title">Sell Product</h2>
+      
+      <div id="step1">
+        <p class="form-label" style="text-align: center; margin-bottom: 15px;">Select Product Type</p>
+        <div class="type-selection">
+          <div class="type-btn" onclick="selectType('game')">
+            <div class="type-icon">🎮</div>
+            <div class="type-label">Game</div>
+          </div>
+          <div class="type-btn" onclick="selectType('physical')">
+            <div class="type-icon">📦</div>
+            <div class="type-label">Physical Product</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="step2" style="display: none;">
+        <form id="sellForm" onsubmit="submitRequest(event)">
+          <div class="form-group">
+            <label class="form-label">Title *</label>
+            <input type="text" class="form-input" id="productTitle" required placeholder="Enter product title">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Price ($) *</label>
+            <input type="number" class="form-input" id="productPrice" required min="0.01" step="0.01" placeholder="0.00">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea class="form-textarea" id="productDescription" placeholder="Describe your product (optional)"></textarea>
+          </div>
+
+          <div id="gameFields" style="display: none;">
+            <div class="instructions-box">
+              <div class="instructions-title">Upload Instructions</div>
+              <ul class="instructions-list">
+                <li>Export your Scratch game as .sb3 file</li>
+                <li>Upload the .sb3 to Google Drive</li>
+                <li>Create a square icon image (PNG/JPG)</li>
+                <li>Upload icon to Google Drive</li>
+                <li>Paste both shareable links below</li>
+              </ul>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Game File Drive Link *</label>
+              <input type="url" class="form-input" id="gameLink" placeholder="https://drive.google.com/...">
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Icon Image Drive Link *</label>
+              <input type="url" class="form-input" id="iconLink" placeholder="https://drive.google.com/...">
+            </div>
+          </div>
+
+          <div id="physicalFields" style="display: none;">
+            <div class="form-group">
+              <label class="form-label">Image Link *</label>
+              <input type="url" class="form-input" id="physicalImageLink" required placeholder="https://example.com/image.jpg">
+              <div class="help-text">Direct link to product image</div>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Stock Quantity *</label>
+              <input type="number" class="form-input" id="physicalStock" required min="1" step="1" placeholder="How many available?">
+            </div>
+          </div>
+
+          <button type="submit" class="submit-btn" id="submitBtn">Request Upload</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Owned Items Modal -->
+  <div class="modal-overlay" id="ownedModal">
+    <div class="modal">
+      <button class="close-btn" onclick="closeOwnedModal()">×</button>
+      <h2 class="modal-title">My Games</h2>
+      <div id="ownedContent">
+        <div class="empty-state">
+          <div style="width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+          <p>Loading your games...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sold Items Modal -->
+  <div class="modal-overlay" id="soldModal">
+    <div class="modal">
+      <button class="close-btn" onclick="closeSoldModal()">×</button>
+      <h2 class="modal-title">Sold Items</h2>
+      <div id="soldContent">
+        <div class="empty-state">
+          <div style="width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+          <p>Loading sold items...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pending Orders Modal -->
+  <div class="modal-overlay" id="pendingModal">
+    <div class="modal">
+      <button class="close-btn" onclick="closePendingModal()">×</button>
+      <h2 class="modal-title">Pending Orders</h2>
+      <div id="pendingContent">
+        <div class="empty-state">
+          <div style="width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+          <p>Loading pending orders...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+    const supabase = createClient(
+      "https://mdymxbgwhauapvphscrr.supabase.co",
+      "sb_publishable_nOrq936I1SMh4v21KzE2og_tAEbcAzK"
+    );
+
+    function getCookie(name) {
+      const value = document.cookie.split("; ").find(r => r.startsWith(name + "="))?.split("=")[1];
+      return value ? decodeURIComponent(value) : null;
+    }
+
+    function applyTheme() {
+      if (getCookie("theme") === "light") {
+        document.documentElement.classList.add("light");
+      }
+    }
+    applyTheme();
+
+    const uuid = getCookie("uuid");
+    const username = getCookie("username");
+    const content = document.getElementById("content");
+    
+    let currentUser = null;
+    let selectedType = null;
+    let products = [];
+    let myPurchases = [];
+    let myGames = [];
+    let soldItemsCount = 0;
+    let pendingOrdersCount = 0;
+
+    if (!uuid || !username) {
+      content.innerHTML = `
+        <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center;">
+          <div style="background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 50px; text-align: center;">
+            <div style="font-size: 4rem; margin-bottom: 20px;">🏪</div>
+            <h1>Access Required</h1>
+            <p style="color: var(--text-muted); margin: 15px 0;">Please log in to access the Marketplace.</p>
+            <a href="/login.html" style="display: inline-block; padding: 14px 32px; background: var(--accent); color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">Sign In</a>
+          </div>
+        </div>
+      `;
+    } else {
+      content.innerHTML = `
+        <div class="header">
+          <div class="logo">🏪 Marketplace</div>
+          <div class="user-info">
+            <div class="balance-box">
+              <div class="balance-label">Balance</div>
+              <div class="balance-amount" id="balanceDisplay">$0.00</div>
+            </div>
+            <div class="username" id="usernameDisplay">${escapeHtml(username)}</div>
+          </div>
+        </div>
+        
+        <div class="container">
+          <div class="actions-bar">
+            <div class="btn-group">
+              <button class="sell-btn" onclick="openSellModal()">Sell</button>
+              <button class="owned-btn" onclick="openOwnedModal()">My Games</button>
+              <button class="sold-btn" onclick="openSoldModal()" id="soldBtn">
+                Sold
+                <span class="badge" id="soldBadge" style="display: none;">0</span>
+              </button>
+              <button class="pending-btn" onclick="openPendingModal()" id="pendingBtn">
+                Orders
+                <span class="badge" id="pendingBadge" style="display: none;">0</span>
+              </button>
+            </div>
+            <a href="/tools/requests.html" class="requests-btn" id="requestsBtn">Requests</a>
+          </div>
+          
+          <div class="products-grid" id="productsGrid"></div>
+        </div>
+      `;
+      
+      loadData();
+    }
+
+    async function loadData() {
+      try {
+        const { data: userData, error: userError } = await supabase
+          .from("users")
+          .select("uuid, username, balance, rank")
+          .eq("uuid", uuid)
+          .single();
+
+        if (userError || !userData) {
+          window.location.href = "/login.html";
+          return;
+        }
+
+        currentUser = userData;
+        document.getElementById("balanceDisplay").textContent = "$" + (parseFloat(userData.balance) || 0).toFixed(2);
+        
+        const userRank = (userData.rank || "").toLowerCase();
+        if (userRank === "manager" || userRank === "owner") {
+          document.getElementById("requestsBtn").classList.add("show");
+        }
+
+        await loadProducts();
+        await loadMyPurchases();
+        await updateCounts();
+
+      } catch (err) {
+        console.error(err);
+        showToast("Error loading marketplace", "error");
+      }
+    }
+
+    async function updateCounts() {
+      // Get sold items count (physical products sold by user that are pending)
+      const { count: soldCount, error: soldError } = await supabase
+        .from("purchases")
+        .select("*", { count: "exact", head: true })
+        .eq("seller_uuid", uuid)
+        .eq("status", "pending");
+
+      if (!soldError && soldCount > 0) {
+        soldItemsCount = soldCount;
+        document.getElementById("soldBadge").textContent = soldCount;
+        document.getElementById("soldBadge").style.display = "block";
+      }
+
+      // Get pending orders count (physical products bought by user that are pending)
+      const { count: pendingCount, error: pendingError } = await supabase
+        .from("purchases")
+        .select("*", { count: "exact", head: true })
+        .eq("buyer_uuid", uuid)
+        .eq("status", "pending");
+
+      if (!pendingError && pendingCount > 0) {
+        pendingOrdersCount = pendingCount;
+        document.getElementById("pendingBadge").textContent = pendingCount;
+        document.getElementById("pendingBadge").style.display = "block";
+      }
+    }
+
+    async function loadProducts() {
+      const { data, error } = await supabase
+        .from("marketplace")
+        .select("*, seller:seller_uuid(name)")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      products = data || [];
+      renderProducts();
+    }
+
+    async function loadMyPurchases() {
+      const { data, error } = await supabase
+        .from("purchases")
+        .select("product_id, product:product_id(*)")
+        .eq("buyer_uuid", uuid);
+
+      if (!error && data) {
+        myPurchases = data.map(p => p.product_id);
+        myGames = data.filter(p => p.product?.product_type === "game").map(p => p.product);
+      }
+      renderProducts();
+    }
+
+    function renderProducts() {
+      const grid = document.getElementById("productsGrid");
+      
+      if (products.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-state" style="grid-column: 1 / -1;">
+            <div class="empty-icon">📭</div>
+            <h2>No products available</h2>
+            <p>Be the first to sell something!</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = products.map(product => {
+        const isMine = product.seller_uuid === uuid;
+        const isOwned = myPurchases.includes(product.id);
+        const isGame = product.product_type === "game";
+        const inStock = isGame || product.stock > 0;
+        
+        let buttonText = "Buy";
+        let buttonClass = "buy-btn";
+        let buttonDisabled = "";
+        let buttonAction = `onclick="buyProduct(${product.id}, ${product.price})"`;
+        
+        if (isMine) {
+          buttonText = "Yours";
+          buttonClass = "buy-btn owned";
+          buttonDisabled = "disabled";
+          buttonAction = "";
+        } else if (isOwned && isGame) {
+          buttonText = "Owned";
+          buttonClass = "buy-btn owned";
+          buttonDisabled = "disabled";
+          buttonAction = "";
+        } else if (!inStock) {
+          buttonText = "Out of Stock";
+          buttonClass = "buy-btn owned";
+          buttonDisabled = "disabled";
+          buttonAction = "";
+        }
+
+        let stockDisplay = "";
+        if (isGame) {
+          stockDisplay = `<span class="stock-badge">∞ infinite</span>`;
+        } else if (product.stock > 0) {
+          stockDisplay = `<span class="stock-badge">${product.stock} in stock</span>`;
+        } else {
+          stockDisplay = `<span class="out-of-stock">out of stock</span>`;
+        }
+
+        return `
+          <div class="product-card">
+            <img src="${escapeHtml(product.image_path)}" alt="${escapeHtml(product.title)}" class="product-image" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect width=%22100%22 height=%22100%22 fill=%22%231e293b%22/><text x=%2250%22 y=%2250%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22 font-size=%2214%22>No Image</text></svg>'">
+            <div class="product-info">
+              <div>
+                <span class="product-type">${product.product_type}</span>
+                ${stockDisplay}
+              </div>
+              <h3 class="product-title">${escapeHtml(product.title)}</h3>
+              <p class="product-description">${escapeHtml(product.description) || "No description"}</p>
+              <div class="product-footer">
+                <span class="product-price">$${parseFloat(product.price).toFixed(2)}</span>
+                <button class="${buttonClass}" ${buttonDisabled} ${buttonAction}>${buttonText}</button>
+              </div>
+              <div style="margin-top: 10px; font-size: 0.8rem; color: var(--text-muted);">
+                by ${escapeHtml(product.seller?.name || "Unknown")}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    window.openSellModal = function() {
+      document.getElementById("sellModal").classList.add("show");
+      document.getElementById("step1").style.display = "block";
+      document.getElementById("step2").style.display = "none";
+      selectedType = null;
+      document.querySelectorAll(".type-btn").forEach(btn => btn.classList.remove("selected"));
+      document.getElementById("sellForm").reset();
+    };
+
+    window.closeSellModal = function() {
+      document.getElementById("sellModal").classList.remove("show");
+      selectedType = null;
+    };
+
+    window.selectType = function(type) {
+      selectedType = type;
+      document.querySelectorAll(".type-btn").forEach((btn, index) => {
+        btn.classList.toggle("selected", 
+          (type === "game" && index === 0) || (type === "physical" && index === 1)
+        );
+      });
+      
+      setTimeout(() => {
+        document.getElementById("step1").style.display = "none";
+        document.getElementById("step2").style.display = "block";
+        
+        document.getElementById("gameFields").style.display = type === "game" ? "block" : "none";
+        document.getElementById("physicalFields").style.display = type === "physical" ? "block" : "none";
+        
+        document.getElementById("gameLink").required = type === "game";
+        document.getElementById("iconLink").required = type === "game";
+        document.getElementById("physicalImageLink").required = type === "physical";
+        document.getElementById("physicalStock").required = type === "physical";
+      }, 200);
+    };
+
+    window.submitRequest = async function(e) {
+      e.preventDefault();
+      
+      const title = document.getElementById("productTitle").value.trim();
+      const price = parseFloat(document.getElementById("productPrice").value);
+      const description = document.getElementById("productDescription").value.trim();
+      
+      let driveLink = null;
+      let stock = -1;
+      
+      if (selectedType === "game") {
+        const gameLink = document.getElementById("gameLink").value.trim();
+        const iconLink = document.getElementById("iconLink").value.trim();
+        driveLink = JSON.stringify({ game: gameLink, icon: iconLink });
+        stock = -1;
+      } else {
+        const imageLink = document.getElementById("physicalImageLink").value.trim();
+        const physicalStock = parseInt(document.getElementById("physicalStock").value);
+        driveLink = JSON.stringify({ image: imageLink, stock: physicalStock });
+        stock = physicalStock;
+      }
+      
+      const submitBtn = document.getElementById("submitBtn");
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Submitting...";
+
+      try {
+        const { error } = await supabase.from("requests").insert({
+          seller_uuid: uuid,
+          title: title,
+          price: price,
+          description: description || null,
+          product_type: selectedType,
+          drive_link: driveLink,
+          status: "pending"
+        });
+
+        if (error) throw error;
+
+        showToast("Request submitted for review!", "success");
+        closeSellModal();
+        
+      } catch (err) {
+        console.error(err);
+        showToast("Failed to submit request: " + err.message, "error");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Request Upload";
+      }
+    };
+
+    window.openOwnedModal = async function() {
+      document.getElementById("ownedModal").classList.add("show");
+      await loadOwnedGames();
+    };
+
+    window.closeOwnedModal = function() {
+      document.getElementById("ownedModal").classList.remove("show");
+    };
+
+    async function loadOwnedGames() {
+      const ownedContent = document.getElementById("ownedContent");
+      
+      try {
+        const { data, error } = await supabase
+          .from("purchases")
+          .select("product:product_id(*)")
+          .eq("buyer_uuid", uuid)
+          .eq("product.product_type", "game");
+
+        if (error) throw error;
+
+        const games = data?.map(p => p.product) || [];
+        
+        if (games.length === 0) {
+          ownedContent.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-icon">🎮</div>
+              <h2>No games yet</h2>
+              <p>Buy some games from the marketplace!</p>
+            </div>
+          `;
+          return;
+        }
+
+        ownedContent.innerHTML = `<div class="owned-grid">${games.map(game => `
+          <div class="owned-card">
+            <img src="${escapeHtml(game.image_path)}" alt="${escapeHtml(game.title)}" class="owned-image" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect width=%22100%22 height=%22100%22 fill=%22%231e293b%22/></svg>'">
+            <div class="owned-info">
+              <div class="owned-title">${escapeHtml(game.title)}</div>
+              <button class="play-btn" onclick="playGame('${escapeHtml(game.game_path)}')">▶ Play</button>
+            </div>
+          </div>
+        `).join("")}</div>`;
+        
+      } catch (err) {
+        console.error(err);
+        ownedContent.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">⚠️</div>
+            <h2>Error loading games</h2>
+            <p>${err.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    window.playGame = function(gamePath) {
+      window.location.href = gamePath;
+    };
+
+    // SOLD ITEMS MODAL
+    window.openSoldModal = async function() {
+      document.getElementById("soldModal").classList.add("show");
+      await loadSoldItems();
+    };
+
+    window.closeSoldModal = function() {
+      document.getElementById("soldModal").classList.remove("show");
+    };
+
+    async function loadSoldItems() {
+      const soldContent = document.getElementById("soldContent");
+      
+      try {
+        // Get physical products sold by current user that are pending
+        const { data, error } = await supabase
+          .from("purchases")
+          .select(`
+            id,
+            buyer:buyer_uuid(name),
+            product:product_id(title, price),
+            purchased_at
+          `)
+          .eq("seller_uuid", uuid)
+          .eq("status", "pending");
+
+        if (error) throw error;
+
+        const items = data || [];
+        
+        if (items.length === 0) {
+          soldContent.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-icon">📦</div>
+              <h2>No pending sales</h2>
+              <p>When someone buys your physical products, they'll appear here.</p>
+            </div>
+          `;
+          return;
+        }
+
+        soldContent.innerHTML = `<div class="orders-list">${items.map(item => `
+          <div class="order-item">
+            <div class="order-info">
+              <div class="order-title">${escapeHtml(item.product?.title || "Unknown Product")}</div>
+              <div class="order-meta">Buyer: ${escapeHtml(item.buyer?.name || "Unknown")} • ${new Date(item.purchased_at).toLocaleDateString()}</div>
+            </div>
+            <div class="order-price">$${parseFloat(item.product?.price || 0).toFixed(2)}</div>
+            <button class="complete-btn" onclick="completeOrder(${item.id}, 'sold')">Complete</button>
+          </div>
+        `).join("")}</div>`;
+        
+      } catch (err) {
+        console.error(err);
+        soldContent.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">⚠️</div>
+            <h2>Error loading sales</h2>
+            <p>${err.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    // PENDING ORDERS MODAL
+    window.openPendingModal = async function() {
+      document.getElementById("pendingModal").classList.add("show");
+      await loadPendingOrders();
+    };
+
+    window.closePendingModal = function() {
+      document.getElementById("pendingModal").classList.remove("show");
+    };
+
+    async function loadPendingOrders() {
+      const pendingContent = document.getElementById("pendingContent");
+      
+      try {
+        // Get physical products bought by current user that are pending
+        const { data, error } = await supabase
+          .from("purchases")
+          .select(`
+            id,
+            seller:seller_uuid(name),
+            product:product_id(title, price),
+            purchased_at
+          `)
+          .eq("buyer_uuid", uuid)
+          .eq("status", "pending");
+
+        if (error) throw error;
+
+        const items = data || [];
+        
+        if (items.length === 0) {
+          pendingContent.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-icon">📋</div>
+              <h2>No pending orders</h2>
+              <p>When you buy physical products, they'll appear here until the seller completes the order.</p>
+            </div>
+          `;
+          return;
+        }
+
+        pendingContent.innerHTML = `<div class="orders-list">${items.map(item => `
+          <div class="order-item">
+            <div class="order-info">
+              <div class="order-title">${escapeHtml(item.product?.title || "Unknown Product")}</div>
+              <div class="order-meta">Seller: ${escapeHtml(item.seller?.name || "Unknown")} • ${new Date(item.purchased_at).toLocaleDateString()}</div>
+            </div>
+            <div class="order-price">$${parseFloat(item.product?.price || 0).toFixed(2)}</div>
+            <span class="pending-badge">Pending</span>
+          </div>
+        `).join("")}</div>`;
+        
+      } catch (err) {
+        console.error(err);
+        pendingContent.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">⚠️</div>
+            <h2>Error loading orders</h2>
+            <p>${err.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    window.completeOrder = async function(purchaseId, type) {
+      if (!confirm("Mark this order as complete? This will remove it from the system.")) return;
+      
+      try {
+        // Delete the purchase record completely
+        const { error } = await supabase
+          .from("purchases")
+          .delete()
+          .eq("id", purchaseId);
+
+        if (error) throw error;
+
+        showToast("Order completed!", "success");
+        
+        // Refresh the modal and counts
+        if (type === 'sold') {
+          await loadSoldItems();
+        } else {
+          await loadPendingOrders();
+        }
+        await updateCounts();
+        
+      } catch (err) {
+        console.error(err);
+        showToast("Error completing order: " + err.message, "error");
+      }
+    };
+
+    window.buyProduct = async function(productId, price) {
+      if (!confirm(`Buy this for $${price.toFixed(2)}?`)) return;
+      
+      try {
+        const { data, error } = await supabase.rpc("purchase_product", {
+          p_buyer_uuid: uuid,
+          p_product_id: productId
+        });
+
+        if (error || !data) {
+          throw new Error(error?.message || "Purchase failed");
+        }
+
+        showToast("Purchase successful!", "success");
+        await loadData();
+        
+      } catch (err) {
+        console.error(err);
+        showToast(err.message || "Purchase failed", "error");
+      }
+    };
+
+    function escapeHtml(text) {
+      if (!text) return "";
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function showToast(message, type) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.className = `toast ${type}`;
+      setTimeout(() => toast.classList.add("show"), 10);
+      setTimeout(() => toast.classList.remove("show"), 3000);
+    }
+
+    document.getElementById("sellModal")?.addEventListener("click", (e) => {
+      if (e.target === document.getElementById("sellModal")) closeSellModal();
+    });
+    
+    document.getElementById("ownedModal")?.addEventListener("click", (e) => {
+      if (e.target === document.getElementById("ownedModal")) closeOwnedModal();
+    });
+
+    document.getElementById("soldModal")?.addEventListener("click", (e) => {
+      if (e.target === document.getElementById("soldModal")) closeSoldModal();
+    });
+
+    document.getElementById("pendingModal")?.addEventListener("click", (e) => {
+      if (e.target === document.getElementById("pendingModal")) closePendingModal();
+    });
+  </script>
+</body>
+</html>

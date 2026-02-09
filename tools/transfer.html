@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>USD Transfer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #020617;
+      --panel: #0f172a;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --accent: #22c55e;
+      --accent-hover: #16a34a;
+      --border: #1e293b;
+      --input-bg: #1e293b;
+      --shadow: rgba(0, 0, 0, 0.5);
+      --numpad-bg: #0f172a;
+      --numpad-hover: #1e293b;
+      --preview-gray: #64748b;
+    }
+
+    html.light {
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --accent: #16a34a;
+      --accent-hover: #15803d;
+      --border: #e2e8f0;
+      --input-bg: #f1f5f9;
+      --shadow: rgba(0, 0, 0, 0.1);
+      --numpad-bg: #f1f5f9;
+      --numpad-hover: #e2e8f0;
+      --preview-gray: #94a3b8;
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    /* Login Required */
+    .login-required {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 50px 40px;
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 10px 40px var(--shadow);
+    }
+
+    .login-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+    }
+
+    .login-btn {
+      display: inline-block;
+      padding: 14px 32px;
+      background: var(--accent);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      margin-top: 15px;
+    }
+
+    /* Main App */
+    #app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+      padding-top: 20px;
+    }
+
+    .header h1 {
+      font-size: 1.5rem;
+      margin-bottom: 5px;
+    }
+
+    .balance-display {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 15px 30px;
+      margin-bottom: 10px;
+    }
+
+    .balance-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .balance-amount {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    /* Transfer Container */
+    .transfer-container {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 10px 40px var(--shadow);
+    }
+
+    /* Amount Display */
+    .amount-display {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 20px;
+      background: var(--bg);
+      border-radius: 16px;
+      border: 2px solid var(--border);
+    }
+
+    .amount-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .amount-value {
+      font-size: 3.5rem;
+      font-weight: 700;
+      font-family: 'SF Mono', Monaco, monospace;
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 2px;
+    }
+
+    .amount-main {
+      color: var(--text);
+      min-width: 1ch;
+    }
+
+    .amount-decimal {
+      color: var(--preview-gray);
+      font-size: 0.6em;
+    }
+
+    /* Recipient Input */
+    .recipient-section {
+      margin-bottom: 25px;
+    }
+
+    .recipient-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .recipient-input {
+      width: 100%;
+      padding: 15px;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 1.1rem;
+      transition: border-color 0.2s;
+    }
+
+    .recipient-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .recipient-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    /* Numpad */
+    .numpad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .numpad-btn {
+      aspect-ratio: 1.2;
+      background: var(--numpad-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      color: var(--text);
+      font-size: 1.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+    }
+
+    .numpad-btn:hover {
+      background: var(--numpad-hover);
+      transform: translateY(-2px);
+    }
+
+    .numpad-btn:active {
+      transform: translateY(0) scale(0.95);
+    }
+
+    .numpad-btn.action {
+      background: var(--accent);
+      color: white;
+      font-size: 1.4rem;
+    }
+
+    .numpad-btn.action:hover {
+      background: var(--accent-hover);
+    }
+
+    .numpad-btn.delete {
+      background: #ef4444;
+      color: white;
+      font-size: 1.4rem;
+    }
+
+    .numpad-btn.delete:hover {
+      background: #dc2626;
+    }
+
+    /* Send Button */
+    .send-btn {
+      width: 100%;
+      padding: 18px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 16px;
+      font-size: 1.3rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .send-btn:hover:not(:disabled) {
+      background: var(--accent-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(34, 197, 94, 0.3);
+    }
+
+    .send-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .send-btn.loading {
+      position: relative;
+      color: transparent;
+    }
+
+    .send-btn.loading::after {
+      content: "";
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      top: 50%;
+      left: 50%;
+      margin-left: -10px;
+      margin-top: -10px;
+      border: 2px solid #ffffff;
+      border-radius: 50%;
+      border-top-color: transparent;
+      animation: spinner 0.8s linear infinite;
+    }
+
+    @keyframes spinner {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Recent Transfers */
+    .recent-section {
+      margin-top: 30px;
+      max-width: 400px;
+      width: 100%;
+    }
+
+    .recent-title {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .recent-item {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .recent-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .recent-name {
+      font-weight: 600;
+    }
+
+    .recent-date {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .recent-amount {
+      font-weight: 700;
+      color: var(--accent);
+      font-size: 1.1rem;
+    }
+
+    .recent-amount.negative {
+      color: #ef4444;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 15px 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px var(--shadow);
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success {
+      border-color: var(--accent);
+    }
+
+    .toast.error {
+      border-color: #ef4444;
+    }
+
+    @media (max-width: 480px) {
+      .transfer-container {
+        padding: 20px;
+      }
+
+      .amount-value {
+        font-size: 2.8rem;
+      }
+
+      .numpad-btn {
+        font-size: 1.5rem;
+        border-radius: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="content"></div>
+
+  <div class="toast" id="toast"></div>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+    // Use your stored credentials
+    const supabase = createClient(
+      "https://mdymxbgwhauapvphscrr.supabase.co",
+      "sb_publishable_nOrq936I1SMh4v21KzE2og_tAEbcAzK"
+    );
+
+    function getCookie(name) {
+      return document.cookie.split("; ").find(r => r.startsWith(name + "="))?.split("=")[1] || null;
+    }
+
+    function applyTheme() {
+      if (getCookie("theme") === "light") {
+        document.documentElement.classList.add("light");
+      } else {
+        document.documentElement.classList.remove("light");
+      }
+    }
+
+    applyTheme();
+
+    const uuid = getCookie("uuid");
+    const username = getCookie("username");
+    const content = document.getElementById("content");
+
+    let currentUser = null;
+    let balance = 0;
+    let amount = "0";
+    let hasDecimal = false;
+    let decimalPlaces = 0;
+    let isProcessing = false;
+
+    if (!uuid || !username) {
+      content.innerHTML = `
+        <div class="login-required">
+          <div class="login-card">
+            <div class="login-icon">💵</div>
+            <h1>Access Required</h1>
+            <p>Please log in to access USD Transfer.</p>
+            <a href="/login.html" class="login-btn">Sign In</a>
+          </div>
+        </div>
+      `;
+    } else {
+      content.innerHTML = `
+        <div id="app">
+          <div class="header">
+            <div class="balance-display">
+              <div class="balance-label">Your Balance</div>
+              <div class="balance-amount" id="balanceDisplay">$0.00</div>
+            </div>
+          </div>
+
+          <div class="transfer-container">
+            <div class="amount-display">
+              <div class="amount-label">Amount to Send</div>
+              <div class="amount-value">
+                <span class="amount-main" id="amountMain">0</span>
+                <span class="amount-decimal" id="amountDecimal">.00</span>
+              </div>
+            </div>
+
+            <div class="recipient-section">
+              <label class="recipient-label">Send to (Username or Phone)</label>
+              <input type="text" class="recipient-input" id="recipientInput" placeholder="Enter recipient">
+            </div>
+
+            <div class="numpad">
+              <button class="numpad-btn" onclick="pressNum('1')">1</button>
+              <button class="numpad-btn" onclick="pressNum('2')">2</button>
+              <button class="numpad-btn" onclick="pressNum('3')">3</button>
+              <button class="numpad-btn" onclick="pressNum('4')">4</button>
+              <button class="numpad-btn" onclick="pressNum('5')">5</button>
+              <button class="numpad-btn" onclick="pressNum('6')">6</button>
+              <button class="numpad-btn" onclick="pressNum('7')">7</button>
+              <button class="numpad-btn" onclick="pressNum('8')">8</button>
+              <button class="numpad-btn" onclick="pressNum('9')">9</button>
+              <button class="numpad-btn" onclick="pressDecimal()">.</button>
+              <button class="numpad-btn" onclick="pressNum('0')">0</button>
+              <button class="numpad-btn delete" onclick="pressDelete()">⌫</button>
+            </div>
+
+            <button class="send-btn" id="sendBtn" onclick="sendMoney()" disabled>Send Money</button>
+          </div>
+
+          <div class="recent-section" id="recentSection" style="display: none;">
+            <div class="recent-title">Recent Transfers</div>
+            <div id="recentList"></div>
+          </div>
+        </div>
+      `;
+
+      loadData();
+    }
+
+    async function loadData() {
+      try {
+        const { data: userData, error: userError } = await supabase
+          .from("users")
+          .select("uuid, username, name, balance")
+          .eq("uuid", uuid)
+          .single();
+
+        if (userError || !userData) {
+          content.innerHTML = `
+            <div class="login-required">
+              <div class="login-card">
+                <div class="login-icon">⚠️</div>
+                <h1>Session Expired</h1>
+                <a href="/login.html" class="login-btn">Sign In</a>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        currentUser = userData;
+        balance = parseFloat(userData.balance) || 0;
+        updateBalanceDisplay();
+        loadRecentTransfers();
+
+      } catch (err) {
+        console.error(err);
+        showToast("Error loading account", "error");
+      }
+    }
+
+    function updateBalanceDisplay() {
+      document.getElementById('balanceDisplay').textContent = '$' + balance.toFixed(2);
+    }
+
+    function updateAmountDisplay() {
+      const mainEl = document.getElementById('amountMain');
+      const decimalEl = document.getElementById('amountDecimal');
+      
+      if (amount === "0" && !hasDecimal) {
+        mainEl.textContent = "0";
+        decimalEl.textContent = ".00";
+        decimalEl.className = "amount-decimal";
+      } else if (hasDecimal) {
+        const parts = amount.split('.');
+        mainEl.textContent = parts[0] || "0";
+        let dec = parts[1] || "";
+        while (dec.length < 2) dec += "0";
+        decimalEl.textContent = "." + dec.substring(0, 2);
+        decimalEl.className = "amount-decimal";
+      } else {
+        mainEl.textContent = amount;
+        decimalEl.textContent = ".00";
+        decimalEl.className = "amount-decimal";
+      }
+
+      // Enable/disable send button
+      const recipient = document.getElementById('recipientInput')?.value.trim();
+      const sendBtn = document.getElementById('sendBtn');
+      const currentAmount = parseFloat(amount) || 0;
+      
+      if (sendBtn && !isProcessing) {
+        sendBtn.disabled = currentAmount <= 0 || currentAmount > balance || !recipient;
+      }
+    }
+
+    window.pressNum = function(num) {
+      if (hasDecimal && decimalPlaces >= 2) return;
+      
+      if (hasDecimal) {
+        decimalPlaces++;
+        amount += num;
+      } else {
+        if (amount === "0") {
+          amount = num;
+        } else {
+          amount += num;
+        }
+      }
+      
+      updateAmountDisplay();
+    };
+
+    window.pressDecimal = function() {
+      if (!hasDecimal) {
+        hasDecimal = true;
+        amount += ".";
+        updateAmountDisplay();
+      }
+    };
+
+    window.pressDelete = function() {
+      if (amount.length <= 1) {
+        amount = "0";
+        hasDecimal = false;
+        decimalPlaces = 0;
+      } else {
+        if (hasDecimal && amount.endsWith('.')) {
+          hasDecimal = false;
+          decimalPlaces = 0;
+        } else if (hasDecimal) {
+          decimalPlaces--;
+        }
+        amount = amount.slice(0, -1);
+      }
+      updateAmountDisplay();
+    };
+
+    window.sendMoney = async function() {
+      if (isProcessing) return;
+      
+      const recipient = document.getElementById('recipientInput').value.trim();
+      const sendAmount = parseFloat(amount);
+      
+      if (!recipient || sendAmount <= 0 || sendAmount > balance) {
+        showToast("Invalid amount or recipient", "error");
+        return;
+      }
+
+      // Prevent double-clicking
+      isProcessing = true;
+      const sendBtn = document.getElementById('sendBtn');
+      sendBtn.disabled = true;
+      sendBtn.classList.add('loading');
+
+      try {
+        // Find recipient first
+        const { data: recipientData, error: recipientError } = await supabase
+          .from("users")
+          .select("uuid, username, balance")
+          .or(`username.eq.${recipient},phone.eq.${recipient}`)
+          .single();
+
+        if (recipientError || !recipientData) {
+          showToast("Recipient not found", "error");
+          isProcessing = false;
+          sendBtn.classList.remove('loading');
+          updateAmountDisplay();
+          return;
+        }
+
+        if (recipientData.uuid === uuid) {
+          showToast("Cannot send to yourself", "error");
+          isProcessing = false;
+          sendBtn.classList.remove('loading');
+          updateAmountDisplay();
+          return;
+        }
+
+        // CRITICAL FIX: Use RPC call for atomic transaction
+        // This calls a Supabase database function that handles both updates in one transaction
+        const { data: result, error: rpcError } = await supabase.rpc('transfer_funds', {
+          sender_uuid: uuid,
+          recipient_uuid: recipientData.uuid,
+          transfer_amount: sendAmount
+        });
+
+        if (rpcError) {
+          console.error("RPC Error:", rpcError);
+          
+          // Fallback: Manual transaction with better error handling
+          const success = await manualTransfer(uuid, recipientData.uuid, sendAmount, recipientData.balance);
+          
+          if (!success) {
+            throw new Error("Transfer failed");
+          }
+        }
+
+        // Record the transfer in history (separate from the balance update)
+        const { error: historyError } = await supabase.from("transfers").insert({
+          from_uuid: uuid,
+          to_uuid: recipientData.uuid,
+          amount: sendAmount,
+          created_at: new Date().toISOString()
+        });
+
+        if (historyError) {
+          console.error("History error:", historyError);
+          // Don't fail the whole transaction if history fails, just log it
+        }
+
+        // Update local state only after successful DB update
+        balance -= sendAmount;
+        updateBalanceDisplay();
+        
+        // Reset form
+        amount = "0";
+        hasDecimal = false;
+        decimalPlaces = 0;
+        document.getElementById('recipientInput').value = '';
+        updateAmountDisplay();
+
+        showToast(`Sent $${sendAmount.toFixed(2)} to ${recipientData.username}`, "success");
+        loadRecentTransfers();
+
+      } catch (err) {
+        console.error("Transfer error:", err);
+        showToast("Transfer failed: " + (err.message || "Unknown error"), "error");
+        
+        // Reload balance to ensure UI is in sync with DB
+        await loadData();
+      } finally {
+        isProcessing = false;
+        sendBtn.classList.remove('loading');
+        updateAmountDisplay();
+      }
+    };
+
+    // Fallback manual transfer with verification
+    async function manualTransfer(senderUuid, recipientUuid, amount, recipientCurrentBalance) {
+      try {
+        // Step 1: Verify sender still has sufficient balance (prevent race conditions)
+        const { data: senderData, error: senderCheckError } = await supabase
+          .from("users")
+          .select("balance")
+          .eq("uuid", senderUuid)
+          .single();
+
+        if (senderCheckError || !senderData) {
+          console.error("Sender check failed:", senderCheckError);
+          return false;
+        }
+
+        const currentSenderBalance = parseFloat(senderData.balance) || 0;
+        
+        if (currentSenderBalance < amount) {
+          console.error("Insufficient balance");
+          return false;
+        }
+
+        // Step 2: Update sender (deduct)
+        const { error: senderUpdateError } = await supabase
+          .from("users")
+          .update({ balance: currentSenderBalance - amount })
+          .eq("uuid", senderUuid)
+          .eq("balance", currentSenderBalance); // Optimistic locking
+
+        if (senderUpdateError) {
+          console.error("Sender update failed:", senderUpdateError);
+          return false;
+        }
+
+        // Step 3: Update recipient (add)
+        const newRecipientBalance = (parseFloat(recipientCurrentBalance) || 0) + amount;
+        
+        const { error: recipientUpdateError } = await supabase
+          .from("users")
+          .update({ balance: newRecipientBalance })
+          .eq("uuid", recipientUuid);
+
+        if (recipientUpdateError) {
+          console.error("Recipient update failed:", recipientUpdateError);
+          // CRITICAL: Attempt to rollback sender's deduction
+          await supabase
+            .from("users")
+            .update({ balance: currentSenderBalance })
+            .eq("uuid", senderUuid);
+          
+          return false;
+        }
+
+        return true;
+      } catch (err) {
+        console.error("Manual transfer error:", err);
+        return false;
+      }
+    }
+
+    async function loadRecentTransfers() {
+      const { data: transfers, error } = await supabase
+        .from("transfers")
+        .select("*, from:from_uuid(username), to:to_uuid(username)")
+        .or(`from_uuid.eq.${uuid},to_uuid.eq.${uuid}`)
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+      if (error || !transfers?.length) return;
+
+      const recentSection = document.getElementById('recentSection');
+      const recentList = document.getElementById('recentList');
+      
+      recentSection.style.display = 'block';
+      recentList.innerHTML = '';
+
+      transfers.forEach(t => {
+        const isSender = t.from_uuid === uuid;
+        const otherPerson = isSender ? t.to?.username : t.from?.username;
+        const amountClass = isSender ? 'recent-amount negative' : 'recent-amount';
+        const sign = isSender ? '-' : '+';
+        
+        const div = document.createElement('div');
+        div.className = 'recent-item';
+        div.innerHTML = `
+          <div class="recent-info">
+            <span class="recent-name">${isSender ? 'To' : 'From'}: ${otherPerson}</span>
+            <span class="recent-date">${new Date(t.created_at).toLocaleDateString()}</span>
+          </div>
+          <span class="${amountClass}">${sign}$${parseFloat(t.amount).toFixed(2)}</span>
+        `;
+        recentList.appendChild(div);
+      });
+    }
+
+    function showToast(message, type) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = `toast ${type}`;
+      setTimeout(() => toast.classList.add('show'), 10);
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // Update send button when recipient changes
+    document.addEventListener('input', (e) => {
+      if (e.target.id === 'recipientInput') {
+        updateAmountDisplay();
+      }
+    });
+  </script>
+</body>
+</html>
