@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Betting</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #020617;
+      --panel: #0f172a;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --accent: #8b5cf6;
+      --accent-hover: #7c3aed;
+      --border: #1e293b;
+      --input-bg: #1e293b;
+      --shadow: rgba(0, 0, 0, 0.5);
+      --success: #22c55e;
+      --error: #ef4444;
+      --money: #22c55e;
+    }
+
+    html.light {
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --accent: #8b5cf6;
+      --accent-hover: #7c3aed;
+      --border: #e2e8f0;
+      --input-bg: #f1f5f9;
+      --shadow: rgba(0, 0, 0, 0.1);
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    /* Login Required */
+    .login-required {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 50px 40px;
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 10px 40px var(--shadow);
+    }
+
+    .login-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+    }
+
+    .login-btn {
+      display: inline-block;
+      padding: 14px 32px;
+      background: var(--accent);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      margin-top: 15px;
+    }
+
+    /* Access Denied */
+    .access-denied {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .denied-card {
+      background: var(--panel);
+      border: 2px solid var(--error);
+      border-radius: 16px;
+      padding: 50px 40px;
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 10px 40px var(--shadow);
+    }
+
+    .denied-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+    }
+
+    .denied-title {
+      color: var(--error);
+      margin-bottom: 10px;
+    }
+
+    /* Main App */
+    #app {
+      min-height: 100vh;
+      padding: 20px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding: 20px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 4px 20px var(--shadow);
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .back-btn {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: color 0.2s;
+    }
+
+    .back-btn:hover {
+      color: var(--text);
+    }
+
+    .user-info {
+      text-align: right;
+    }
+
+    .user-name {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .user-balance {
+      font-size: 0.9rem;
+      color: var(--money);
+    }
+
+    .create-bet-btn {
+      padding: 12px 24px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .create-bet-btn:hover {
+      background: var(--accent-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 10px;
+    }
+
+    .tab {
+      padding: 10px 20px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-radius: 8px;
+    }
+
+    .tab:hover {
+      color: var(--text);
+      background: var(--panel);
+    }
+
+    .tab.active {
+      color: var(--accent);
+      background: var(--panel);
+      font-weight: 600;
+    }
+
+    /* Bet Cards */
+    .bets-list {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .bet-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 25px;
+      transition: all 0.2s;
+    }
+
+    .bet-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px var(--shadow);
+    }
+
+    .bet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .bet-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      flex: 1;
+    }
+
+    .bet-status {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .status-open {
+      background: var(--success);
+      color: white;
+    }
+
+    .status-closed {
+      background: var(--text-muted);
+      color: white;
+    }
+
+    .status-settled {
+      background: var(--accent);
+      color: white;
+    }
+
+    .bet-creator {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    .bet-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .option-box {
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .option-box:hover:not(.disabled) {
+      border-color: var(--accent);
+      transform: scale(1.02);
+    }
+
+    .option-box.selected {
+      border-color: var(--accent);
+      background: rgba(139, 92, 246, 0.1);
+    }
+
+    .option-box.winner {
+      border-color: var(--success);
+      background: rgba(34, 197, 94, 0.1);
+    }
+
+    .option-box.loser {
+      border-color: var(--error);
+      opacity: 0.6;
+    }
+
+    .option-box.disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .option-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+
+    .option-text {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .option-odds {
+      font-size: 0.9rem;
+      color: var(--accent);
+    }
+
+    .option-total {
+      font-size: 0.85rem;
+      color: var(--money);
+      margin-top: 5px;
+    }
+
+    .bet-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .bet-input {
+      flex: 1;
+      padding: 12px;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 1rem;
+    }
+
+    .bet-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .place-bet-btn {
+      padding: 12px 24px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .place-bet-btn:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+
+    .place-bet-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .manage-btn {
+      padding: 8px 16px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .manage-btn:hover {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .winner-badge {
+      display: inline-block;
+      background: var(--success);
+      color: white;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      margin-left: 10px;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 500px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 25px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .form-input, .form-textarea {
+      width: 100%;
+      padding: 15px;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+
+    .form-input:focus, .form-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .form-textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .char-count {
+      text-align: right;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 5px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 16px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 10px;
+    }
+
+    .submit-btn:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    .close-btn:hover {
+      color: var(--text);
+    }
+
+    .modal-header {
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    /* Manage Modal */
+    .settle-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .settle-btn {
+      padding: 20px;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .settle-btn:hover {
+      border-color: var(--success);
+      background: rgba(34, 197, 94, 0.1);
+    }
+
+    .settle-btn.option-a:hover {
+      border-color: #3b82f6;
+      background: rgba(59, 130, 246, 0.1);
+    }
+
+    .settle-btn.option-b:hover {
+      border-color: #ef4444;
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    .stats-box {
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .stats-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .stats-row:last-child {
+      border-bottom: none;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 15px 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px var(--shadow);
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 2000;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success {
+      border-color: var(--success);
+    }
+
+    .toast.error {
+      border-color: var(--error);
+    }
+
+    @media (max-width: 480px) {
+      .bet-options {
+        grid-template-columns: 1fr;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .settle-options {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="content"></div>
+  <div class="toast" id="toast"></div>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+    const supabase = createClient(
+      "https://mdymxbgwhauapvphscrr.supabase.co",
+      "sb_publishable_nOrq936I1SMh4v21KzE2og_tAEbcAzK"
+    );
+
+    function getCookie(name) {
+      return document.cookie.split("; ").find(r => r.startsWith(name + "="))?.split("=")[1] || null;
+    }
+
+    function applyTheme() {
+      if (getCookie("theme") === "light") {
+        document.documentElement.classList.add("light");
+      } else {
+        document.documentElement.classList.remove("light");
+      }
+    }
+
+    applyTheme();
+
+    const uuid = getCookie("uuid");
+    const username = getCookie("username");
+    const content = document.getElementById("content");
+
+    let userData = null;
+    let moneyBalance = 0;
+    let currentTab = 'active';
+    let bets = [];
+    let myBets = [];
+
+    const ALLOWED_RANKS = ['owner', 'manager', 'admin', 'tier 3', 'tier 2', 'tier 1'];
+
+    function checkAccess(rank) {
+      if (!rank) return false;
+      return ALLOWED_RANKS.includes(rank.toLowerCase());
+    }
+
+    if (!uuid || !username) {
+      content.innerHTML = `
+        <div class="login-required">
+          <div class="login-card">
+            <div class="login-icon">🎯</div>
+            <h1>Access Required</h1>
+            <p>Please log in to access Betting.</p>
+            <a href="/login.html" class="login-btn">Sign In</a>
+          </div>
+        </div>
+      `;
+    } else {
+      checkUserAccess();
+    }
+
+    async function checkUserAccess() {
+      try {
+        const { data: user, error: userError } = await supabase
+          .from("users")
+          .select("name, rank, balance")
+          .eq("uuid", uuid)
+          .single();
+
+        if (userError || !user) {
+          content.innerHTML = `
+            <div class="login-required">
+              <div class="login-card">
+                <div class="login-icon">⚠️</div>
+                <h1>Session Error</h1>
+                <a href="/login.html" class="login-btn">Sign In Again</a>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        if (!checkAccess(user.rank)) {
+          content.innerHTML = `
+            <div class="access-denied">
+              <div class="denied-card">
+                <div class="denied-icon">🚫</div>
+                <h1 class="denied-title">Access Denied</h1>
+                <p>Betting is restricted to Tier 1 and above.</p>
+                <div class="tier-info">
+                  <div>Your rank: <strong>${user.rank || 'user'}</strong></div>
+                </div>
+                <a href="/tools/gambling/" class="login-btn">Back to Gambling Hub</a>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        userData = user;
+        moneyBalance = parseFloat(user.balance) || 0;
+        await loadBets();
+        renderPage();
+      } catch (err) {
+        console.error("Access check error:", err);
+        showToast("Error verifying access", "error");
+      }
+    }
+
+    async function loadBets() {
+      try {
+        // Load all bets with creator info
+        const { data: allBets, error } = await supabase
+          .from("bets")
+          .select("*, creator:creator_uuid(name)")
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+        bets = allBets || [];
+
+        // Load my bet placements
+        const { data: placements, error: pError } = await supabase
+          .from("bet_placements")
+          .select("*")
+          .eq("player_uuid", uuid);
+
+        if (!pError) {
+          myBets = placements || [];
+        }
+      } catch (err) {
+        console.error("Load bets error:", err);
+      }
+    }
+
+    function renderPage() {
+      const filteredBets = bets.filter(b => {
+        if (currentTab === 'active') return b.status === 'open';
+        if (currentTab === 'my-bets') return b.creator_uuid === uuid;
+        if (currentTab === 'settled') return b.status === 'settled';
+        return true;
+      });
+
+      content.innerHTML = `
+        <div id="app">
+          <div class="header">
+            <div>
+              <a href="/tools/gambling/" class="back-btn">← Back to Hub</a>
+              <div style="margin-top: 5px; font-size: 1.2rem; font-weight: 700;">🎯 Betting</div>
+            </div>
+            <div class="user-info">
+              <div class="user-name">${userData?.name || username}</div>
+              <div class="user-balance">$${moneyBalance.toFixed(2)}</div>
+            </div>
+          </div>
+
+          <button class="create-bet-btn" onclick="openCreateModal()" style="margin-bottom: 20px; width: 100%;">
+            + Create New Bet
+          </button>
+
+          <div class="tabs">
+            <button class="tab ${currentTab === 'active' ? 'active' : ''}" onclick="switchTab('active')">Active Bets</button>
+            <button class="tab ${currentTab === 'my-bets' ? 'active' : ''}" onclick="switchTab('my-bets')">My Bets</button>
+            <button class="tab ${currentTab === 'settled' ? 'active' : ''}" onclick="switchTab('settled')">Settled</button>
+          </div>
+
+          <div class="bets-list">
+            ${filteredBets.length === 0 ? `
+              <div class="empty-state">
+                <div class="empty-icon">🎯</div>
+                <h2>No bets found</h2>
+                <p>${currentTab === 'active' ? 'Be the first to create a bet!' : 'No bets in this category yet.'}</p>
+              </div>
+            ` : filteredBets.map(bet => renderBetCard(bet)).join('')}
+          </div>
+        </div>
+
+        <!-- Create Bet Modal -->
+        <div class="modal-overlay" id="createModal">
+          <div class="modal">
+            <div class="modal-header">
+              <h2 class="modal-title">Create New Bet</h2>
+              <button class="close-btn" onclick="closeCreateModal()">×</button>
+            </div>
+            <form onsubmit="submitBet(event)">
+              <div class="form-group">
+                <label class="form-label">Bet Title (max 200 chars)</label>
+                <textarea class="form-textarea" id="betTitle" maxlength="200" placeholder="e.g., Which team will win the Super Bowl?" required oninput="updateCharCount('betTitle', 'titleCount')"></textarea>
+                <div class="char-count"><span id="titleCount">0</span>/200</div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Option A (max 50 chars)</label>
+                  <input type="text" class="form-input" id="optionA" maxlength="50" placeholder="e.g., Chiefs" required oninput="updateCharCount('optionA', 'optionACount')">
+                  <div class="char-count"><span id="optionACount">0</span>/50</div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Option B (max 50 chars)</label>
+                  <input type="text" class="form-input" id="optionB" maxlength="50" placeholder="e.g., 49ers" required oninput="updateCharCount('optionB', 'optionBCount')">
+                  <div class="char-count"><span id="optionBCount">0</span>/50</div>
+                </div>
+              </div>
+
+              <button type="submit" class="submit-btn">Create Bet</button>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderBetCard(bet) {
+      const myPlacement = myBets.find(p => p.bet_id === bet.id);
+      const isCreator = bet.creator_uuid === uuid;
+      const totalPool = parseFloat(bet.total_a) + parseFloat(bet.total_b);
+      
+      let statusClass = 'status-open';
+      if (bet.status === 'closed') statusClass = 'status-closed';
+      if (bet.status === 'settled') statusClass = 'status-settled';
+
+      const optionAClass = bet.winner_option === 1 ? 'winner' : (bet.winner_option === 2 ? 'loser' : '');
+      const optionBClass = bet.winner_option === 2 ? 'winner' : (bet.winner_option === 1 ? 'loser' : '');
+
+      return `
+        <div class="bet-card">
+          <div class="bet-header">
+            <div class="bet-title">
+              ${escapeHtml(bet.title)}
+              ${myPlacement ? `<span class="winner-badge">You Bet $${parseFloat(myPlacement.amount).toFixed(2)}</span>` : ''}
+            </div>
+            <span class="bet-status ${statusClass}">${bet.status}</span>
+          </div>
+          
+          <div class="bet-creator">Created by ${escapeHtml(bet.creator?.name || 'Unknown')}</div>
+          
+          <div class="bet-options">
+            <div class="option-box ${optionAClass} ${myPlacement?.option_chosen === 1 ? 'selected' : ''} ${bet.status !== 'open' ? 'disabled' : ''}" onclick="${bet.status === 'open' && !myPlacement ? `selectBetOption(${bet.id}, 1)` : ''}">
+              <div class="option-label">Option A</div>
+              <div class="option-text">${escapeHtml(bet.option_a)}</div>
+              <div class="option-total">$${parseFloat(bet.total_a).toFixed(2)} bet</div>
+              ${bet.total_a > 0 && bet.total_b > 0 ? `<div class="option-odds">1:${(bet.total_b/bet.total_a).toFixed(2)}</div>` : ''}
+            </div>
+            <div class="option-box ${optionBClass} ${myPlacement?.option_chosen === 2 ? 'selected' : ''} ${bet.status !== 'open' ? 'disabled' : ''}" onclick="${bet.status === 'open' && !myPlacement ? `selectBetOption(${bet.id}, 2)` : ''}">
+              <div class="option-label">Option B</div>
+              <div class="option-text">${escapeHtml(bet.option_b)}</div>
+              <div class="option-total">$${parseFloat(bet.total_b).toFixed(2)} bet</div>
+              ${bet.total_a > 0 && bet.total_b > 0 ? `<div class="option-odds">1:${(bet.total_a/bet.total_b).toFixed(2)}</div>` : ''}
+            </div>
+          </div>
+
+          ${bet.status === 'open' && !myPlacement ? `
+            <div class="bet-actions" id="betActions-${bet.id}">
+              <input type="number" class="bet-input" id="betAmount-${bet.id}" placeholder="Amount ($)" min="0.01" step="0.01" max="${moneyBalance}">
+              <button class="place-bet-btn" onclick="placeBet(${bet.id})">Place Bet</button>
+            </div>
+          ` : ''}
+
+          ${isCreator && bet.status === 'open' ? `
+            <div style="margin-top: 15px;">
+              <button class="manage-btn" onclick="openManageModal(${bet.id})">Manage Bet</button>
+            </div>
+          ` : ''}
+
+          ${bet.status === 'settled' ? `
+            <div style="margin-top: 15px; padding: 15px; background: var(--bg); border-radius: 8px; font-size: 0.9rem;">
+              Winner: <strong>${bet.winner_option === 1 ? escapeHtml(bet.option_a) : escapeHtml(bet.option_b)}</strong>
+              ${myPlacement ? `<br>Your payout: <strong style="color: var(--money);">$${parseFloat(myPlacement.payout_amount || 0).toFixed(2)}</strong>` : ''}
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    window.switchTab = function(tab) {
+      currentTab = tab;
+      renderPage();
+    };
+
+    window.updateCharCount = function(inputId, countId) {
+      const input = document.getElementById(inputId);
+      const count = document.getElementById(countId);
+      if (input && count) {
+        count.textContent = input.value.length;
+      }
+    };
+
+    window.openCreateModal = function() {
+      document.getElementById('createModal').classList.add('show');
+    };
+
+    window.closeCreateModal = function() {
+      document.getElementById('createModal').classList.remove('show');
+      document.getElementById('betTitle').value = '';
+      document.getElementById('optionA').value = '';
+      document.getElementById('optionB').value = '';
+      updateCharCount('betTitle', 'titleCount');
+      updateCharCount('optionA', 'optionACount');
+      updateCharCount('optionB', 'optionBCount');
+    };
+
+    window.submitBet = async function(e) {
+      e.preventDefault();
+      
+      const title = document.getElementById('betTitle').value.trim();
+      const optionA = document.getElementById('optionA').value.trim();
+      const optionB = document.getElementById('optionB').value.trim();
+
+      if (!title || !optionA || !optionB) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('bets')
+          .insert({
+            creator_uuid: uuid,
+            title: title,
+            option_a: optionA,
+            option_b: optionB
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        showToast('Bet created successfully!', 'success');
+        closeCreateModal();
+        await loadBets();
+        renderPage();
+      } catch (err) {
+        console.error('Create bet error:', err);
+        showToast('Failed to create bet: ' + err.message, 'error');
+      }
+    };
+
+    window.selectBetOption = function(betId, option) {
+      // Visual selection handled by click, actual bet placed via placeBet
+      const actions = document.getElementById(`betActions-${betId}`);
+      if (actions) {
+        actions.dataset.selectedOption = option;
+        // Visual feedback
+        const card = actions.closest('.bet-card');
+        card.querySelectorAll('.option-box').forEach((box, idx) => {
+          box.classList.toggle('selected', idx + 1 === option);
+        });
+      }
+    };
+
+    window.placeBet = async function(betId) {
+      const actions = document.getElementById(`betActions-${betId}`);
+      const amountInput = document.getElementById(`betAmount-${betId}`);
+      const amount = parseFloat(amountInput.value);
+      const option = actions.dataset.selectedOption || 1;
+
+      if (!amount || amount <= 0) {
+        showToast('Please enter a valid amount', 'error');
+        return;
+      }
+
+      if (amount > moneyBalance) {
+        showToast('Insufficient balance', 'error');
+        return;
+      }
+
+      try {
+        const { data: result, error } = await supabase.rpc('place_bet', {
+          p_player_uuid: uuid,
+          p_bet_id: betId,
+          p_option: parseInt(option),
+          p_amount: amount
+        });
+
+        if (error || !result || !result.success) {
+          throw new Error(error?.message || result?.message || 'Bet failed');
+        }
+
+        moneyBalance = result.new_balance;
+        showToast(`Bet placed! $${amount.toFixed(2)} on Option ${option}`, 'success');
+        await loadBets();
+        renderPage();
+      } catch (err) {
+        console.error('Place bet error:', err);
+        showToast('Failed to place bet: ' + err.message, 'error');
+      }
+    };
+
+    window.openManageModal = function(betId) {
+      const bet = bets.find(b => b.id === betId);
+      if (!bet) return;
+
+      const modal = document.createElement('div');
+      modal.className = 'modal-overlay show';
+      modal.id = 'manageModal';
+      modal.innerHTML = `
+        <div class="modal">
+          <div class="modal-header">
+            <h2 class="modal-title">Manage Bet</h2>
+            <button class="close-btn" onclick="closeManageModal()">×</button>
+          </div>
+          
+          <div class="stats-box">
+            <div class="stats-row">
+              <span>Total in Option A (${escapeHtml(bet.option_a)}):</span>
+              <strong>$${parseFloat(bet.total_a).toFixed(2)}</strong>
+            </div>
+            <div class="stats-row">
+              <span>Total in Option B (${escapeHtml(bet.option_b)}):</span>
+              <strong>$${parseFloat(bet.total_b).toFixed(2)}</strong>
+            </div>
+            <div class="stats-row">
+              <span>Total Pool:</span>
+              <strong style="color: var(--money);">$${(parseFloat(bet.total_a) + parseFloat(bet.total_b)).toFixed(2)}</strong>
+            </div>
+          </div>
+
+          <p style="margin-bottom: 15px; color: var(--text-muted);">Select the winning option:</p>
+          
+          <div class="settle-options">
+            <button class="settle-btn option-a" onclick="settleBet(${betId}, 1)">
+              ${escapeHtml(bet.option_a)} Wins
+            </button>
+            <button class="settle-btn option-b" onclick="settleBet(${betId}, 2)">
+              ${escapeHtml(bet.option_b)} Wins
+            </button>
+          </div>
+
+          <button class="submit-btn" style="background: var(--text-muted);" onclick="closeBet(${betId})">
+            Close Bet (Return All Money)
+          </button>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    };
+
+    window.closeManageModal = function() {
+      const modal = document.getElementById('manageModal');
+      if (modal) modal.remove();
+    };
+
+    window.settleBet = async function(betId, winnerOption) {
+      if (!confirm('Are you sure? This will pay out all winners and take 10% house fee.')) return;
+
+      try {
+        const { data: result, error } = await supabase.rpc('settle_bet', {
+          p_bet_id: betId,
+          p_winner_option: winnerOption,
+          p_settled_by: uuid
+        });
+
+        if (error || !result || !result.success) {
+          throw new Error(error?.message || result?.message || 'Settlement failed');
+        }
+
+        showToast(`Bet settled! House fee: $${parseFloat(result.house_fee).toFixed(2)}`, 'success');
+        closeManageModal();
+        await loadBets();
+        renderPage();
+      } catch (err) {
+        console.error('Settle error:', err);
+        showToast('Failed to settle: ' + err.message, 'error');
+      }
+    };
+
+    window.closeBet = async function(betId) {
+      if (!confirm('Close this bet and return all money to bettors?')) return;
+
+      try {
+        const { data: result, error } = await supabase.rpc('close_bet', {
+          p_bet_id: betId,
+          p_closed_by: uuid
+        });
+
+        if (error || !result || !result.success) {
+          throw new Error(error?.message || result?.message || 'Close failed');
+        }
+
+        showToast('Bet closed, all money refunded', 'success');
+        closeManageModal();
+        await loadBets();
+        renderPage();
+      } catch (err) {
+        console.error('Close error:', err);
+        showToast('Failed to close: ' + err.message, 'error');
+      }
+    };
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function showToast(message, type) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = `toast ${type}`;
+      setTimeout(() => toast.classList.add('show'), 10);
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // Close modals on outside click
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('modal-overlay')) {
+        e.target.remove();
+      }
+    });
+  </script>
+</body>
+</html>
