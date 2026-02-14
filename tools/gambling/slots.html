@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Classic Slots</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #020617;
+      --panel: #0f172a;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --accent: #f59e0b;
+      --accent-hover: #d97706;
+      --border: #1e293b;
+      --input-bg: #1e293b;
+      --shadow: rgba(0, 0, 0, 0.5);
+      --success: #22c55e;
+      --error: #ef4444;
+      --jackpot: #ef4444;
+      --half: #f59e0b;
+      --quarter: #3b82f6;
+    }
+
+    html.light {
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --accent: #f59e0b;
+      --accent-hover: #d97706;
+      --border: #e2e8f0;
+      --input-bg: #f1f5f9;
+      --shadow: rgba(0, 0, 0, 0.1);
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    /* Login Required */
+    .login-required {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 50px 40px;
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 10px 40px var(--shadow);
+    }
+
+    .login-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+    }
+
+    .login-btn {
+      display: inline-block;
+      padding: 14px 32px;
+      background: var(--accent);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      margin-top: 15px;
+    }
+
+    /* Access Denied */
+    .access-denied {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .denied-card {
+      background: var(--panel);
+      border: 2px solid var(--error);
+      border-radius: 16px;
+      padding: 50px 40px;
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 10px 40px var(--shadow);
+    }
+
+    .denied-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+    }
+
+    .denied-title {
+      color: var(--error);
+      margin-bottom: 10px;
+    }
+
+    /* Main App */
+    #app {
+      min-height: 100vh;
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 20px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 4px 20px var(--shadow);
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .back-btn {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: color 0.2s;
+    }
+
+    .back-btn:hover {
+      color: var(--text);
+    }
+
+    .user-info {
+      text-align: right;
+    }
+
+    .user-name {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .token-balance {
+      font-size: 0.9rem;
+      color: var(--accent);
+    }
+
+    /* Prize Pool Display */
+    .prize-pool {
+      background: linear-gradient(135deg, var(--jackpot), #dc2626);
+      border-radius: 20px;
+      padding: 30px;
+      text-align: center;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 40px rgba(239, 68, 68, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .prize-pool::before {
+      content: "🏆";
+      position: absolute;
+      top: 10px;
+      left: 20px;
+      font-size: 2rem;
+      opacity: 0.3;
+    }
+
+    .prize-pool::after {
+      content: "🏆";
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      font-size: 2rem;
+      opacity: 0.3;
+    }
+
+    .prize-label {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 10px;
+      opacity: 0.9;
+    }
+
+    .prize-amount {
+      font-size: 3rem;
+      font-weight: 800;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+
+    /* Slot Machine */
+    .slot-machine {
+      background: var(--panel);
+      border: 2px solid var(--border);
+      border-radius: 24px;
+      padding: 40px;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 40px var(--shadow);
+    }
+
+    .slot-title {
+      text-align: center;
+      font-size: 1.5rem;
+      margin-bottom: 30px;
+      color: var(--accent);
+    }
+
+    .reels-container {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 40px;
+    }
+
+    .reel {
+      width: 100px;
+      height: 120px;
+      background: var(--bg);
+      border: 3px solid var(--border);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      font-weight: 800;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .reel.spinning {
+      animation: spin 0.1s linear infinite;
+      background: linear-gradient(var(--bg), var(--panel), var(--bg));
+    }
+
+    @keyframes spin {
+      0% { background-position: 0 0; }
+      100% { background-position: 0 100px; }
+    }
+
+    .reel.win-777 {
+      border-color: var(--jackpot);
+      box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+      animation: pulse-jackpot 1s ease-in-out infinite;
+    }
+
+    .reel.win-676 {
+      border-color: var(--half);
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.5);
+    }
+
+    .reel.win-123 {
+      border-color: var(--quarter);
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+    }
+
+    @keyframes pulse-jackpot {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    /* Bet Options */
+    .bet-section {
+      margin-bottom: 30px;
+    }
+
+    .bet-label {
+      text-align: center;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .bet-options {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .bet-btn {
+      padding: 15px 25px;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      min-width: 80px;
+    }
+
+    .bet-btn:hover:not(:disabled):not(.selected) {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .bet-btn.selected {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+      box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+    }
+
+    .bet-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Spin Button */
+    .spin-btn {
+      width: 100%;
+      padding: 20px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 16px;
+      font-size: 1.5rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .spin-btn:hover:not(:disabled) {
+      background: var(--accent-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(245, 158, 11, 0.4);
+    }
+
+    .spin-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .spin-btn.spinning {
+      animation: pulse-spin 0.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse-spin {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(0.98); }
+    }
+
+    /* Info Section */
+    .info-section {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 25px;
+      margin-bottom: 20px;
+    }
+
+    .info-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .win-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .win-table th,
+    .win-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .win-table th {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+    }
+
+    .win-number {
+      font-family: monospace;
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .win-777-color { color: var(--jackpot); }
+    .win-676-color { color: var(--half); }
+    .win-123-color { color: var(--quarter); }
+
+    .house-fee-note {
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 15px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .hint-text {
+      margin-top: 15px;
+      font-size: 0.85rem;
+      color: var(--accent);
+      text-align: center;
+    }
+
+    /* Result Display */
+    .result-display {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.9);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .result-display.show {
+      display: flex;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .result-card {
+      background: var(--panel);
+      border: 3px solid var(--border);
+      border-radius: 24px;
+      padding: 40px;
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .result-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+    }
+
+    .result-title {
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+
+    .result-title.jackpot { color: var(--jackpot); }
+    .result-title.half { color: var(--half); }
+    .result-title.quarter { color: var(--quarter); }
+    .result-title.loss { color: var(--text-muted); }
+
+    .result-amount {
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+    }
+
+    .result-numbers {
+      font-family: monospace;
+      font-size: 3rem;
+      font-weight: 800;
+      letter-spacing: 10px;
+      margin-bottom: 20px;
+      padding: 20px;
+      background: var(--bg);
+      border-radius: 12px;
+    }
+
+    .house-fee {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    .close-result {
+      padding: 15px 40px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .close-result:hover {
+      background: var(--accent-hover);
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 15px 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px var(--shadow);
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success {
+      border-color: var(--success);
+    }
+
+    .toast.error {
+      border-color: var(--error);
+    }
+
+    @media (max-width: 480px) {
+      .reel {
+        width: 80px;
+        height: 100px;
+        font-size: 2rem;
+      }
+
+      .prize-amount {
+        font-size: 2rem;
+      }
+
+      .bet-btn {
+        padding: 12px 20px;
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="content"></div>
+  <div class="toast" id="toast"></div>
+
+  <!-- Result Modal -->
+  <div class="result-display" id="resultModal">
+    <div class="result-card">
+      <div class="result-icon" id="resultIcon">🎰</div>
+      <div class="result-title" id="resultTitle">Result</div>
+      <div class="result-numbers" id="resultNumbers">000</div>
+      <div class="result-amount" id="resultAmount"></div>
+      <div class="house-fee" id="houseFee"></div>
+      <button class="close-result" onclick="closeResult()">Spin Again</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+    const supabase = createClient(
+      "https://mdymxbgwhauapvphscrr.supabase.co",
+      "sb_publishable_nOrq936I1SMh4v21KzE2og_tAEbcAzK"
+    );
+
+    function getCookie(name) {
+      return document.cookie.split("; ").find(r => r.startsWith(name + "="))?.split("=")[1] || null;
+    }
+
+    function applyTheme() {
+      if (getCookie("theme") === "light") {
+        document.documentElement.classList.add("light");
+      } else {
+        document.documentElement.classList.remove("light");
+      }
+    }
+
+    applyTheme();
+
+    const uuid = getCookie("uuid");
+    const username = getCookie("username");
+    const content = document.getElementById("content");
+
+    let userData = null;
+    let tokenBalance = 0;
+    let currentSlot = null;
+    let selectedBet = 20; // Changed default to 20
+    let isSpinning = false;
+
+    const ALLOWED_RANKS = ['owner', 'manager', 'admin', 'tier 3', 'tier 2', 'tier 1'];
+
+    function checkAccess(rank) {
+      if (!rank) return false;
+      return ALLOWED_RANKS.includes(rank.toLowerCase());
+    }
+
+    if (!uuid || !username) {
+      content.innerHTML = `
+        <div class="login-required">
+          <div class="login-card">
+            <div class="login-icon">🎰</div>
+            <h1>Access Required</h1>
+            <p>Please log in to play slots.</p>
+            <a href="/login.html" class="login-btn">Sign In</a>
+          </div>
+        </div>
+      `;
+    } else {
+      checkUserAccess();
+    }
+
+    async function checkUserAccess() {
+      try {
+        const { data: user, error: userError } = await supabase
+          .from("users")
+          .select("name, rank")
+          .eq("uuid", uuid)
+          .single();
+
+        if (userError || !user) {
+          content.innerHTML = `
+            <div class="login-required">
+              <div class="login-card">
+                <div class="login-icon">⚠️</div>
+                <h1>Session Error</h1>
+                <a href="/login.html" class="login-btn">Sign In Again</a>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        if (!checkAccess(user.rank)) {
+          content.innerHTML = `
+            <div class="access-denied">
+              <div class="denied-card">
+                <div class="denied-icon">🚫</div>
+                <h1 class="denied-title">Access Denied</h1>
+                <p>Slots are restricted to Tier 1 and above.</p>
+                <div class="tier-info">
+                  <div>Your rank: <strong>${user.rank || 'user'}</strong></div>
+                </div>
+                <a href="/tools/gambling/" class="login-btn">Back to Gambling Hub</a>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        userData = user;
+        await initializePage();
+      } catch (err) {
+        console.error("Access check error:", err);
+        showToast("Error verifying access", "error");
+      }
+    }
+
+    async function initializePage() {
+      const [{ data: slotData }, { data: tokenData }] = await Promise.all([
+        supabase.from("slots").select("*").eq("slot_name", "classic").single(),
+        supabase.from("tokens").select("balance").eq("uuid", uuid).single()
+      ]);
+
+      currentSlot = slotData;
+      tokenBalance = tokenData?.balance || 0;
+
+      if (!currentSlot) {
+        showToast("Slot machine not found", "error");
+        return;
+      }
+
+      renderPage();
+    }
+
+    function renderPage() {
+      content.innerHTML = `
+        <div id="app">
+          <div class="header">
+            <a href="/tools/gambling/" class="back-btn">← Back to Hub</a>
+            <div class="user-info">
+              <div class="user-name">${userData?.name || username}</div>
+              <div class="token-balance">${tokenBalance.toLocaleString()} 🪙</div>
+            </div>
+          </div>
+
+          <div class="prize-pool">
+            <div class="prize-label">Current Prize Pool</div>
+            <div class="prize-amount" id="prizePool">$${parseFloat(currentSlot?.prize_pool || 0).toFixed(2)}</div>
+          </div>
+
+          <div class="slot-machine">
+            <div class="slot-title">🎰 Classic Slots 🎰</div>
+            
+            <div class="reels-container">
+              <div class="reel" id="reel1">7</div>
+              <div class="reel" id="reel2">7</div>
+              <div class="reel" id="reel3">7</div>
+            </div>
+
+            <div class="bet-section">
+              <div class="bet-label">Select Your Bet</div>
+              <div class="bet-options">
+                <button class="bet-btn ${selectedBet === 10 ? 'selected' : ''}" onclick="selectBet(10)" ${tokenBalance < 10 ? 'disabled' : ''}>10 🪙</button>
+                <button class="bet-btn ${selectedBet === 20 ? 'selected' : ''}" onclick="selectBet(20)" ${tokenBalance < 20 ? 'disabled' : ''}>20 🪙</button>
+                <button class="bet-btn ${selectedBet === 50 ? 'selected' : ''}" onclick="selectBet(50)" ${tokenBalance < 50 ? 'disabled' : ''}>50 🪙</button>
+                <button class="bet-btn ${selectedBet === 100 ? 'selected' : ''}" onclick="selectBet(100)" ${tokenBalance < 100 ? 'disabled' : ''}>100 🪙</button>
+                <button class="bet-btn ${selectedBet === 500 ? 'selected' : ''}" onclick="selectBet(500)" ${tokenBalance < 500 ? 'disabled' : ''}>500 🪙</button>
+              </div>
+            </div>
+
+            <button class="spin-btn" id="spinBtn" onclick="spin()" ${tokenBalance < selectedBet ? 'disabled' : ''}>
+              ${tokenBalance < selectedBet ? 'Insufficient Tokens' : 'SPIN!'}
+            </button>
+          </div>
+
+          <div class="info-section">
+            <div class="info-title">📋 How to Win</div>
+            <table class="win-table">
+              <thead>
+                <tr>
+                  <th>Numbers</th>
+                  <th>Prize</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="win-number win-777-color">777</td>
+                  <td><strong>80%</strong> of Prize Pool</td>
+                </tr>
+                <tr>
+                  <td class="win-number win-676-color">676</td>
+                  <td><strong>50%</strong> of Prize Pool</td>
+                </tr>
+                <tr>
+                  <td class="win-number win-123-color">123</td>
+                  <td><strong>25%</strong> of Prize Pool</td>
+                </tr>
+              </tbody>
+            </table>
+            <p class="hint-text">💡 The more you bet, the higher your chance of winning!</p>
+          </div>
+
+          <div class="info-section">
+            <div class="info-title">ℹ️ House Fee</div>
+            <div class="house-fee-note">
+              A 10% house fee is deducted from all winnings.<br>
+              Your net winnings will be 90% of the prize.
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    window.selectBet = function(amount) {
+      if (isSpinning) return;
+      selectedBet = amount;
+      updateBetButtons();
+    };
+
+    function updateBetButtons() {
+      document.querySelectorAll('.bet-btn').forEach(btn => {
+        const btnAmount = parseInt(btn.textContent);
+        btn.classList.toggle('selected', btnAmount === selectedBet);
+      });
+      
+      const spinBtn = document.getElementById('spinBtn');
+      if (spinBtn) {
+        spinBtn.disabled = tokenBalance < selectedBet;
+        spinBtn.textContent = tokenBalance < selectedBet ? 'Insufficient Tokens' : 'SPIN!';
+      }
+    }
+
+    window.spin = async function() {
+      if (isSpinning || tokenBalance < selectedBet) return;
+      
+      isSpinning = true;
+      const spinBtn = document.getElementById('spinBtn');
+      spinBtn.disabled = true;
+      spinBtn.classList.add('spinning');
+      spinBtn.textContent = 'SPINNING...';
+
+      const reels = [document.getElementById('reel1'), document.getElementById('reel2'), document.getElementById('reel3')];
+      reels.forEach(reel => {
+        reel.classList.add('spinning');
+        reel.textContent = '❓';
+      });
+
+      try {
+        const { data: result, error } = await supabase.rpc('play_slot', {
+          p_player_uuid: uuid,
+          p_slot_id: currentSlot.id,
+          p_bet_amount: selectedBet
+        });
+
+        if (error || !result || !result.success) {
+          throw new Error(error?.message || result?.message || "Spin failed");
+        }
+
+        await new Promise(r => setTimeout(r, 1500));
+
+        const numbers = result.numbers;
+        reels[0].textContent = numbers[0];
+        reels[1].textContent = numbers[1];
+        reels[2].textContent = numbers[2];
+        reels.forEach(reel => reel.classList.remove('spinning'));
+
+        if (result.won) {
+          reels.forEach(reel => reel.classList.add(`win-${numbers}`));
+        }
+
+        tokenBalance = result.new_token_balance;
+        document.querySelector('.token-balance').textContent = `${tokenBalance.toLocaleString()} 🪙`;
+        
+        currentSlot.prize_pool = result.new_prize_pool;
+        document.getElementById('prizePool').textContent = `$${parseFloat(result.new_prize_pool).toFixed(2)}`;
+
+        showResult(result);
+        updateBetButtons();
+
+      } catch (err) {
+        console.error("Spin error:", err);
+        showToast("Spin failed: " + err.message, "error");
+        
+        reels.forEach(reel => {
+          reel.classList.remove('spinning');
+          reel.textContent = '7';
+        });
+        
+        await initializePage();
+      } finally {
+        isSpinning = false;
+        spinBtn.classList.remove('spinning');
+        spinBtn.textContent = 'SPIN!';
+        if (tokenBalance >= selectedBet) {
+          spinBtn.disabled = false;
+        }
+      }
+    };
+
+    function showResult(result) {
+      const modal = document.getElementById('resultModal');
+      const icon = document.getElementById('resultIcon');
+      const title = document.getElementById('resultTitle');
+      const numbers = document.getElementById('resultNumbers');
+      const amount = document.getElementById('resultAmount');
+      const houseFee = document.getElementById('houseFee');
+
+      numbers.textContent = result.numbers;
+
+      if (result.won) {
+        icon.textContent = result.win_type === 'jackpot' ? '🎉' : result.win_type === 'half' ? '🎊' : '🎁';
+        title.textContent = result.win_type === 'jackpot' ? 'MEGA JACKPOT!' : result.win_type === 'half' ? 'BIG WIN!' : 'WIN!';
+        title.className = 'result-title ' + result.win_type;
+        amount.textContent = `You won $${parseFloat(result.win_amount).toFixed(2)}! (${(result.win_amount * 100).toFixed(0)} tokens)`;
+        houseFee.textContent = `House fee (10%): $${parseFloat(result.house_fee).toFixed(2)}`;
+      } else {
+        icon.textContent = '😢';
+        title.textContent = 'Not this time...';
+        title.className = 'result-title loss';
+        amount.textContent = 'Better luck next spin!';
+        houseFee.textContent = '';
+      }
+
+      modal.classList.add('show');
+    }
+
+    window.closeResult = function() {
+      document.getElementById('resultModal').classList.remove('show');
+      
+      document.querySelectorAll('.reel').forEach(reel => {
+        reel.classList.remove('win-777', 'win-676', 'win-123');
+      });
+    };
+
+    function showToast(message, type) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = `toast ${type}`;
+      setTimeout(() => toast.classList.add('show'), 10);
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+  </script>
+</body>
+</html>

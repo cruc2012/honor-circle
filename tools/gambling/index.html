@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Gambling Hub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #020617;
+      --panel: #0f172a;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --accent: #f59e0b;
+      --accent-hover: #d97706;
+      --border: #1e293b;
+      --input-bg: #1e293b;
+      --shadow: rgba(0, 0, 0, 0.5);
+      --success: #22c55e;
+      --error: #ef4444;
+    }
+
+    html.light {
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --accent: #f59e0b;
+      --accent-hover: #d97706;
+      --border: #e2e8f0;
+      --input-bg: #f1f5f9;
+      --shadow: rgba(0, 0, 0, 0.1);
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    /* Login Required */
+    .login-required {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 50px 40px;
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 10px 40px var(--shadow);
+    }
+
+    .login-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+    }
+
+    .login-btn {
+      display: inline-block;
+      padding: 14px 32px;
+      background: var(--accent);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      margin-top: 15px;
+    }
+
+    /* Access Denied */
+    .access-denied {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .denied-card {
+      background: var(--panel);
+      border: 2px solid var(--error);
+      border-radius: 16px;
+      padding: 50px 40px;
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 10px 40px var(--shadow);
+    }
+
+    .denied-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+    }
+
+    .denied-title {
+      color: var(--error);
+      margin-bottom: 10px;
+    }
+
+    .tier-info {
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 15px;
+      margin: 20px 0;
+      font-size: 0.9rem;
+    }
+
+    .tier-info strong {
+      color: var(--accent);
+    }
+
+    /* Main App */
+    #app {
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 800px;
+      margin: 0 auto 30px;
+      padding: 20px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 4px 20px var(--shadow);
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .user-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .user-name {
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .user-rank {
+      font-size: 0.75rem;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .tokens-display {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--bg);
+      padding: 12px 20px;
+      border-radius: 12px;
+      border: 2px solid var(--accent);
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      text-decoration: none;
+    }
+
+    .tokens-display:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    }
+
+    .tokens-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .tokens-amount {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .tokens-icon {
+      font-size: 1.5rem;
+    }
+
+    /* Main Content */
+    .main-content {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .page-title {
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+
+    .page-subtitle {
+      text-align: center;
+      color: var(--text-muted);
+      margin-bottom: 40px;
+    }
+
+    /* Game Grid */
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    .game-card {
+      background: var(--panel);
+      border: 2px solid var(--border);
+      border-radius: 20px;
+      padding: 40px 30px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-decoration: none;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .game-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px var(--shadow);
+    }
+
+    .game-icon {
+      font-size: 3rem;
+      width: 80px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      border-radius: 20px;
+      border: 2px solid var(--border);
+    }
+
+    .game-card:hover .game-icon {
+      border-color: var(--accent);
+      background: rgba(245, 158, 11, 0.1);
+    }
+
+    .game-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+
+    .game-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .coming-soon {
+      opacity: 0.6;
+      cursor: not-allowed;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .coming-soon::after {
+      content: "SOON";
+      position: absolute;
+      top: 15px;
+      right: -30px;
+      background: var(--accent);
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 5px 40px;
+      transform: rotate(45deg);
+    }
+
+    .coming-soon:hover {
+      transform: none;
+      border-color: var(--border);
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 15px 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px var(--shadow);
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success {
+      border-color: var(--success);
+    }
+
+    .toast.error {
+      border-color: var(--error);
+    }
+
+    @media (max-width: 480px) {
+      .header {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .games-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .page-title {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="content"></div>
+  <div class="toast" id="toast"></div>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+    const supabase = createClient(
+      "https://mdymxbgwhauapvphscrr.supabase.co",
+      "sb_publishable_nOrq936I1SMh4v21KzE2og_tAEbcAzK"
+    );
+
+    function getCookie(name) {
+      return document.cookie.split("; ").find(r => r.startsWith(name + "="))?.split("=")[1] || null;
+    }
+
+    function applyTheme() {
+      if (getCookie("theme") === "light") {
+        document.documentElement.classList.add("light");
+      } else {
+        document.documentElement.classList.remove("light");
+      }
+    }
+
+    applyTheme();
+
+    const uuid = getCookie("uuid");
+    const username = getCookie("username");
+    const content = document.getElementById("content");
+
+    let userData = null;
+    let tokenBalance = 0;
+
+    // Allowed ranks only - EXACT matches (case insensitive)
+    const ALLOWED_RANKS = ['owner', 'manager', 'admin', 'tier 3', 'tier 2', 'tier 1'];
+
+    function checkAccess(rank) {
+      if (!rank) return false;
+      return ALLOWED_RANKS.includes(rank.toLowerCase());
+    }
+
+    if (!uuid || !username) {
+      content.innerHTML = `
+        <div class="login-required">
+          <div class="login-card">
+            <div class="login-icon">🎰</div>
+            <h1>Access Required</h1>
+            <p>Please log in to access the Gambling Hub.</p>
+            <a href="/login.html" class="login-btn">Sign In</a>
+          </div>
+        </div>
+      `;
+    } else {
+      // Check access before loading
+      checkUserAccess();
+    }
+
+    async function checkUserAccess() {
+      try {
+        // Fetch user data including rank
+        const { data: user, error: userError } = await supabase
+          .from("users")
+          .select("name, rank")
+          .eq("uuid", uuid)
+          .single();
+
+        if (userError || !user) {
+          content.innerHTML = `
+            <div class="login-required">
+              <div class="login-card">
+                <div class="login-icon">⚠️</div>
+                <h1>Session Error</h1>
+                <p>Could not verify your account.</p>
+                <a href="/login.html" class="login-btn">Sign In Again</a>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        // Check if user has required rank
+        if (!checkAccess(user.rank)) {
+          const userRank = user.rank || 'user';
+          content.innerHTML = `
+            <div class="access-denied">
+              <div class="denied-card">
+                <div class="denied-icon">🚫</div>
+                <h1 class="denied-title">Access Denied</h1>
+                <p>The Gambling Hub is restricted to Tier 1 and above.</p>
+                <div class="tier-info">
+                  <div>Your rank: <strong>${userRank}</strong></div>
+                  <div style="margin-top: 8px; font-size: 0.8rem; color: var(--text-muted);">
+                    Allowed: Owner, Manager, Admin, Tier 3, Tier 2, Tier 1
+                  </div>
+                </div>
+                <a href="/" class="login-btn">Back to Home</a>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        // User has access, load the full page
+        userData = user;
+        await initializePage();
+
+      } catch (err) {
+        console.error("Access check error:", err);
+        showToast("Error verifying access", "error");
+      }
+    }
+
+    async function initializePage() {
+      // Fetch token balance
+      const { data: tokenData, error: tokenError } = await supabase
+        .from("tokens")
+        .select("balance")
+        .eq("uuid", uuid)
+        .single();
+
+      if (tokenError && tokenError.code !== 'PGRST116') {
+        console.error("Token fetch error:", tokenError);
+      }
+
+      tokenBalance = tokenData?.balance || 0;
+
+      // Render the full page
+      content.innerHTML = `
+        <div id="app">
+          <div class="header">
+            <div class="user-info">
+              <div class="user-name" id="displayName">${userData?.name || username}</div>
+              <div class="user-rank" id="userRank">${userData?.rank || "User"}</div>
+            </div>
+            <a href="/tools/gambling/tokens.html" class="tokens-display">
+              <span class="tokens-icon">🪙</span>
+              <div>
+                <div class="tokens-label">Tokens</div>
+                <div class="tokens-amount" id="tokensAmount">${tokenBalance.toLocaleString()}</div>
+              </div>
+            </a>
+          </div>
+
+          <div class="main-content">
+            <h1 class="page-title">🎰 Gambling Hub</h1>
+            <p class="page-subtitle">Choose your game and test your luck!</p>
+
+            <div class="games-grid">
+              <a href="/tools/gambling/slots.html" class="game-card">
+                <div class="game-icon">🎰</div>
+                <div class="game-title">Slots</div>
+                <div class="game-desc">Spin to win big!</div>
+              </a>
+
+              <div class="game-card coming-soon">
+                <div class="game-icon">🎲</div>
+                <div class="game-title">Bet</div>
+                <div class="game-desc">Coming soon</div>
+              </div>
+
+              <div class="game-card coming-soon">
+                <div class="game-icon">🃏</div>
+                <div class="game-title">Blackjack</div>
+                <div class="game-desc">Coming soon</div>
+              </div>
+
+              <div class="game-card coming-soon">
+                <div class="game-icon">🎯</div>
+                <div class="game-title">Roulette</div>
+                <div class="game-desc">Coming soon</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function showToast(message, type) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.className = `toast ${type}`;
+      setTimeout(() => toast.classList.add("show"), 10);
+      setTimeout(() => {
+        toast.classList.remove("show");
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
