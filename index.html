@@ -55,38 +55,81 @@
         footer a:hover {
           text-decoration: underline;
         }
+
+        /* Loading/error states */
+        #loadingScreen {
+          display: none;
+          align-items: center;
+          justify-content: center;
+          height: 100%;
+          flex-direction: column;
+          background: #1e1e1e;
+          color: #eee;
+        }
+        #loadingScreen.light {
+          background: #f4f4f4;
+          color: #111;
+        }
+        .spinner {
+          width: 50px;
+          height: 50px;
+          border: 5px solid #333;
+          border-top: 5px solid #22c55e;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin-bottom: 20px;
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
+    <div id="loadingScreen">
+        <div class="spinner"></div>
+        <p>Loading site...</p>
+    </div>
+    
     <iframe src="/login.html" id="appFrame"></iframe>
     
     <footer id="pageFooter">
         This site was made by Curtis Gann <a href="https://www.curtishub.com" target="_blank">click here to learn more</a>
     </footer>
 
-    <script>
+    <script type="module">
+        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+        const supabase = createClient(
+            "https://mdymxbgwhauapvphscrr.supabase.co",
+            "sb_publishable_nOrq936I1SMh4v21KzE2og_tAEbcAzK"
+        );
+
         function getCookie(name) {
             return document.cookie
                 .split("; ")
                 .find(r => r.startsWith(name + "="))
                 ?.split("=")[1] || null;
         }
-        
+
         function updateTheme() {
             const footer = document.getElementById('pageFooter');
+            const loading = document.getElementById('loadingScreen');
             const theme = getCookie('theme');
             
-            // Default to dark mode if no cookie or cookie is not "light"
             if (theme === 'light') {
                 footer.classList.add('light');
                 footer.classList.remove('dark');
+                loading.classList.add('light');
+                loading.classList.remove('dark');
             } else {
-                // Dark mode (default when no cookie or theme=dark)
                 footer.classList.remove('light');
                 footer.classList.add('dark');
+                loading.classList.remove('light');
+                loading.classList.add('dark');
             }
         }
-        
+
         // Check immediately on load
         updateTheme();
         
@@ -99,6 +142,96 @@
                 updateTheme();
             }
         });
+
+        // Handle domain routing - FIXED VERSION
+        async function loadSite() {
+            const url = window.location.href;
+            const iframe = document.getElementById('appFrame');
+            const loading = document.getElementById('loadingScreen');
+
+            // Debug: log the full URL
+            console.log('Full URL:', url);
+            console.log('Search:', window.location.search);
+            console.log('Hash:', window.location.hash);
+
+            // Get domain from URL - handle both ?domain and ? formats
+            let domain = null;
+            
+            // Try standard query param first
+            const params = new URLSearchParams(window.location.search);
+            domain = params.get('domain');
+            
+            // If not found, check if there's a raw query string (like ?mydomain)
+            if (!domain && window.location.search) {
+                // Remove the leading ? and get the raw value
+                const rawQuery = window.location.search.substring(1);
+                // If it doesn't contain =, it's likely a direct domain (e.g., ?mydomain)
+                if (rawQuery && !rawQuery.includes('=')) {
+                    domain = rawQuery;
+                }
+            }
+
+            console.log('Extracted domain:', domain);
+
+            if (!domain) {
+                console.log('No domain found, showing default');
+                // No domain specified, show default login page
+                iframe.src = '/login.html';
+                document.title = 'Honor Circle';
+                return;
+            }
+
+            // Clean the domain
+            domain = domain.trim().toLowerCase();
+            console.log('Cleaned domain:', domain);
+
+            // Show loading
+            loading.style.display = 'flex';
+            iframe.style.display = 'none';
+
+            try {
+                // Fetch site from Supabase
+                console.log('Fetching from Supabase...');
+                const { data, error } = await supabase
+                    .from('published_sites')
+                    .select('html_content, site_data')
+                    .eq('domain', domain)
+                    .maybeSingle();
+
+                console.log('Supabase response:', { data, error });
+
+                if (error) {
+                    console.error('Supabase error:', error);
+                    throw new Error('Database error: ' + error.message);
+                }
+
+                if (!data) {
+                    throw new Error('Site not found for domain: ' + domain);
+                }
+
+                // Update page title
+                document.title = data.site_data?.title || domain;
+
+                // Load the HTML content into the iframe using srcdoc
+                iframe.srcdoc = data.html_content;
+                iframe.style.display = 'block';
+                loading.style.display = 'none';
+
+                console.log('Site loaded successfully');
+
+            } catch (err) {
+                console.error('Failed to load site:', err);
+                loading.innerHTML = `
+                    <h2>Site Not Found</h2>
+                    <p>${err.message}</p>
+                    <p style="font-size: 12px; margin-top: 10px; opacity: 0.7;">Domain: ${domain}</p>
+                    <button onclick="window.location.href='/'" style="margin-top: 20px; padding: 10px 20px; cursor: pointer;">Go Home</button>
+                `;
+            }
+        }
+
+        // Load site on page load
+        loadSite();
     </script>
 </body>
 </html>

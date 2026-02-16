@@ -12,6 +12,16 @@
       --text: #ffffff;
       --accent: #2563eb;
       --sidebar-width: 220px;
+      
+      /* Rank Colors */
+      --rank-owner: #ef4444;
+      --rank-manager: #f97316;
+      --rank-admin: #eab308;
+      --rank-tier3: #22c55e;
+      --rank-tier2: #3b82f6;
+      --rank-tier1: #8b5cf6;
+      --rank-trusted: #06b6d4;
+      --rank-user: #64748b;
     }
 
     body.light {
@@ -32,6 +42,93 @@
       color: var(--text);
       font-family: system-ui, -apple-system, sans-serif;
       overflow: hidden;
+    }
+
+    /* Rank Badge Styles */
+    .rank-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border: 1.5px solid;
+      background: rgba(0,0,0,0.2);
+      backdrop-filter: blur(4px);
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .rank-badge:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .rank-badge::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 8px currentColor;
+    }
+
+    /* Specific Rank Styles */
+    .rank-owner {
+      color: #fecaca;
+      border-color: var(--rank-owner);
+      background: linear-gradient(135deg, rgba(239,68,68,0.2), rgba(239,68,68,0.05));
+      box-shadow: 0 0 20px rgba(239,68,68,0.3);
+    }
+
+    .rank-manager {
+      color: #fdba74;
+      border-color: var(--rank-manager);
+      background: linear-gradient(135deg, rgba(249,115,22,0.2), rgba(249,115,22,0.05));
+    }
+
+    .rank-admin {
+      color: #fde047;
+      border-color: var(--rank-admin);
+      background: linear-gradient(135deg, rgba(234,179,8,0.2), rgba(234,179,8,0.05));
+    }
+
+    .rank-tier3 {
+      color: #86efac;
+      border-color: var(--rank-tier3);
+      background: linear-gradient(135deg, rgba(34,197,94,0.2), rgba(34,197,94,0.05));
+    }
+
+    .rank-tier2 {
+      color: #93c5fd;
+      border-color: var(--rank-tier2);
+      background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(59,130,246,0.05));
+    }
+
+    .rank-tier1 {
+      color: #c4b5fd;
+      border-color: var(--rank-tier1);
+      background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(139,92,246,0.05));
+    }
+
+    .rank-trusted {
+      color: #67e8f9;
+      border-color: var(--rank-trusted);
+      background: linear-gradient(135deg, rgba(6,182,212,0.2), rgba(6,182,212,0.05));
+    }
+
+    .rank-user {
+      color: #94a3b8;
+      border-color: var(--rank-user);
+      background: rgba(100,116,139,0.1);
+    }
+
+    /* Light mode adjustments */
+    body.light .rank-badge {
+      background: rgba(255,255,255,0.5);
     }
 
     /* Mobile Menu Overlay */
@@ -144,25 +241,17 @@
     .right {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       flex-shrink: 0;
     }
 
-    #username {
-      font-size: 0.85rem;
-      max-width: 100px;
+    #display-name {
+      font-size: 0.9rem;
+      font-weight: 600;
+      max-width: 120px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-    }
-
-    .rank {
-      background: var(--accent);
-      border-radius: 50%;
-      padding: 4px 8px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      flex-shrink: 0;
     }
 
     .icon-btn {
@@ -230,12 +319,12 @@
         font-size: 1rem;
       }
 
-      #username {
+      #display-name {
         display: none;
       }
 
-      .rank {
-        padding: 3px 6px;
+      .rank-badge {
+        padding: 3px 8px;
         font-size: 0.65rem;
       }
 
@@ -276,6 +365,7 @@
     <div class="tool" data-file="/tools/transfer.html" onclick="selectTool(this)">Transfer</div>
     <div class="tool" data-file="/tools/marketplace.html" onclick="selectTool(this)">Marketplace</div>
     <div class="tool" data-file="/tools/gambling/index.html" onclick="selectTool(this)">Gamble</div>
+    <div class="tool" data-file="/tools/website-builder.html" onclick="selectTool(this)">Website Builder</div>
     <div class="tool" data-file="/tools/brocode.html" onclick="selectTool(this)">Bro Code</div>
     <div class="tool" data-file="/tools/development.html" onclick="selectTool(this)">Records</div>
     <div class="tool" data-file="/tools/website-access.html" onclick="selectTool(this)">Website Access</div>
@@ -291,8 +381,8 @@
         <span class="header-title">Dashboard</span>
       </div>
       <div class="right">
-        <span id="username"></span>
-        <span class="rank" id="rank"></span>
+        <span id="display-name"></span>
+        <span id="rank-badge" class="rank-badge"></span>
         <button class="icon-btn" onclick="location.href='/notifications'" title="Notifications">🔔</button>
         <button class="icon-btn" onclick="toggleTheme()" title="Toggle Theme">🌓</button>
         <button class="logout-btn" onclick="logout()">Logout</button>
@@ -337,11 +427,9 @@
       location.href = "/login.html";
     }
 
-    document.getElementById("username").textContent = username;
-
     const { data, error } = await supabase
       .from("users")
-      .select("rank")
+      .select("rank, name")
       .eq("uuid", uuid)
       .single();
 
@@ -350,7 +438,16 @@
       location.href = "/login.html";
     }
 
-    document.getElementById("rank").textContent = data.rank;
+    // Display name instead of username (fallback to username if no name)
+    document.getElementById("display-name").textContent = data.name || username;
+
+    // Set rank badge with appropriate styling
+    const rankBadge = document.getElementById("rank-badge");
+    rankBadge.textContent = data.rank;
+    
+    // Add specific class based on rank for styling
+    const rankClass = data.rank.toLowerCase().replace(/\s+/g, '');
+    rankBadge.classList.add(`rank-${rankClass}`);
 
     // Tool selection
     const sidebar = document.getElementById('sidebar');

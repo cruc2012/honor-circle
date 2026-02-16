@@ -69,10 +69,10 @@
   </div>
 
   <script type="module">
-    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2 ";
 
     const supabase = createClient(
-      "https://mdymxbgwhauapvphscrr.supabase.co",
+      "https://mdymxbgwhauapvphscrr.supabase.co ",
       "sb_publishable_nOrq936I1SMh4v21KzE2og_tAEbcAzK"
     );
 
@@ -88,7 +88,8 @@
 
     if (getCookie("uuid")) location.href = "/portal.html";
 
-    document.getElementById("login").onclick = async () => {
+    // Login function
+    async function doLogin() {
       const username = document.getElementById("username").value;
       const password = document.getElementById("password").value;
 
@@ -109,7 +110,19 @@
       setCookie("uuid", data.uuid);
 
       location.href = "/portal.html";
-    };
+    }
+
+    // Click handler
+    document.getElementById("login").onclick = doLogin;
+
+    // Enter key handler for both inputs
+    document.getElementById("username").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") doLogin();
+    });
+
+    document.getElementById("password").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") doLogin();
+    });
 
     window.toggleTheme = () => {
       document.body.classList.toggle("light");
