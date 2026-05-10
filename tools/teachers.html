@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rate a Teacher</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --bg: #020617;
+            --panel: #0f172a;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --accent: #f59e0b;
+            --accent-hover: #d97706;
+            --border: #1e293b;
+            --card-bg: #1e293b;
+            --star-empty: #475569;
+            --star-filled: #fbbf24;
+            --shadow: rgba(0, 0, 0, 0.5);
+        }
+
+        html.light {
+            --bg: #f8fafc;
+            --panel: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --accent: #f59e0b;
+            --accent-hover: #d97706;
+            --border: #e2e8f0;
+            --card-bg: #f1f5f9;
+            --star-empty: #cbd5e1;
+            --star-filled: #f59e0b;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            min-height: 100vh;
+            background: var(--bg);
+            color: var(--text);
+            font-family: system-ui, -apple-system, sans-serif;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* Login Required */
+        .login-required {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 50px 40px;
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 10px 40px var(--shadow);
+        }
+
+        .login-icon { font-size: 4rem; margin-bottom: 20px; }
+        .login-btn {
+            display: inline-block;
+            padding: 14px 32px;
+            background: var(--accent);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-top: 15px;
+        }
+
+        /* Main App */
+        #app {
+            min-height: 100vh;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-top: 20px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--accent), #fbbf24);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p { color: var(--text-muted); }
+
+        /* Filter Tabs */
+        .filter-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 25px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+
+        .filter-btn:hover {
+            background: var(--card-bg);
+            color: var(--text);
+        }
+
+        .filter-btn.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        /* Teacher Grid */
+        .teacher-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .teacher-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 20px var(--shadow);
+        }
+
+        .teacher-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px var(--shadow);
+            border-color: var(--accent);
+        }
+
+        .teacher-avatar {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .teacher-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .teacher-subject {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .overall-rating {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border);
+        }
+
+        .rating-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .rating-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--star-filled);
+        }
+
+        .stars-display {
+            display: flex;
+            gap: 2px;
+        }
+
+        .star {
+            width: 20px;
+            height: 20px;
+            fill: var(--star-empty);
+        }
+
+        .star.filled { fill: var(--star-filled); }
+
+        /* Teacher Detail Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .modal {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            max-width: 700px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-header {
+            padding: 30px;
+            border-bottom: 1px solid var(--border);
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: var(--card-bg);
+            color: var(--text);
+        }
+
+        .modal-teacher-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .modal-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        /* Rating Section */
+        .rating-section {
+            margin-bottom: 30px;
+        }
+
+        .rating-category {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: var(--bg);
+            border-radius: 12px;
+        }
+
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .category-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .category-score {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--star-filled);
+        }
+
+        .star-input {
+            display: flex;
+            gap: 8px;
+        }
+
+        .star-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            transition: transform 0.2s;
+        }
+
+        .star-btn:hover { transform: scale(1.2); }
+        .star-btn svg {
+            width: 32px;
+            height: 32px;
+            fill: var(--star-empty);
+            transition: fill 0.2s;
+        }
+
+        .star-btn.active svg,
+        .star-btn:hover svg { fill: var(--star-filled); }
+
+        /* Reviews Section */
+        .reviews-section {
+            margin-top: 30px;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .review-input {
+            width: 100%;
+            padding: 15px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 1rem;
+            margin-bottom: 15px;
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .review-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .submit-review-btn {
+            width: 100%;
+            padding: 15px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .submit-review-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+
+        .reviews-list {
+            margin-top: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .review-item {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .reviewer-name {
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .review-date {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .review-text {
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .request-btn {
+            background: var(--panel);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .request-btn:hover {
+            background: var(--card-bg);
+            border-color: var(--accent);
+        }
+
+        .admin-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+        }
+
+        .admin-btn:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--panel);
+            border: 1px solid var(--border);
+            padding: 15px 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px var(--shadow);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success { border-color: #22c55e; }
+        .toast.error { border-color: #ef4444; }
+
+        /* Access Denied */
+        .access-denied {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .access-denied h1 {
+            color: #ef4444;
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .teacher-grid { grid-template-columns: 1fr; }
+            .modal-teacher-info { flex-direction: column; text-align: center; }
+            .filter-container { justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap; }
+        }
+    </style>
+</head>
+<body>
+    <div id="content"></div>
+    <div class="toast" id="toast"></div>
+
+    <!-- Teacher Detail Modal -->
+    <div class="modal-overlay" id="teacherModal">
+        <div class="modal">
+            <div class="modal-header">
+                <button class="close-btn" onclick="closeModal()">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+                <div class="modal-teacher-info">
+                    <div class="modal-avatar" id="modalAvatar">?</div>
+                    <div>
+                        <h2 class="text-2xl font-bold" id="modalName">Teacher Name</h2>
+                        <p class="text-muted" id="modalSubject">Subject</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-body">
+                <!-- Rating Categories -->
+                <div class="rating-section">
+                    <h3 class="section-title">
+                        <i data-lucide="star" class="w-5 h-5"></i>
+                        Rate This Teacher
+                    </h3>
+                    
+                    <div class="rating-category">
+                        <div class="category-header">
+                            <span class="category-name">How Nice They Are</span>
+                            <span class="category-score" id="niceScore">0.0</span>
+                        </div>
+                        <div class="star-input" id="niceStars">
+                            <button class="star-btn" onclick="setRating('nice', 1)"><i data-lucide="star"></i></button>
+                            <button class="star-btn" onclick="setRating('nice', 2)"><i data-lucide="star"></i></button>
+                            <button class="star-btn" onclick="setRating('nice', 3)"><i data-lucide="star"></i></button>
+                            <button class="star-btn" onclick="setRating('nice', 4)"><i data-lucide="star"></i></button>
+                            <button class="star-btn" onclick="setRating('nice', 5)"><i data-lucide="star"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="rating-category">
+                        <div class="category-header">
+                            <span class="category-name">Teaching Quality</span>
+                            <span class="category-score" id="teachingScore">0.0</span>
+                        </div>
+                        <div class="star-input" id="teachingStars">
+                            <button class="star-btn" onclick="setRating('teaching', 1)"><i data-lucide="star"></i></button>
+                            <button class="star-btn" onclick="setRating('teaching', 2)"><i data-lucide="star"></i></button>
+                            <button class="star-btn" onclick="setRating('teaching', 3)"><i data-lucide="star"></i></button>
+                            <button class="star-btn" onclick="setRating('teaching', 4)"><i data-lucide="star"></i></button>
+                            <button class="star-btn" onclick="setRating('teaching', 5)"><i data-lucide="star"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="rating-category">
+                        <div class="category-header">
+                            <span class="category-name">How Fun The Subject Is</span>
+                            <span class="category-score" id="funScore">0.0</span>
+                        </div>
+                        <div class="star-input" id="funStars">
+                            <button class="star-btn" onclick="setRating('fun', 1)"><i data-lucide="star"></i></button>
+                            <button class="star-btn" onclick="setRating('fun', 2)"><i data-lucide="star"></i></button>
+                            <button class="star-btn" onclick="setRating('fun', 3)"><i data-lucide="star"></i></button>
+                            <button class="star-btn" onclick="setRating('fun', 4)"><i data-lucide="star"></i></button>
+                            <button class="star-btn" onclick="setRating('fun', 5)"><i data-lucide="star"></i></button>
+                        </div>
+                    </div>
+
+                    <button class="submit-review-btn" onclick="submitRating()">Submit Rating</button>
+                </div>
+
+                <!-- Reviews Section -->
+                <div class="reviews-section">
+                    <h3 class="section-title">
+                        <i data-lucide="message-square" class="w-5 h-5"></i>
+                        Reviews & Comments
+                    </h3>
+                    <textarea class="review-input" id="reviewText" placeholder="Write your thoughts about this teacher..."></textarea>
+                    <button class="submit-review-btn" onclick="submitReview()">Post Review</button>
+                    
+                    <div class="reviews-list" id="reviewsList">
+                        <!-- Reviews will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+        // Supabase credentials from memory
+        const supabase = createClient(
+            "https://mdymxbgwhauapvphscrr.supabase.co",
+            "sb_publishable_nOrq936I1SMh4v21KzE2og_tAEbcAzK"
+        );
+
+        function getCookie(name) {
+            return document.cookie.split("; ").find(r => r.startsWith(name + "="))?.split("=")[1] || null;
+        }
+
+        function applyTheme() {
+            if (getCookie("theme") === "light") {
+                document.documentElement.classList.add("light");
+            } else {
+                document.documentElement.classList.remove("light");
+            }
+        }
+
+        applyTheme();
+
+        const uuid = getCookie("uuid");
+        const content = document.getElementById("content");
+        
+        // Rank hierarchy (lower number = higher rank)
+        const RANK_HIERARCHY = {
+            'owner': 1,
+            'manager': 2,
+            'admin': 3,
+            'tier 3': 4,
+            'tier 2': 5,
+            'tier 1': 6,
+            'trusted': 7,
+            'user': 8
+        };
+
+        const MIN_RANK = 7; // 'trusted' or higher required
+        let currentUser = null;
+        let currentTeacher = null;
+        let teachers = [];
+        let currentFilter = 'all';
+        let userRatings = { nice: 0, teaching: 0, fun: 0 };
+
+        // Check authentication and rank
+        if (!uuid) {
+            content.innerHTML = `
+                <div class="login-required">
+                    <div class="login-card">
+                        <div class="login-icon">⭐</div>
+                        <h1>Access Required</h1>
+                        <p>Please log in to rate teachers.</p>
+                        <a href="/" class="login-btn">Sign In</a>
+                    </div>
+                </div>
+            `;
+        } else {
+            init();
+        }
+
+        async function init() {
+            try {
+                // Get user data and check rank
+                const { data: userData, error: userError } = await supabase
+                    .from("users")
+                    .select("uuid, username, name, rank")
+                    .eq("uuid", uuid)
+                    .single();
+
+                if (userError || !userData) {
+                    content.innerHTML = `
+                        <div class="login-required">
+                            <div class="login-card">
+                                <div class="login-icon">⚠️</div>
+                                <h1>Session Expired</h1>
+                                <a href="/" class="login-btn">Sign In</a>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                currentUser = userData;
+                const userRankLevel = RANK_HIERARCHY[userData.rank.toLowerCase()] || 999;
+
+                // Check if user has required rank (trusted or higher)
+                if (userRankLevel > MIN_RANK) {
+                    content.innerHTML = `
+                        <div class="access-denied">
+                            <div>
+                                <h1>🔒 Access Denied</h1>
+                                <p class="text-muted">You need to be at least <strong>Trusted</strong> rank to access this page.</p>
+                                <p class="text-muted mt-4">Your current rank: <strong>${userData.rank}</strong></p>
+                                <a href="/" class="login-btn mt-6">Go Back</a>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Check if user is admin/manager/owner for admin button
+                const isAdmin = ['owner', 'manager', 'admin'].includes(userData.rank.toLowerCase());
+
+                // Build the main app
+                content.innerHTML = `
+                    <div id="app">
+                        <div class="header">
+                            <h1>⭐ Rate a Teacher</h1>
+                            <p>Share your experience and help others</p>
+                        </div>
+
+                        <div class="filter-container">
+                            <button class="filter-btn active" onclick="filterTeachers('all')">All</button>
+                            <button class="filter-btn" onclick="filterTeachers('math')">Math</button>
+                            <button class="filter-btn" onclick="filterTeachers('reading')">Reading</button>
+                            <button class="filter-btn" onclick="filterTeachers('science')">Science</button>
+                            <button class="filter-btn" onclick="filterTeachers('others')">Others</button>
+                        </div>
+
+                        <div class="teacher-grid" id="teacherGrid">
+                            <div class="text-center text-muted col-span-full">Loading teachers...</div>
+                        </div>
+
+                        <div class="action-buttons">
+                            <a href="request.html" class="action-btn request-btn">
+                                <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                                Request New Teacher
+                            </a>
+                            ${isAdmin ? `
+                                <a href="admin.html" class="action-btn admin-btn">
+                                    <i data-lucide="shield" class="w-5 h-5"></i>
+                                    Admin Panel
+                                </a>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+
+                lucide.createIcons();
+                await loadTeachers();
+
+            } catch (err) {
+                console.error("Init error:", err);
+                showToast("Error loading page", "error");
+            }
+        }
+
+        async function loadTeachers() {
+            try {
+                const { data, error } = await supabase
+                    .from("teachers")
+                    .select(`
+                        *,
+                        ratings:teacher_ratings(nice_rating, teaching_rating, fun_rating),
+                        reviews:teacher_reviews(count)
+                    `)
+                    .order("created_at", { ascending: false });
+
+                if (error) throw error;
+
+                teachers = (data || []).map(teacher => {
+                    // Calculate average ratings
+                    const ratings = teacher.ratings || [];
+                    const avgNice = ratings.length ? (ratings.reduce((a, b) => a + (b.nice_rating || 0), 0) / ratings.length).toFixed(1) : "0.0";
+                    const avgTeaching = ratings.length ? (ratings.reduce((a, b) => a + (b.teaching_rating || 0), 0) / ratings.length).toFixed(1) : "0.0";
+                    const avgFun = ratings.length ? (ratings.reduce((a, b) => a + (b.fun_rating || 0), 0) / ratings.length).toFixed(1) : "0.0";
+                    const overall = ((parseFloat(avgNice) + parseFloat(avgTeaching) + parseFloat(avgFun)) / 3).toFixed(1);
+                    
+                    return {
+                        ...teacher,
+                        avgNice,
+                        avgTeaching,
+                        avgFun,
+                        overall,
+                        reviewCount: teacher.reviews?.[0]?.count || 0
+                    };
+                });
+
+                renderTeachers();
+
+            } catch (err) {
+                console.error("Load teachers error:", err);
+                document.getElementById("teacherGrid").innerHTML = `
+                    <div class="text-center text-muted col-span-full">Error loading teachers. Please refresh.</div>
+                `;
+            }
+        }
+
+        function renderTeachers() {
+            const grid = document.getElementById("teacherGrid");
+            
+            let filtered = teachers;
+            if (currentFilter !== 'all') {
+                filtered = teachers.filter(t => t.subject?.toLowerCase() === currentFilter);
+            }
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="text-center text-muted col-span-full py-10">
+                        <i data-lucide="search" class="w-12 h-12 mx-auto mb-4 opacity-50"></i>
+                        <p>No teachers found in this category.</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            grid.innerHTML = filtered.map(teacher => {
+                const initials = teacher.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                const fullStars = Math.round(parseFloat(teacher.overall));
+                
+                return `
+                    <div class="teacher-card" onclick="openTeacherModal('${teacher.id}')">
+                        <div class="teacher-avatar">${initials}</div>
+                        <div class="teacher-name">${teacher.name}</div>
+                        <div class="teacher-subject">${teacher.subject || 'General'}</div>
+                        
+                        <div class="overall-rating">
+                            <div>
+                                <div class="rating-label">Overall Rating</div>
+                                <div class="stars-display">
+                                    ${[1,2,3,4,5].map(i => `
+                                        <svg class="star ${i <= fullStars ? 'filled' : ''}" viewBox="0 0 24 24">
+                                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                        </svg>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            <div class="rating-value">${teacher.overall}</div>
+                        </div>
+                        
+                        <div class="mt-3 text-sm text-muted">
+                            ${teacher.reviewCount} review${teacher.reviewCount !== 1 ? 's' : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        window.filterTeachers = function(subject) {
+            currentFilter = subject;
+            
+            // Update button states
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent.toLowerCase() === subject || (subject === 'all' && btn.textContent === 'All')) {
+                    btn.classList.add('active');
+                }
+            });
+
+            renderTeachers();
+        };
+
+        window.openTeacherModal = async function(teacherId) {
+            currentTeacher = teachers.find(t => t.id === teacherId);
+            if (!currentTeacher) return;
+
+            // Reset user ratings
+            userRatings = { nice: 0, teaching: 0, fun: 0 };
+            updateStarDisplays();
+
+            // Populate modal
+            document.getElementById("modalName").textContent = currentTeacher.name;
+            document.getElementById("modalSubject").textContent = currentTeacher.subject || 'General';
+            document.getElementById("modalAvatar").textContent = currentTeacher.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            
+            // Update average scores display
+            document.getElementById("niceScore").textContent = currentTeacher.avgNice;
+            document.getElementById("teachingScore").textContent = currentTeacher.avgTeaching;
+            document.getElementById("funScore").textContent = currentTeacher.avgFun;
+
+            // Load reviews
+            await loadReviews(teacherId);
+
+            // Show modal
+            document.getElementById("teacherModal").classList.add("active");
+            lucide.createIcons();
+        };
+
+        window.closeModal = function() {
+            document.getElementById("teacherModal").classList.remove("active");
+            currentTeacher = null;
+            document.getElementById("reviewText").value = '';
+        };
+
+        window.setRating = function(category, value) {
+            userRatings[category] = value;
+            updateStarDisplays();
+        };
+
+        function updateStarDisplays() {
+            ['nice', 'teaching', 'fun'].forEach(category => {
+                const container = document.getElementById(category + 'Stars');
+                const buttons = container.querySelectorAll('.star-btn');
+                buttons.forEach((btn, index) => {
+                    if (index < userRatings[category]) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+            });
+        }
+
+        window.submitRating = async function() {
+            if (!currentTeacher) return;
+            
+            if (userRatings.nice === 0 || userRatings.teaching === 0 || userRatings.fun === 0) {
+                showToast("Please rate all three categories", "error");
+                return;
+            }
+
+            try {
+                // Check if user already rated this teacher
+                const { data: existing } = await supabase
+                    .from("teacher_ratings")
+                    .select("id")
+                    .eq("teacher_id", currentTeacher.id)
+                    .eq("user_uuid", uuid)
+                    .single();
+
+                const ratingData = {
+                    teacher_id: currentTeacher.id,
+                    user_uuid: uuid,
+                    nice_rating: userRatings.nice,
+                    teaching_rating: userRatings.teaching,
+                    fun_rating: userRatings.fun,
+                    updated_at: new Date().toISOString()
+                };
+
+                let error;
+                if (existing) {
+                    // Update existing
+                    ({ error } = await supabase
+                        .from("teacher_ratings")
+                        .update(ratingData)
+                        .eq("id", existing.id));
+                } else {
+                    // Insert new
+                    ({ error } = await supabase
+                        .from("teacher_ratings")
+                        .insert({ ...ratingData, created_at: new Date().toISOString() }));
+                }
+
+                if (error) throw error;
+
+                showToast("Rating submitted successfully!", "success");
+                
+                // Reload teacher data to update averages
+                await loadTeachers();
+                
+                // Update the displayed averages
+                const updated = teachers.find(t => t.id === currentTeacher.id);
+                if (updated) {
+                    document.getElementById("niceScore").textContent = updated.avgNice;
+                    document.getElementById("teachingScore").textContent = updated.avgTeaching;
+                    document.getElementById("funScore").textContent = updated.avgFun;
+                }
+
+            } catch (err) {
+                console.error("Submit rating error:", err);
+                showToast("Failed to submit rating", "error");
+            }
+        };
+
+        window.submitReview = async function() {
+            if (!currentTeacher) return;
+            
+            const text = document.getElementById("reviewText").value.trim();
+            if (!text) {
+                showToast("Please write a review", "error");
+                return;
+            }
+
+            try {
+                const { error } = await supabase
+                    .from("teacher_reviews")
+                    .insert({
+                        teacher_id: currentTeacher.id,
+                        user_uuid: uuid,
+                        username: currentUser.username,
+                        content: text,
+                        created_at: new Date().toISOString()
+                    });
+
+                if (error) throw error;
+
+                showToast("Review posted!", "success");
+                document.getElementById("reviewText").value = '';
+                await loadReviews(currentTeacher.id);
+                await loadTeachers(); // Update review count
+
+            } catch (err) {
+                console.error("Submit review error:", err);
+                showToast("Failed to post review", "error");
+            }
+        };
+
+        async function loadReviews(teacherId) {
+            try {
+                const { data, error } = await supabase
+                    .from("teacher_reviews")
+                    .select("*")
+                    .eq("teacher_id", teacherId)
+                    .order("created_at", { ascending: false });
+
+                if (error) throw error;
+
+                const list = document.getElementById("reviewsList");
+                
+                if (!data || data.length === 0) {
+                    list.innerHTML = `
+                        <div class="text-center text-muted py-8">
+                            <i data-lucide="message-circle" class="w-12 h-12 mx-auto mb-4 opacity-30"></i>
+                            <p>No reviews yet. Be the first!</p>
+                        </div>
+                    `;
+                    lucide.createIcons();
+                    return;
+                }
+
+                list.innerHTML = data.map(review => `
+                    <div class="review-item">
+                        <div class="review-header">
+                            <span class="reviewer-name">@${review.username}</span>
+                            <span class="review-date">${new Date(review.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <p class="review-text">${escapeHtml(review.content)}</p>
+                    </div>
+                `).join('');
+
+                lucide.createIcons();
+
+            } catch (err) {
+                console.error("Load reviews error:", err);
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showToast(message, type) {
+            const toast = document.getElementById("toast");
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            setTimeout(() => toast.classList.add("show"), 10);
+            setTimeout(() => toast.classList.remove("show"), 3000);
+        }
+
+        // Close modal on backdrop click
+        document.getElementById("teacherModal").addEventListener('click', (e) => {
+            if (e.target.id === "teacherModal") closeModal();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request Teacher</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --bg: #020617;
+            --panel: #0f172a;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --accent: #f59e0b;
+            --accent-hover: #d97706;
+            --border: #1e293b;
+            --input-bg: #1e293b;
+            --shadow: rgba(0, 0, 0, 0.5);
+        }
+
+        html.light {
+            --bg: #f8fafc;
+            --panel: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --accent: #f59e0b;
+            --accent-hover: #d97706;
+            --border: #e2e8f0;
+            --input-bg: #f1f5f9;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            min-height: 100vh;
+            background: var(--bg);
+            color: var(--text);
+            font-family: system-ui, -apple-system, sans-serif;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .request-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 10px 40px var(--shadow);
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            text-decoration: none;
+            margin-bottom: 20px;
+            transition: color 0.2s;
+        }
+
+        .back-btn:hover { color: var(--text); }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--accent), #fbbf24);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 15px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 10px;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--panel);
+            border: 1px solid var(--border);
+            padding: 15px 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px var(--shadow);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success { border-color: #22c55e; }
+        .toast.error { border-color: #ef4444; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="request-card">
+            <a href="/tools/teachers.html" class="back-btn">
+                <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                Back to Teachers
+            </a>
+            
+            <h1>📚 Request Teacher</h1>
+            <p class="subtitle">Suggest a new teacher to be added to the rating system</p>
+            
+            <form id="requestForm">
+                <div class="form-group">
+                    <label for="teacherName">Teacher Name</label>
+                    <input type="text" id="teacherName" placeholder="e.g., Mr. Smith" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="subject">Subject</label>
+                    <select id="subject" required>
+                        <option value="">Select a subject...</option>
+                        <option value="math">Math</option>
+                        <option value="reading">Reading</option>
+                        <option value="science">Science</option>
+                        <option value="others">Others</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="reason">Why should they be added?</label>
+                    <input type="text" id="reason" placeholder="Brief reason (optional)">
+                </div>
+                
+                <button type="submit" class="submit-btn" id="submitBtn">Submit Request</button>
+            </form>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast"></div>
+
+    <script type="module">
+        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+        const supabase = createClient(
+            "https://mdymxbgwhauapvphscrr.supabase.co",
+            "sb_publishable_nOrq936I1SMh4v21KzE2og_tAEbcAzK"
+        );
+
+        function getCookie(name) {
+            return document.cookie.split("; ").find(r => r.startsWith(name + "="))?.split("=")[1] || null;
+        }
+
+        function applyTheme() {
+            if (getCookie("theme") === "light") {
+                document.documentElement.classList.add("light");
+            } else {
+                document.documentElement.classList.remove("light");
+            }
+        }
+
+        applyTheme();
+        lucide.createIcons();
+
+        const uuid = getCookie("uuid");
+        if (!uuid) {
+            window.location.href = "/";
+        }
+
+        document.getElementById("requestForm").onsubmit = async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById("submitBtn");
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Submitting...";
+            
+            const name = document.getElementById("teacherName").value.trim();
+            const subject = document.getElementById("subject").value;
+            const reason = document.getElementById("reason").value.trim();
+            
+            try {
+                const { error } = await supabase
+                    .from("teacher_request")
+                    .insert({
+                        user_uuid: uuid,
+                        teacher_name: name,
+                        subject: subject,
+                        reason: reason,
+                        status: "pending",
+                        created_at: new Date().toISOString()
+                    });
+                
+                if (error) throw error;
+                
+                showToast("Request submitted successfully!", "success");
+                setTimeout(() => {
+                    window.location.href = "/tools/teachers.html";
+                }, 2000);
+                
+            } catch (err) {
+                console.error(err);
+                showToast("Failed to submit request", "error");
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Submit Request";
+            }
+        };
+
+        function showToast(message, type) {
+            const toast = document.getElementById("toast");
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            setTimeout(() => toast.classList.add("show"), 10);
+            setTimeout(() => toast.classList.remove("show"), 3000);
+        }
+    </script>
+</body>
+</html>

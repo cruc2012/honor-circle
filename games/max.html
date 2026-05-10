@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Max's Forehead Clicker</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .game-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 20px;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: 100vh;
+        }
+
+        @media (max-width: 968px) {
+            .game-container {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 40px);
+        }
+
+        h1 {
+            font-family: 'Fredoka One', cursive;
+            text-align: center;
+            color: #fff;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .stats {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 20px;
+            flex-shrink: 0;
+        }
+
+        .forehead-count {
+            font-size: 3rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .click-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
+            position: relative;
+        }
+
+        .max-head-wrapper {
+            width: 300px;
+            height: 300px;
+            position: relative;
+            margin-bottom: 10px;
+        }
+
+        .max-head {
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            transition: transform 0.1s;
+            filter: drop-shadow(0 20px 60px rgba(0,0,0,0.3));
+            user-select: none;
+            -webkit-user-drag: none;
+            position: relative;
+            z-index: 10;
+        }
+
+        .max-head.clicking {
+            transform: scale(0.9);
+        }
+
+        .max-head:hover {
+            transform: scale(1.05);
+        }
+
+        .max-head img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            pointer-events: none;
+        }
+
+        .golden-max {
+            position: fixed;
+            width: 100px;
+            height: 100px;
+            cursor: pointer;
+            z-index: 1000;
+            animation: goldenSpawn 0.5s ease-out;
+            filter: drop-shadow(0 0 20px gold) drop-shadow(0 0 40px orange);
+            transition: transform 0.1s;
+        }
+
+        .golden-max:hover {
+            transform: scale(1.2);
+        }
+
+        .golden-max:active {
+            transform: scale(0.9);
+        }
+
+        .golden-max img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            animation: goldenGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes goldenSpawn {
+            0% { transform: scale(0) rotate(0deg); opacity: 0; }
+            50% { transform: scale(1.3) rotate(180deg); }
+            100% { transform: scale(1) rotate(360deg); opacity: 1; }
+        }
+
+        @keyframes goldenGlow {
+            0%, 100% { filter: brightness(1) saturate(1); }
+            50% { filter: brightness(1.3) saturate(1.5); }
+        }
+
+        .golden-text {
+            position: fixed;
+            pointer-events: none;
+            color: gold;
+            font-weight: bold;
+            font-size: 2rem;
+            text-shadow: 0 0 10px orange, 0 0 20px red;
+            animation: goldenFloat 1.5s ease-out forwards;
+            z-index: 1001;
+        }
+
+        @keyframes goldenFloat {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1) rotate(0deg);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-150px) scale(2) rotate(20deg);
+            }
+        }
+
+        .scroll-container {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 5px;
+            margin-top: 10px;
+        }
+
+        .scroll-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .scroll-container::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+        }
+
+        .scroll-container::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 4px;
+        }
+
+        .scroll-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.5);
+        }
+
+        .upgrade-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            position: relative;
+            z-index: 100;
+        }
+
+        .upgrade-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #F59E0B;
+        }
+
+        .upgrade-item:active {
+            transform: scale(0.98);
+        }
+
+        .upgrade-item.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .upgrade-item.locked:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: transparent;
+            transform: none;
+        }
+
+        .upgrade-name {
+            font-weight: bold;
+            color: #fff;
+            font-size: 1.1rem;
+        }
+
+        .upgrade-cost {
+            color: #F59E0B;
+            font-size: 0.9rem;
+        }
+
+        .upgrade-desc {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+
+        .floating-text {
+            position: fixed;
+            pointer-events: none;
+            color: #fff;
+            font-weight: bold;
+            font-size: 1.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            animation: floatUp 1s ease-out forwards;
+            z-index: 1000;
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-100px) scale(1.5);
+            }
+        }
+
+        .achievement {
+            position: fixed;
+            bottom: 20px;
+            right: -400px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: right 0.5s ease-out;
+            z-index: 1000;
+            max-width: 350px;
+        }
+
+        .achievement.show {
+            right: 20px;
+        }
+
+        .achievement-title {
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+
+        .particles {
+            position: fixed;
+            pointer-events: none;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 999;
+        }
+
+        .particle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #F59E0B;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .auto-clicker-display {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            min-height: 50px;
+        }
+
+        .auto-clicker-icon {
+            font-size: 1.5rem;
+            animation: none;
+        }
+
+        .section-title {
+            color: #fff;
+            font-family: 'Fredoka One', cursive;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .reset-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid #fff;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-family: 'Nunito', sans-serif;
+            font-weight: bold;
+            transition: all 0.3s;
+            margin-top: 20px;
+            width: 100%;
+            flex-shrink: 0;
+        }
+
+        .reset-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .per-second {
+            color: rgba(255,255,255,0.8);
+            font-size: 1.1rem;
+            margin-top: 5px;
+        }
+
+        .click-power {
+            color: #F59E0B;
+            font-size: 1rem;
+            margin-top: 5px;
+        }
+
+        .loading-placeholder {
+            width: 300px;
+            height: 300px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255,255,255,0.5);
+            font-size: 1.2rem;
+        }
+
+        .ownership-verified {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(34, 197, 94, 0.9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            z-index: 2000;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .purchase-required {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            color: white;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .purchase-required h2 {
+            font-family: 'Fredoka One', cursive;
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #e94560;
+        }
+
+        .purchase-required p {
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+            max-width: 600px;
+            line-height: 1.6;
+        }
+
+        .purchase-btn {
+            background: linear-gradient(45deg, #22c55e, #16a34a);
+            color: white;
+            border: none;
+            padding: 20px 50px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 10px 30px rgba(34, 197, 94, 0.4);
+        }
+
+        .purchase-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(34, 197, 94, 0.6);
+        }
+
+        .max-head-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .max-head-small {
+            width: 150px;
+            height: 150px;
+            opacity: 0.3;
+            filter: grayscale(100%);
+        }
+
+        .checking-ownership {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            color: white;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top-color: #22c55e;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .army-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .army-title {
+            color: #fff;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            flex-shrink: 0;
+        }
+
+        .save-indicator {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(34, 197, 94, 0.9);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 2000;
+        }
+
+        .save-indicator.show {
+            opacity: 1;
+        }
+
+        /* Prevent text selection on upgrades */
+        .no-select {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="checkingBlock" class="checking-ownership">
+        <div class="spinner"></div>
+        <p>Checking game ownership...</p>
+    </div>
+
+    <div id="purchaseBlock" style="display: none;">
+        <div class="purchase-required">
+            <h2>🔒 Game Locked</h2>
+            <div class="max-head-container">
+                <div class="max-head-small">
+                    <img src="/images/max.png" alt="Max's Head" style="width: 100%; height: 100%; object-fit: contain;">
+                </div>
+            </div>
+            <p>You need to purchase <strong>Max's Forehead Clicker</strong> from the Marketplace to play!</p>
+            <p style="font-size: 1rem; color: #94a3b8; margin-bottom: 30px;">Click Max's legendary forehead, unlock hilarious upgrades, and discover the legendary Golden Max!</p>
+            <a href="/marketplace.html" class="purchase-btn">Go to Marketplace</a>
+        </div>
+    </div>
+
+    <div class="game-container" id="gameContainer" style="display: none;">
+        <!-- Left Panel: Stats & Info -->
+        <div class="panel">
+            <h2 class="section-title">📊 Stats</h2>
+            <div class="stats">
+                <div class="forehead-count" id="foreheadCount">0</div>
+                <div style="color: #fff; font-size: 1.2rem;">Forehead Points</div>
+                <div class="per-second" id="perSecond">0 per second</div>
+                <div class="click-power" id="clickPower">1 per click</div>
+            </div>
+            
+            <div class="army-section">
+                <div class="army-title">Your Army:</div>
+                <div class="scroll-container" id="armyScroll">
+                    <div id="armyDisplay" class="auto-clicker-display"></div>
+                </div>
+            </div>
+            
+            <button class="reset-btn" onclick="resetGame()">🔄 Reset Game</button>
+        </div>
+
+        <!-- Center Panel: The Clicker -->
+        <div class="panel click-area">
+            <h1>Max's Forehead Clicker</h1>
+            
+            <div class="max-head-wrapper">
+                <div class="max-head" id="maxHead">
+                    <img src="/images/max.png" alt="Max's Head" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'loading-placeholder\'>Add max.png to /images/</div>';">
+                </div>
+            </div>
+            
+            <p style="color: rgba(255,255,255,0.8); margin-bottom: 20px; text-align: center;">
+                Click Max's legendary forehead!<br>
+                <small>(Don't worry, he's in on the joke 😄)</small>
+            </p>
+            
+            <div style="color: rgba(255,255,255,0.6); text-align: center;">
+                <p>💡 Tip: Buy upgrades to auto-generate forehead points!</p>
+                <p>✨ Watch for the GOLDEN MAX to appear randomly!</p>
+                <p id="nextAchievement" style="margin-top: 10px; font-size: 0.9rem;"></p>
+            </div>
+        </div>
+
+        <!-- Right Panel: Upgrades -->
+        <div class="panel">
+            <h2 class="section-title">🛒 Upgrades</h2>
+            <div class="scroll-container" id="upgradesScroll">
+                <!-- Use a container with event delegation -->
+                <div id="upgradesList"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="particles" id="particles"></div>
+    <div class="save-indicator" id="saveIndicator">💾 Saved!</div>
+
+    <script type="module">
+        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+        const supabase = createClient(
+            "https://mdymxbgwhauapvphscrr.supabase.co",
+            "sb_publishable_nOrq936I1SMh4v21KzE2og_tAEbcAzK"
+        );
+
+        // Game State - start with defaults
+        let gameState = {
+            foreheads: 0,
+            totalForeheads: 0,
+            clickPower: 1,
+            autoClickers: {
+                friend: { count: 0, power: 1, cost: 15, name: "Friend's Joke", icon: "😂" },
+                mirror: { count: 0, power: 5, cost: 100, name: "Mirror Check", icon: "🪞" },
+                hat: { count: 0, power: 20, cost: 500, name: "Hat Collection", icon: "🎩" },
+                shampoo: { count: 0, power: 50, cost: 2000, name: "Forehead Shampoo", icon: "🧴" },
+                billboard: { count: 0, power: 150, cost: 10000, name: "Billboard Ad", icon: "📺" },
+                satellite: { count: 0, power: 500, cost: 50000, name: "Space Telescope", icon: "🛰️" },
+                foreheadOil: { count: 0, power: 1200, cost: 150000, name: "Forehead Oil", icon: "🛢️" },
+                foreheadGym: { count: 0, power: 3000, cost: 500000, name: "Forehead Gym", icon: "🏋️" },
+                foreheadBank: { count: 0, power: 8000, cost: 2000000, name: "Forehead Bank", icon: "🏦" },
+                foreheadFactory: { count: 0, power: 20000, cost: 10000000, name: "Forehead Factory", icon: "🏭" },
+                foreheadEmpire: { count: 0, power: 50000, cost: 50000000, name: "Forehead Empire", icon: "👑" },
+                foreheadReligion: { count: 0, power: 150000, cost: 250000000, name: "Forehead Religion", icon: "⛪" },
+                foreheadPlanet: { count: 0, power: 500000, cost: 1000000000, name: "Forehead Planet", icon: "🪐" },
+                foreheadGalaxy: { count: 0, power: 2000000, cost: 5000000000, name: "Forehead Galaxy", icon: "🌌" },
+                foreheadUniverse: { count: 0, power: 10000000, cost: 25000000000, name: "Forehead Universe", icon: "🌠" },
+                foreheadMultiverse: { count: 0, power: 50000000, cost: 100000000000, name: "Forehead Multiverse", icon: "♾️" }
+            },
+            achievements: [],
+            startTime: Date.now(),
+            gameId: 2
+        };
+
+        let totalClicks = 0;
+        let clickPowerUpgradeCost = 100;
+        let goldenMaxClicks = 0;
+        let userUuid = null;
+        let gameLoopInterval = null;
+        let saveInterval = null;
+        let isProcessingClick = false; // Prevent double-clicks
+
+        // Get UUID from cookie
+        function getCookie(name) {
+            const value = document.cookie.split("; ").find(r => r.startsWith(name + "="))?.split("=")[1];
+            return value ? decodeURIComponent(value) : null;
+        }
+
+        // Check ownership via Supabase
+        async function checkOwnership() {
+            userUuid = getCookie("uuid");
+            
+            if (!userUuid) {
+                return false;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .from("items")
+                    .select("*")
+                    .eq("game_id", 2)
+                    .eq("owner_uuid", userUuid);
+
+                if (error) {
+                    console.error("Supabase error:", error);
+                    return false;
+                }
+
+                return data && data.length > 0;
+                
+            } catch (err) {
+                console.error("Error checking ownership:", err);
+                return false;
+            }
+        }
+
+        // Load game data from Supabase
+        async function loadGameData() {
+            if (!userUuid) return false;
+
+            try {
+                const { data, error } = await supabase
+                    .from("game_saves")
+                    .select("*")
+                    .eq("user_uuid", userUuid)
+                    .eq("game_id", 2)
+                    .single();
+
+                if (error) {
+                    if (error.code === 'PGRST116') {
+                        // No data found - new player
+                        console.log("No save data found, starting fresh");
+                        return false;
+                    }
+                    console.error("Error loading game:", error);
+                    return false;
+                }
+
+                if (data) {
+                    console.log("Loading saved game data:", data);
+                    
+                    // Load saved data
+                    gameState.foreheads = parseFloat(data.foreheads) || 0;
+                    gameState.totalForeheads = parseFloat(data.total_foreheads) || 0;
+                    gameState.clickPower = parseInt(data.click_power) || 1;
+                    gameState.achievements = data.achievements || [];
+                    totalClicks = parseInt(data.total_clicks) || 0;
+                    goldenMaxClicks = parseInt(data.golden_max_clicks) || 0;
+                    clickPowerUpgradeCost = parseInt(data.click_power_cost) || 100;
+
+                    // Load auto clickers
+                    if (data.auto_clickers) {
+                        const savedClickers = typeof data.auto_clickers === 'string' 
+                            ? JSON.parse(data.auto_clickers) 
+                            : data.auto_clickers;
+                        
+                        for (let key in savedClickers) {
+                            if (gameState.autoClickers[key]) {
+                                gameState.autoClickers[key].count = parseInt(savedClickers[key].count) || 0;
+                                gameState.autoClickers[key].cost = parseInt(savedClickers[key].cost) || gameState.autoClickers[key].cost;
+                            }
+                        }
+                    }
+                    
+                    console.log("Game data loaded successfully");
+                    return true;
+                }
+                
+                return false;
+            } catch (err) {
+                console.error("Error loading game data:", err);
+                return false;
+            }
+        }
+
+        // Save game data to Supabase immediately
+        async function saveGameData() {
+            if (!userUuid) return;
+
+            try {
+                const autoClickersData = {};
+                for (let key in gameState.autoClickers) {
+                    autoClickersData[key] = {
+                        count: gameState.autoClickers[key].count,
+                        cost: gameState.autoClickers[key].cost
+                    };
+                }
+
+                const savePayload = {
+                    user_uuid: userUuid,
+                    game_id: 2,
+                    foreheads: gameState.foreheads,
+                    total_foreheads: gameState.totalForeheads,
+                    click_power: gameState.clickPower,
+                    click_power_cost: clickPowerUpgradeCost,
+                    auto_clickers: JSON.stringify(autoClickersData),
+                    achievements: gameState.achievements,
+                    total_clicks: totalClicks,
+                    golden_max_clicks: goldenMaxClicks,
+                    updated_at: new Date().toISOString()
+                };
+
+                const { error } = await supabase
+                    .from("game_saves")
+                    .upsert(savePayload, { onConflict: ['user_uuid', 'game_id'] });
+
+                if (error) {
+                    console.error("Error saving game:", error);
+                } else {
+                    // Show save indicator
+                    const indicator = document.getElementById("saveIndicator");
+                    indicator.classList.add("show");
+                    setTimeout(() => indicator.classList.remove("show"), 1500);
+                }
+
+            } catch (err) {
+                console.error("Error in save process:", err);
+            }
+        }
+
+        // Initialize game
+        async function initializeGame() {
+            const ownsGame = await checkOwnership();
+            
+            document.getElementById("checkingBlock").style.display = "none";
+            
+            if (ownsGame) {
+                document.getElementById("purchaseBlock").style.display = "none";
+                document.getElementById("gameContainer").style.display = "grid";
+                
+                const div = document.createElement("div");
+                div.className = "ownership-verified";
+                div.innerHTML = "✅ Owned";
+                document.body.appendChild(div);
+                setTimeout(() => div.remove(), 2000);
+                
+                // Load existing data BEFORE starting the game
+                await loadGameData();
+                
+                // Setup click handler for Max's head
+                setupMaxClickHandler();
+                
+                // Setup event delegation for upgrades (CRITICAL FIX)
+                setupUpgradeDelegation();
+                
+                // Initial display update
+                updateDisplay();
+                
+                // Start game loops
+                startGameLoops();
+                
+                // If new player, show welcome
+                if (gameState.totalForeheads === 0) {
+                    setTimeout(() => {
+                        createFloatingText(window.innerWidth / 2, window.innerHeight / 2, "Click Max's forehead to begin!");
+                    }, 500);
+                }
+                
+            } else {
+                document.getElementById("purchaseBlock").style.display = "block";
+                document.getElementById("gameContainer").style.display = "none";
+            }
+        }
+
+        function setupMaxClickHandler() {
+            const maxHead = document.getElementById("maxHead");
+            
+            // Remove any existing listeners first (clone replacement technique)
+            const newMaxHead = maxHead.cloneNode(true);
+            maxHead.parentNode.replaceChild(newMaxHead, maxHead);
+            
+            // Use mousedown/touchstart for immediate response
+            const handlePress = (e) => {
+                // Prevent double-processing
+                if (isProcessingClick) return;
+                isProcessingClick = true;
+                
+                e.preventDefault();
+                e.stopPropagation(); // Stop bubbling to parent elements
+                
+                // Visual feedback
+                newMaxHead.classList.add("clicking");
+                setTimeout(() => newMaxHead.classList.remove("clicking"), 100);
+                
+                // Game logic
+                gameState.foreheads += gameState.clickPower;
+                gameState.totalForeheads += gameState.clickPower;
+                totalClicks++;
+                
+                // Get click position for floating text
+                const rect = newMaxHead.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                
+                createFloatingText(centerX, centerY, `+${gameState.clickPower}`);
+                createParticles(centerX, centerY);
+                
+                updateDisplay();
+                checkAchievements();
+                
+                // Reset processing flag after short delay
+                setTimeout(() => {
+                    isProcessingClick = false;
+                }, 50);
+            };
+            
+            newMaxHead.addEventListener("mousedown", handlePress);
+            newMaxHead.addEventListener("touchstart", handlePress, { passive: false });
+        }
+
+        // CRITICAL FIX: Use event delegation for upgrades instead of individual handlers
+        function setupUpgradeDelegation() {
+            const upgradesList = document.getElementById("upgradesList");
+            
+            // Remove any existing listeners by cloning
+            const newUpgradesList = upgradesList.cloneNode(false);
+            upgradesList.parentNode.replaceChild(newUpgradesList, upgradesList);
+            
+            // Single delegated event listener for the entire container
+            newUpgradesList.addEventListener("click", function(e) {
+                // Find the closest upgrade item
+                const upgradeItem = e.target.closest(".upgrade-item");
+                if (!upgradeItem) return;
+                
+                // Don't process if locked
+                if (upgradeItem.classList.contains("locked")) return;
+                
+                // Get the upgrade type from data attribute
+                const upgradeType = upgradeItem.dataset.upgrade;
+                if (!upgradeType) return;
+                
+                // Stop propagation to prevent Max from being clicked
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Process the purchase
+                if (upgradeType === "clickPower") {
+                    buyClickPower();
+                } else {
+                    buyUpgrade(upgradeType);
+                }
+            });
+        }
+
+        function startGameLoops() {
+            // Clear any existing intervals
+            if (gameLoopInterval) clearInterval(gameLoopInterval);
+            if (saveInterval) clearInterval(saveInterval);
+            
+            // Game loop - 10 ticks per second for auto-clickers
+            gameLoopInterval = setInterval(() => {
+                const perSecond = calculatePerSecond();
+                if (perSecond > 0) {
+                    gameState.foreheads += perSecond / 10;
+                    gameState.totalForeheads += perSecond / 10;
+                    updateDisplay();
+                    checkAchievements();
+                }
+            }, 100);
+
+            // Golden Max spawner
+            setInterval(() => {
+                if (Math.random() < 0.3) {
+                    spawnGoldenMax();
+                }
+            }, 30000);
+
+            // Auto-save every 2 seconds
+            saveInterval = setInterval(() => {
+                saveGameData();
+            }, 2000);
+        }
+
+        window.resetGame = async function() {
+            if (confirm("Are you sure you want to reset all progress? Max will be disappointed...")) {
+                if (userUuid) {
+                    await supabase
+                        .from("game_saves")
+                        .delete()
+                        .eq("user_uuid", userUuid)
+                        .eq("game_id", 2);
+                }
+                location.reload();
+            }
+        };
+
+        function spawnGoldenMax() {
+            if (document.querySelector(".golden-max")) return;
+            
+            const goldenMax = document.createElement("div");
+            goldenMax.className = "golden-max";
+            goldenMax.innerHTML = '<img src="/images/max.png" alt="Golden Max">';
+            
+            const x = 50 + Math.random() * (window.innerWidth - 150);
+            const y = 50 + Math.random() * (window.innerHeight - 150);
+            
+            goldenMax.style.left = x + "px";
+            goldenMax.style.top = y + "px";
+            
+            goldenMax.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation(); // Prevent bubbling
+                clickGoldenMax(e);
+            };
+            
+            document.body.appendChild(goldenMax);
+            
+            setTimeout(() => {
+                if (goldenMax.parentNode) {
+                    goldenMax.style.animation = "goldenSpawn 0.5s ease-out reverse";
+                    setTimeout(() => goldenMax.remove(), 500);
+                }
+            }, 5000);
+        }
+
+        function clickGoldenMax(event) {
+            const bonus = Math.floor(gameState.foreheads * (0.05 + Math.random() * 0.05));
+            const actualBonus = Math.max(bonus, 10);
+            
+            gameState.foreheads += actualBonus;
+            gameState.totalForeheads += actualBonus;
+            goldenMaxClicks++;
+            
+            const goldenText = document.createElement("div");
+            goldenText.className = "golden-text";
+            goldenText.textContent = `+${actualBonus} GOLDEN!`;
+            goldenText.style.left = event.clientX + "px";
+            goldenText.style.top = event.clientY + "px";
+            document.body.appendChild(goldenText);
+            setTimeout(() => goldenText.remove(), 1500);
+            
+            for (let i = 0; i < 15; i++) {
+                createParticle(event.clientX, event.clientY, true);
+            }
+            
+            const goldenMax = document.querySelector(".golden-max");
+            if (goldenMax) {
+                goldenMax.style.animation = "goldenSpawn 0.3s ease-out reverse";
+                setTimeout(() => goldenMax.remove(), 300);
+            }
+            
+            updateDisplay();
+            checkAchievements();
+            saveGameData();
+        }
+
+        function createParticle(x, y, isGolden = false) {
+            const container = document.getElementById("particles");
+            const particle = document.createElement("div");
+            particle.className = "particle";
+            particle.style.left = x + "px";
+            particle.style.top = y + "px";
+            
+            if (isGolden) {
+                particle.style.background = "gold";
+                particle.style.boxShadow = "0 0 10px orange";
+            }
+            
+            const angle = Math.random() * Math.PI * 2;
+            const velocity = 100 + Math.random() * 100;
+            const tx = Math.cos(angle) * velocity;
+            const ty = Math.sin(angle) * velocity;
+            
+            particle.animate([
+                { transform: "translate(0, 0) scale(1)", opacity: 1 },
+                { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
+            ], {
+                duration: 1000,
+                easing: "ease-out"
+            });
+            
+            container.appendChild(particle);
+            setTimeout(() => particle.remove(), 1000);
+        }
+
+        function createFloatingText(x, y, text) {
+            const el = document.createElement("div");
+            el.className = "floating-text";
+            el.textContent = text;
+            el.style.left = x + "px";
+            el.style.top = y + "px";
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 1000);
+        }
+
+        function createParticles(x, y) {
+            const container = document.getElementById("particles");
+            for (let i = 0; i < 5; i++) {
+                const particle = document.createElement("div");
+                particle.className = "particle";
+                particle.style.left = x + "px";
+                particle.style.top = y + "px";
+                
+                const angle = (Math.PI * 2 * i) / 5;
+                const velocity = 100 + Math.random() * 50;
+                const tx = Math.cos(angle) * velocity;
+                const ty = Math.sin(angle) * velocity;
+                
+                particle.animate([
+                    { transform: "translate(0, 0) scale(1)", opacity: 1 },
+                    { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
+                ], {
+                    duration: 800,
+                    easing: "ease-out"
+                });
+                
+                container.appendChild(particle);
+                setTimeout(() => particle.remove(), 800);
+            }
+        }
+
+        // Buy upgrade - now called from event delegation
+        function buyUpgrade(type) {
+            const upgrade = gameState.autoClickers[type];
+            if (gameState.foreheads >= upgrade.cost) {
+                gameState.foreheads -= upgrade.cost;
+                upgrade.count++;
+                upgrade.cost = Math.floor(upgrade.cost * 1.15);
+                updateDisplay();
+                checkAchievements();
+                saveGameData();
+            }
+        }
+
+        function buyClickPower() {
+            if (gameState.foreheads >= clickPowerUpgradeCost) {
+                gameState.foreheads -= clickPowerUpgradeCost;
+                gameState.clickPower++;
+                clickPowerUpgradeCost = Math.floor(clickPowerUpgradeCost * 1.5);
+                updateDisplay();
+                checkAchievements();
+                saveGameData();
+            }
+        }
+
+        function calculatePerSecond() {
+            let total = 0;
+            for (let key in gameState.autoClickers) {
+                total += gameState.autoClickers[key].count * gameState.autoClickers[key].power;
+            }
+            return total;
+        }
+
+        function formatNumber(num) {
+            if (num >= 1e15) return (num / 1e15).toFixed(2) + "Q";
+            if (num >= 1e12) return (num / 1e12).toFixed(2) + "T";
+            if (num >= 1e9) return (num / 1e9).toFixed(2) + "B";
+            if (num >= 1e6) return (num / 1e6).toFixed(2) + "M";
+            if (num >= 1e3) return (num / 1e3).toFixed(2) + "K";
+            return Math.floor(num).toString();
+        }
+
+        // CRITICAL FIX: Just render HTML, don't attach event handlers here
+        function updateDisplay() {
+            document.getElementById("foreheadCount").textContent = formatNumber(gameState.foreheads);
+            document.getElementById("perSecond").textContent = formatNumber(calculatePerSecond()) + " per second";
+            document.getElementById("clickPower").textContent = formatNumber(gameState.clickPower) + " per click";
+            
+            const armyDiv = document.getElementById("armyDisplay");
+            armyDiv.innerHTML = "";
+            for (let key in gameState.autoClickers) {
+                const upgrade = gameState.autoClickers[key];
+                for (let i = 0; i < upgrade.count; i++) {
+                    const span = document.createElement("span");
+                    span.className = "auto-clicker-icon";
+                    span.textContent = upgrade.icon;
+                    armyDiv.appendChild(span);
+                }
+            }
+            
+            const upgradesDiv = document.getElementById("upgradesList");
+            // Just update innerHTML - no event handlers attached!
+            upgradesDiv.innerHTML = "";
+            
+            // Click power upgrade with data attribute
+            const clickPowerDiv = document.createElement("div");
+            clickPowerDiv.className = "upgrade-item" + (gameState.foreheads < clickPowerUpgradeCost ? " locked" : "");
+            clickPowerDiv.dataset.upgrade = "clickPower"; // Data attribute for delegation
+            clickPowerDiv.innerHTML = `
+                <div class="upgrade-name">💪 Stronger Fingers</div>
+                <div class="upgrade-cost">Cost: ${formatNumber(clickPowerUpgradeCost)}</div>
+                <div class="upgrade-desc">Increase click power by 1 (Current: ${gameState.clickPower})</div>
+            `;
+            upgradesDiv.appendChild(clickPowerDiv);
+            
+            // Auto clicker upgrades with data attributes
+            for (let key in gameState.autoClickers) {
+                const upgrade = gameState.autoClickers[key];
+                const div = document.createElement("div");
+                div.className = "upgrade-item" + (gameState.foreheads < upgrade.cost ? " locked" : "");
+                div.dataset.upgrade = key; // Data attribute for delegation
+                div.innerHTML = `
+                    <div class="upgrade-name">${upgrade.icon} ${upgrade.name}</div>
+                    <div class="upgrade-cost">Cost: ${formatNumber(upgrade.cost)} | Owned: ${upgrade.count}</div>
+                    <div class="upgrade-desc">+${formatNumber(upgrade.power)} per second</div>
+                `;
+                upgradesDiv.appendChild(div);
+            }
+            
+            const achievements = [
+                { id: "first_click", name: "First Contact", desc: "Click Max's forehead for the first time", requirement: 1, type: "total" },
+                { id: "getting_warm", name: "Getting Warm", desc: "Reach 100 forehead points", requirement: 100, type: "total" },
+                { id: "forehead_master", name: "Forehead Master", desc: "Reach 1,000 forehead points", requirement: 1000, type: "total" },
+                { id: "fivehead", name: "Certified 5Head", desc: "Reach 10,000 forehead points", requirement: 10000, type: "total" },
+                { id: "galaxy_brain", name: "Galaxy Brain", desc: "Reach 100,000 forehead points", requirement: 100000, type: "total" },
+                { id: "universe_mind", name: "Universal Mind", desc: "Reach 1,000,000 forehead points", requirement: 1000000, type: "total" },
+                { id: "multiverse_mind", name: "Multiverse Mind", desc: "Reach 1,000,000,000 forehead points", requirement: 1000000000, type: "total" },
+                { id: "first_friend", name: "Spread the Word", desc: "Buy your first Friend's Joke", requirement: 1, type: "friend" },
+                { id: "mirror_mirror", name: "Mirror, Mirror", desc: "Buy your first Mirror Check", requirement: 1, type: "mirror" },
+                { id: "hat_trick", name: "Hat Trick", desc: "Buy your first Hat Collection", requirement: 1, type: "hat" },
+                { id: "clean_forehead", name: "Squeaky Clean", desc: "Buy your first Forehead Shampoo", requirement: 1, type: "shampoo" },
+                { id: "famous", name: "Internet Famous", desc: "Buy your first Billboard Ad", requirement: 1, type: "billboard" },
+                { id: "space_age", name: "Space Age", desc: "Buy your first Space Telescope", requirement: 1, type: "satellite" },
+                { id: "oily", name: "Slippery Slope", desc: "Buy your first Forehead Oil", requirement: 1, type: "foreheadOil" },
+                { id: "fitness", name: "Forehead Fitness", desc: "Buy your first Forehead Gym", requirement: 1, type: "foreheadGym" },
+                { id: "banker", name: "Banking on It", desc: "Buy your first Forehead Bank", requirement: 1, type: "foreheadBank" },
+                { id: "industrial", name: "Industrial Revolution", desc: "Buy your first Forehead Factory", requirement: 1, type: "foreheadFactory" },
+                { id: "royalty", name: "Royal Forehead", desc: "Buy your first Forehead Empire", requirement: 1, type: "foreheadEmpire" },
+                { id: "holy", name: "Holy Forehead", desc: "Buy your first Forehead Religion", requirement: 1, type: "foreheadReligion" },
+                { id: "planetary", name: "Planetary Forehead", desc: "Buy your first Forehead Planet", requirement: 1, type: "foreheadPlanet" },
+                { id: "galactic", name: "Galactic Forehead", desc: "Buy your first Forehead Galaxy", requirement: 1, type: "foreheadGalaxy" },
+                { id: "universal", name: "Universal Forehead", desc: "Buy your first Forehead Universe", requirement: 1, type: "foreheadUniverse" },
+                { id: "infinite", name: "Infinite Forehead", desc: "Buy your first Forehead Multiverse", requirement: 1, type: "foreheadMultiverse" },
+                { id: "clicker", name: "Clicker Hero", desc: "Click 100 times", requirement: 100, type: "clicks" },
+                { id: "powerful", name: "Power Clicker", desc: "Reach 10 click power", requirement: 10, type: "clickPower" },
+                { id: "golden_touch", name: "Golden Touch", desc: "Catch a Golden Max", requirement: 1, type: "goldenMax" }
+            ];
+            
+            const nextAch = achievements.find(a => !gameState.achievements.includes(a.id));
+            if (nextAch) {
+                document.getElementById("nextAchievement").textContent = `Next achievement: ${nextAch.name}`;
+            } else {
+                document.getElementById("nextAchievement").textContent = "All achievements unlocked! 🎉";
+            }
+        }
+
+        function showAchievement(achievement) {
+            if (gameState.achievements.includes(achievement.id)) return;
+            
+            gameState.achievements.push(achievement.id);
+            
+            const div = document.createElement("div");
+            div.className = "achievement";
+            div.innerHTML = `
+                <div class="achievement-title">🏆 Achievement Unlocked!</div>
+                <div style="font-size: 1.1rem; margin-bottom: 5px;">${achievement.name}</div>
+                <div style="font-size: 0.9rem; opacity: 0.9;">${achievement.desc}</div>
+            `;
+            document.body.appendChild(div);
+            
+            setTimeout(() => div.classList.add("show"), 100);
+            setTimeout(() => {
+                div.classList.remove("show");
+                setTimeout(() => div.remove(), 500);
+            }, 4000);
+            
+            saveGameData();
+        }
+
+        function checkAchievements() {
+            const achievements = [
+                { id: "first_click", name: "First Contact", desc: "Click Max's forehead for the first time", requirement: 1, type: "total" },
+                { id: "getting_warm", name: "Getting Warm", desc: "Reach 100 forehead points", requirement: 100, type: "total" },
+                { id: "forehead_master", name: "Forehead Master", desc: "Reach 1,000 forehead points", requirement: 1000, type: "total" },
+                { id: "fivehead", name: "Certified 5Head", desc: "Reach 10,000 forehead points", requirement: 10000, type: "total" },
+                { id: "galaxy_brain", name: "Galaxy Brain", desc: "Reach 100,000 forehead points", requirement: 100000, type: "total" },
+                { id: "universe_mind", name: "Universal Mind", desc: "Reach 1,000,000 forehead points", requirement: 1000000, type: "total" },
+                { id: "multiverse_mind", name: "Multiverse Mind", desc: "Reach 1,000,000,000 forehead points", requirement: 1000000000, type: "total" },
+                { id: "first_friend", name: "Spread the Word", desc: "Buy your first Friend's Joke", requirement: 1, type: "friend" },
+                { id: "mirror_mirror", name: "Mirror, Mirror", desc: "Buy your first Mirror Check", requirement: 1, type: "mirror" },
+                { id: "hat_trick", name: "Hat Trick", desc: "Buy your first Hat Collection", requirement: 1, type: "hat" },
+                { id: "clean_forehead", name: "Squeaky Clean", desc: "Buy your first Forehead Shampoo", requirement: 1, type: "shampoo" },
+                { id: "famous", name: "Internet Famous", desc: "Buy your first Billboard Ad", requirement: 1, type: "billboard" },
+                { id: "space_age", name: "Space Age", desc: "Buy your first Space Telescope", requirement: 1, type: "satellite" },
+                { id: "oily", name: "Slippery Slope", desc: "Buy your first Forehead Oil", requirement: 1, type: "foreheadOil" },
+                { id: "fitness", name: "Forehead Fitness", desc: "Buy your first Forehead Gym", requirement: 1, type: "foreheadGym" },
+                { id: "banker", name: "Banking on It", desc: "Buy your first Forehead Bank", requirement: 1, type: "foreheadBank" },
+                { id: "industrial", name: "Industrial Revolution", desc: "Buy your first Forehead Factory", requirement: 1, type: "foreheadFactory" },
+                { id: "royalty", name: "Royal Forehead", desc: "Buy your first Forehead Empire", requirement: 1, type: "foreheadEmpire" },
+                { id: "holy", name: "Holy Forehead", desc: "Buy your first Forehead Religion", requirement: 1, type: "foreheadReligion" },
+                { id: "planetary", name: "Planetary Forehead", desc: "Buy your first Forehead Planet", requirement: 1, type: "foreheadPlanet" },
+                { id: "galactic", name: "Galactic Forehead", desc: "Buy your first Forehead Galaxy", requirement: 1, type: "foreheadGalaxy" },
+                { id: "universal", name: "Universal Forehead", desc: "Buy your first Forehead Universe", requirement: 1, type: "foreheadUniverse" },
+                { id: "infinite", name: "Infinite Forehead", desc: "Buy your first Forehead Multiverse", requirement: 1, type: "foreheadMultiverse" },
+                { id: "clicker", name: "Clicker Hero", desc: "Click 100 times", requirement: 100, type: "clicks" },
+                { id: "powerful", name: "Power Clicker", desc: "Reach 10 click power", requirement: 10, type: "clickPower" },
+                { id: "golden_touch", name: "Golden Touch", desc: "Catch a Golden Max", requirement: 1, type: "goldenMax" }
+            ];
+            
+            achievements.forEach(ach => {
+                if (gameState.achievements.includes(ach.id)) return;
+                
+                let unlocked = false;
+                switch(ach.type) {
+                    case "total":
+                        if (gameState.totalForeheads >= ach.requirement) unlocked = true;
+                        break;
+                    case "clicks":
+                        if (totalClicks >= ach.requirement) unlocked = true;
+                        break;
+                    case "clickPower":
+                        if (gameState.clickPower >= ach.requirement) unlocked = true;
+                        break;
+                    case "goldenMax":
+                        if (goldenMaxClicks >= ach.requirement) unlocked = true;
+                        break;
+                    default:
+                        if (gameState.autoClickers[ach.type] && gameState.autoClickers[ach.type].count >= ach.requirement) {
+                            unlocked = true;
+                        }
+                }
+                
+                if (unlocked) showAchievement(ach);
+            });
+        }
+
+        // Start the game
+        initializeGame();
+
+        // Save before page unload
+        window.addEventListener('beforeunload', () => {
+            if (userUuid) {
+                saveGameData();
+            }
+        });
+    </script>
+</body>
+</html>

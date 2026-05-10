@@ -2,179 +2,224 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <title>Indian Poker | Real-time Multiplayer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Website</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
-      --bg: #020617;
-      --panel: #0f172a;
-      --text: #e2e8f0;
-      --text-muted: #94a3b8;
-      --accent: #22c55e;
-      --border: #1e293b;
+      --bg: #020617; --panel: #0f172a; --panel-light: #1e293b; --text: #f1f5f9;
+      --text-muted: #94a3b8; --accent: #f59e0b; --accent-hover: #d97706; --border: #1e293b;
+      --shadow: rgba(0,0,0,0.6); --success: #10b981; --error: #ef4444; --cyan: #06b6d4;
+      --gold: #ffd700; --felt: #1a472a; --felt-dark: #051a0e; --wood: #5c3a1e;
     }
-    body {
-      font-family: system-ui, -apple-system, sans-serif;
-      background: #020617;
-      color: var(--text);
-      line-height: 1.6;
-    }
-    .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
-    .section { margin-bottom: 40px; }
-    .nav { 
-      background: var(--panel); 
-      padding: 20px; 
-      text-align: center; 
-      border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    .nav-btn {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 8px 16px;
-      margin: 0 5px;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .nav-btn:hover, .nav-btn.active {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: white;
-    }
-    .page-content { display: none; }
-    .page-content.home-page { display: block; }
-    h1, h2, h3 { color: var(--text); margin-bottom: 20px; }
-    p { line-height: 1.6; }
-    a { color: var(--accent); }
-    .btn {
-      display: inline-block;
-      padding: 12px 24px;
-      text-decoration: none;
-      border-radius: 8px;
-      font-weight: 600;
-      transition: all 0.2s;
-      border: none;
-      cursor: pointer;
-    }
-    .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-    img { max-width: 100%; height: auto; display: block; }
-    .card {
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 30px;
-      margin-bottom: 20px;
-    }
-    .hero {
-      text-align: center;
-      padding: 80px 20px;
-      border-radius: 16px;
-    }
-    .hero h1 { font-size: 2.5rem; margin-bottom: 20px; }
-    .hero p { font-size: 1.2rem; margin-bottom: 30px; }
-    iframe { width: 100%; border: none; border-radius: 8px; }
-    .footer {
-      border-top: 1px solid var(--border);
-      padding: 40px 20px;
-      text-align: center;
-      margin-top: 40px;
-    }
-    .watermark {
-      position: fixed;
-      bottom: 10px;
-      right: 10px;
-      background: rgba(0, 0, 0, 0.7);
-      color: white;
-      padding: 5px 10px;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      z-index: 9999;
-      pointer-events: none;
-    }
+    body { min-height: 100vh; background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; overflow-x: hidden; }
+    #app { max-width: 1400px; margin: 0 auto; padding: 20px; min-height: 100vh; }
+    
+    .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 25px; box-shadow: 0 4px 20px var(--shadow); }
+    .brand-name { font-size: 1.4rem; font-weight: 800; background: linear-gradient(to right, var(--accent), #fbbf24); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .user-details { text-align: right; }
+    .user-balance { font-size: 0.85rem; color: var(--accent); font-weight: 600; }
+
+    .hero { text-align: center; padding: 60px 20px; }
+    .hero h1 { font-size: 4rem; font-weight: 900; text-transform: uppercase; letter-spacing: -2px; margin-bottom: 10px; }
+    .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; max-width: 800px; margin: 0 auto; }
+    .menu-card { background: var(--panel); border: 2px solid var(--border); border-radius: 24px; padding: 40px; text-align: center; cursor: pointer; transition: 0.4s; display: flex; flex-direction: column; align-items: center; gap: 15px; }
+    .menu-card:hover { border-color: var(--accent); transform: translateY(-10px); }
+    .menu-card .icon { font-size: 4rem; }
+
+    .setup-card { background: var(--panel); border: 1px solid var(--border); border-radius: 24px; padding: 40px; max-width: 550px; margin: 0 auto; box-shadow: 0 20px 50px var(--shadow); }
+    .form-group { margin-bottom: 25px; }
+    .form-label { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); }
+    .form-label span.val { color: var(--accent); font-size: 1.2rem; }
+    input[type="range"] { width: 100%; height: 6px; background: var(--panel-light); appearance: none; cursor: pointer; border-radius: 5px; }
+    input[type="range"]::-webkit-slider-thumb { appearance: none; width: 20px; height: 20px; background: var(--accent); border-radius: 50%; }
+    .btn { width: 100%; padding: 18px; border-radius: 14px; border: none; font-size: 1.1rem; font-weight: 800; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-secondary { background: var(--panel-light); color: var(--text); border: 1px solid var(--border); }
+
+    .lobby-layout { display: grid; grid-template-columns: 350px 1fr; gap: 30px; }
+    .sidebar { background: var(--panel); border: 1px solid var(--border); border-radius: 20px; padding: 25px; height: 75vh; display: flex; flex-direction: column; }
+    .player-row { display: flex; align-items: center; gap: 12px; padding: 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; }
+    .player-row.is-host { border-color: var(--accent); }
+    .p-name { flex: 1; font-weight: 600; font-size: 0.9rem; }
+    .kick-btn { color: var(--error); cursor: pointer; font-weight: bold; }
+    .code-box { background: var(--bg); padding: 30px 50px; border-radius: 20px; border: 2px dashed var(--border); margin-bottom: 30px; text-align: center; }
+    .code-val { font-size: 4rem; font-weight: 900; color: var(--accent); letter-spacing: 15px; font-family: monospace; }
+
+    .game-layout { display: grid; grid-template-columns: 300px 1fr; gap: 30px; }
+    .game-player-card { background: var(--bg); border: 2px solid var(--border); border-radius: 16px; padding: 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 15px; }
+    .game-player-card.is-active { border-color: var(--accent); }
+    .game-player-card.folded { opacity: 0.4; }
+    .card-visual { width: 50px; height: 75px; background: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: black; font-weight: 800; font-size: 1.4rem; flex-shrink: 0; }
+    .card-visual.hidden { background: linear-gradient(135deg, #1e293b, #0f172a); border: 2px solid #334155; color: transparent; background-image: radial-gradient(var(--accent) 1px, transparent 1px); background-size: 8px 8px; }
+    .table-felt { flex: 1; background: radial-gradient(circle at center, var(--felt) 0%, var(--felt-dark) 100%); border-radius: 50%; border: 12px solid var(--wood); min-height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+    .pot-val { font-size: 4.5rem; font-weight: 900; color: var(--gold); }
+    .game-controls { background: var(--panel); border: 1px solid var(--border); border-radius: 20px; padding: 20px; display: flex; justify-content: center; gap: 15px; }
+    
+    #toast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--panel); border: 2px solid var(--accent); padding: 18px 40px; border-radius: 16px; z-index: 9999; font-weight: 700; transition: 0.4s; opacity: 0; pointer-events: none; }
+    #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    #toast.error { border-color: var(--error); color: var(--error); }
   </style>
 </head>
 <body>
+  <div id="app"></div>
+  <div id="toast"></div>
 
-    <nav class="nav">
-      <button onclick="showPage('home')" class="nav-btn active" data-page="home">Home</button><button onclick="showPage('page_1771144787318')" class="nav-btn " data-page="page_1771144787318">About Me</button>
-    </nav>
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+    const supabase = createClient("https://mdymxbgwhauapvphscrr.supabase.co", "sb_publishable_nOrq936I1SMh4v21KzE2og_tAEbcAzK");
+    
+    const STATE = {
+      uuid: getCookie("uuid"), username: getCookie("username"),
+      user: { balance: 0 }, game: null, players: [], myPlayer: null,
+      channels: { game: null, players: null }, view: 'home', isProcessing: false
+    };
 
-    <div id="page-home" class="page-content home-page" style="display: block;">
-      <div class="container">
-      <div class="section" style="width: 850px; height: 155px; margin-bottom: 20px;">
-        <p style="text-align: left; font-size: 5rem; color: #ffffff; margin: 0; line-height: 1.6;">Welcome to my site</p>
-      </div>
-
-      <div class="section" style="width: 100%; height: auto; margin-bottom: 20px;">
-        <p style="text-align: left; font-size: 4rem; color: #ffffff; margin: 0; line-height: 1.6;">HELLO</p>
-      </div>
-
-      <div class="section" style="width: 100%; height: auto; margin-bottom: 20px;">
-        <p style="text-align: left; font-size: 2rem; color: #94a3b8; margin: 0; line-height: 1.6;">I'm Curtis Gann and I'm a developer. Some of the things I like to code are simple websites, games, apps, and more.</p>
-      </div>
-
-      <div class="section" style="width: 100%; height: 40; margin-bottom: 20px;">
-        <div style="height: 40px; width: 100%;"></div>
-      </div>
-
-      <div class="section" style="width: 100%; height: auto; margin-bottom: 20px;">
-        <p style="text-align: left; font-size: 4rem; color: #ffffff; margin: 0; line-height: 1.6;">About Me</p>
-      </div>
-
-      <div class="section" style="width: 100%; height: auto; margin-bottom: 20px;">
-        <p style="text-align: left; font-size: 1rem; color: #94a3b8; margin: 0; line-height: 1.6;">Age: 14</p>
-      </div>
-
-      <div class="section" style="width: 100%; height: auto; margin-bottom: 20px;">
-        <p style="text-align: left; font-size: 1rem; color: #94a3b8; margin: 0; line-height: 1.6;">Location: Oklahoma</p>
-      </div>
-
-      <div class="section" style="width: 100%; height: auto; margin-bottom: 20px;">
-        <p style="text-align: left; font-size: 1rem; color: #94a3b8; margin: 0; line-height: 1.6;">Zodiac Sign: Aquarius</p>
-      </div>
-
-      <div class="section" style="width: 100%; height: 40; margin-bottom: 20px;">
-        <div style="height: 40px; width: 100%;"></div>
-      </div>
-
-      <div class="section" style="width: 100%; height: auto; margin-bottom: 20px;">
-        <p style="text-align: left; font-size: 4rem; color: #ffffff; margin: 0; line-height: 1.6;">Other Hobbies</p>
-      </div>
-
-      <div class="section" style="width: 100%; height: auto; margin-bottom: 20px;">
-        <p style="text-align: left; font-size: 1rem; color: #94a3b8; margin: 0; line-height: 1.6;">Plays trumpet</p>
-      </div>
-
-      <div class="section" style="width: 100%; height: auto; margin-bottom: 20px;">
-        <p style="text-align: left; font-size: 1rem; color: #94a3b8; margin: 0; line-height: 1.6;">Running</p>
-      </div>
-      </div>
-    </div>
-    <div id="page-page_1771144787318" class="page-content " style="display: none;">
-      <div class="container">
-
-      </div>
-    </div>
-
-<div class="watermark">Built using hc.curtishub.com</div>
-
-  <script>
-    function showPage(pageId) {
-      document.querySelectorAll('.page-content').forEach(page => {
-        page.style.display = 'none';
-      });
-      document.getElementById('page-' + pageId).style.display = 'block';
-      document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.dataset.page === pageId) {
-          btn.classList.add('active');
-        }
-      });
+    async function init() {
+      if (!STATE.uuid) { document.getElementById("app").innerHTML = "<div style='text-align:center; padding:100px;'><h1>Login Required</h1></div>"; return; }
+      const { data: tokens } = await supabase.from("tokens").select("balance").eq("uuid", STATE.uuid).single();
+      STATE.user.balance = tokens?.balance || 0;
+      renderView();
     }
+
+    async function handleCreateRoom() {
+      if (STATE.isProcessing) return;
+      const casual = document.getElementById("casualMode")?.checked || false;
+      const stack = parseInt(document.getElementById("startStack")?.value || 30);
+      const rounds = parseInt(document.getElementById("totalRounds")?.value || 5);
+      if (!casual && STATE.user.balance < stack) return showToast("Insufficient Tokens!", true);
+
+      STATE.isProcessing = true;
+      try {
+        const { data: g, error } = await supabase.from("poker_rooms").insert({
+          host_id: STATE.uuid, is_casual: casual, entry_fee: stack, rounds_limit: rounds, game_status: 'lobby'
+        }).select().single();
+        if (error) throw error;
+        if (!casual) await supabase.rpc('poker_deduct', { p_uid: STATE.uuid, p_amt: stack });
+        await supabase.from("poker_players").insert({ room_id: g.id, user_id: STATE.uuid, user_name: STATE.username, chips: stack, is_host: true });
+        STATE.game = g; STATE.view = 'lobby'; setupRealtime();
+      } catch (err) { showToast("Create Error: " + err.message, true); } finally { STATE.isProcessing = false; renderView(); }
+    }
+
+    async function handleJoinRoom() {
+      const code = document.getElementById("roomCodeInput")?.value?.trim().toUpperCase();
+      if (!code || code.length !== 4) return showToast("Enter 4-digit code!", true);
+      STATE.isProcessing = true;
+      try {
+        const { data: g, error } = await supabase.from("poker_rooms").select("*").eq("code", code).neq('game_status', 'finished').single();
+        if (error || !g) return showToast("Room not found!", true);
+        if (g.game_status !== 'lobby') return showToast("Started!", true);
+        if (!g.is_casual && STATE.user.balance < g.entry_fee) return showToast("Not enough tokens!", true);
+        await supabase.from("poker_players").insert({ room_id: g.id, user_id: STATE.uuid, user_name: STATE.username, chips: g.entry_fee, is_host: false });
+        if (!g.is_casual) await supabase.rpc('poker_deduct', { p_uid: STATE.uuid, p_amt: g.entry_fee });
+        STATE.game = g; STATE.view = 'lobby'; setupRealtime();
+      } catch (err) { showToast("Join Error: " + err.message, true); } finally { STATE.isProcessing = false; renderView(); }
+    }
+
+    function setupRealtime() {
+      if (STATE.channels.game) STATE.channels.game.unsubscribe();
+      if (STATE.channels.players) STATE.channels.players.unsubscribe();
+      STATE.channels.game = supabase.channel(`gr_${STATE.game.id}`).on('postgres_changes', { event: '*', schema: 'public', table: 'poker_rooms', filter: `id=eq.${STATE.game.id}` }, p => {
+        if (!p.new || Object.keys(p.new).length === 0) { resetToHome(); return; }
+        STATE.game = p.new;
+        if (STATE.game.game_status === 'playing') STATE.view = 'game';
+        if (STATE.game.game_status === 'finished') { alert("Game Over!"); window.location.reload(); }
+        renderView();
+      }).subscribe();
+      STATE.channels.players = supabase.channel(`pr_${STATE.game.id}`).on('postgres_changes', { event: '*', schema: 'public', table: 'poker_players', filter: `room_id=eq.${STATE.game.id}` }, () => { syncPlayers(); }).subscribe();
+      syncPlayers();
+    }
+
+    async function syncPlayers() {
+      const { data } = await supabase.from("poker_players").select("*").eq("room_id", STATE.game.id).order('joined_at');
+      STATE.players = data || [];
+      STATE.myPlayer = STATE.players.find(p => p.user_id === STATE.uuid);
+      if (!STATE.myPlayer && STATE.game.game_status !== 'finished') { resetToHome(); return; }
+      renderView();
+    }
+
+    async function handleStart() {
+      const deck = createDeck();
+      for (let p of STATE.players) {
+        const c = deck.pop();
+        await supabase.from("poker_players").update({ card_val: c.v, card_suit: c.s, is_folded: false, round_bet: 0 }).eq("id", p.id);
+      }
+      await supabase.from("poker_rooms").update({ game_status: 'playing', current_round: 1, active_turn_id: STATE.players[0].user_id, pot_total: 0, current_high_bet: 0 }).eq("id", STATE.game.id);
+    }
+
+    async function handleAction(type) {
+      if (STATE.game.active_turn_id !== STATE.uuid || STATE.isProcessing) return;
+      STATE.isProcessing = true;
+      try {
+        let uP = { chips: STATE.myPlayer.chips, round_bet: STATE.myPlayer.round_bet, is_folded: STATE.myPlayer.is_folded };
+        let uG = { pot_total: STATE.game.pot_total, current_high_bet: STATE.game.current_high_bet };
+        if (type === 'fold') uP.is_folded = true;
+        else if (type === 'call') { const d = STATE.game.current_high_bet - STATE.myPlayer.round_bet; uP.chips -= d; uP.round_bet += d; uG.pot_total += d; }
+        else if (type === 'raise') { const d = (STATE.game.current_high_bet - STATE.myPlayer.round_bet) + 10; uP.chips -= d; uP.round_bet += d; uG.pot_total += d; uG.current_high_bet += 10; }
+        await supabase.from("poker_players").update(uP).eq("id", STATE.myPlayer.id);
+        if (STATE.game.host_id === STATE.uuid) {
+          const res = getNext();
+          if (res.end) await resolve(uG);
+          else await supabase.from("poker_rooms").update({ pot_total: uG.pot_total, current_high_bet: uG.current_high_bet, active_turn_id: res.next }).eq("id", STATE.game.id);
+        } else await supabase.from("poker_rooms").update({ pot_total: uG.pot_total, current_high_bet: uG.current_high_bet }).eq("id", STATE.game.id);
+      } catch (err) { showToast("Error", true); } finally { STATE.isProcessing = false; }
+    }
+
+    function getNext() {
+      const active = STATE.players.filter(p => !p.is_folded);
+      if (active.length <= 1) return { end: true };
+      const cur = STATE.players.findIndex(p => p.user_id === STATE.uuid);
+      let next = (cur + 1) % STATE.players.length;
+      while (STATE.players[next].is_folded) next = (next + 1) % STATE.players.length;
+      if (next === 0 && STATE.players.every(p => p.is_folded || p.round_bet === STATE.game.current_high_bet)) return { end: true };
+      return { next: STATE.players[next].user_id, end: false };
+    }
+
+    async function resolve(g) {
+      const active = STATE.players.filter(p => !p.is_folded);
+      const v = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+      active.sort((a, b) => v.indexOf(b.card_val) - v.indexOf(a.card_val));
+      const win = active[0];
+      await supabase.from("poker_players").update({ chips: win.chips + g.pot_total }).eq("id", win.id);
+      if (STATE.game.current_round >= STATE.game.rounds_limit) {
+        await supabase.from("poker_rooms").update({ game_status: 'finished' }).eq("id", STATE.game.id);
+        if (!STATE.game.is_casual) {
+          const all = [...STATE.players].sort((a,b) => b.chips - a.chips);
+          await supabase.rpc('poker_refund', { p_uid: all[0].user_id, p_amt: all[0].chips });
+        }
+      } else {
+        const deck = createDeck();
+        for (let p of STATE.players) {
+          const c = deck.pop();
+          await supabase.from("poker_players").update({ card_val: c.v, card_suit: c.s, is_folded: false, round_bet: 0 }).eq("id", p.id);
+        }
+        await supabase.from("poker_rooms").update({ current_round: STATE.game.current_round + 1, pot_total: 0, current_high_bet: 0, active_turn_id: STATE.players[0].user_id }).eq("id", STATE.game.id);
+      }
+    }
+
+    function renderView() {
+      const app = document.getElementById("app");
+      let h = `<div class="header"><div class="brand-name">INDIAN POKER</div><div class="user-details"><div class="user-name">${STATE.username}</div><div class="user-balance">${STATE.user.balance} Tokens</div></div></div>`;
+      if (STATE.view === 'home') h += `<div class="hero"><h1>Master the Bluff</h1><div class="menu-grid"><div class="menu-card" onclick="window.setView('host')"><span class="icon">👑</span><h3>Host Game</h3></div><div class="menu-card" onclick="window.setView('join')"><span class="icon">🤝</span><h3>Join Game</h3></div></div></div>`;
+      else if (STATE.view === 'host') h += `<div class="setup-card"><h2>Host Game</h2><div class="form-group"><div class="form-label"><span>Stack</span><span class="val" id="sv">30</span></div><input type="range" id="startStack" min="10" max="100" step="5" value="30" oninput="document.getElementById('sv').innerText=this.value"></div><div class="form-group"><div class="form-label"><span>Rounds</span><span class="val" id="rv">5</span></div><input type="range" id="totalRounds" min="1" max="15" value="5" oninput="document.getElementById('rv').innerText=this.value"></div><div class="form-group"><label><input type="checkbox" id="casualMode"> Casual Play</label></div><button class="btn btn-primary" onclick="window.create()">Create Room</button><button class="btn btn-secondary" style="margin-top:10px" onclick="window.setView('home')">Back</button></div>`;
+      else if (STATE.view === 'join') h += `<div class="setup-card"><h2>Join Game</h2><div class="form-group"><label class="form-label">Room Code</label><input type="text" id="roomCodeInput" maxlength="4" style="width:100%; padding:20px; background:var(--bg); border:2px solid var(--border); border-radius:16px; color:var(--accent); font-size:3rem; text-align:center; letter-spacing:15px; font-weight:900;"></div><button class="btn btn-primary" onclick="window.join()">Join Room</button><button class="btn btn-secondary" style="margin-top:10px" onclick="window.setView('home')">Back</button></div>`;
+      else if (STATE.view === 'lobby') h += `<div class="lobby-layout"><div class="sidebar"><h3>Players (${STATE.players.length})</h3><div class="player-list">${STATE.players.map(p => `<div class="player-row ${p.is_host ? 'is-host' : ''}"><div class="p-avatar">${p.user_name.charAt(0)}</div><div class="p-name">${p.user_name}</div>${STATE.game.host_id === STATE.uuid && !p.is_host ? `<span class="kick-btn" onclick="window.kick('${p.user_id}')">✕</span>` : ''}</div>`).join('')}</div>${STATE.game.host_id === STATE.uuid ? `<button class="btn btn-primary" onclick="window.start()" ${STATE.players.length < 2 ? 'disabled' : ''}>Start Game</button>` : `<div class="text-center">Waiting...</div>`}</div><div class="lobby-main"><div class="code-box"><div class="code-val">${STATE.game.code}</div></div><p>Share code to invite friends.</p></div></div>`;
+      else if (STATE.view === 'game') h += `<div class="game-layout"><div class="game-sidebar"><h3>Table</h3>${STATE.players.map(p => `<div class="game-player-card ${STATE.game.active_turn_id === p.user_id ? 'is-active' : ''} ${p.is_folded ? 'folded' : ''}"><div class="card-visual ${p.user_id === STATE.uuid ? 'hidden' : ''}">${p.user_id === STATE.uuid ? '' : p.card_val + p.card_suit}</div><div><div style="font-weight:bold">${p.user_name}</div><div style="color:var(--accent)">Chips: ${p.chips}</div></div></div>`).join('')}</div><div><div class="table-felt"><div class="pot-val">${STATE.game.pot_total}</div><div style="color:var(--accent); font-weight:bold;">ROUND ${STATE.game.current_round} / ${STATE.game.rounds_limit}</div></div><div style="text-align:center; margin:20px 0; font-weight:bold; color:var(--accent)">${STATE.game.active_turn_id === STATE.uuid ? 'YOUR TURN!' : 'Waiting...'}</div><div class="game-controls"><button class="btn btn-secondary" onclick="window.act('fold')" ${STATE.game.active_turn_id !== STATE.uuid ? 'disabled' : ''}>Fold</button><button class="btn btn-primary" onclick="window.act('call')" ${STATE.game.active_turn_id !== STATE.uuid ? 'disabled' : ''}>Call/Check</button><button class="btn btn-primary" onclick="window.act('raise')" ${STATE.game.active_turn_id !== STATE.uuid ? 'disabled' : ''}>Raise 10</button></div></div></div>`;
+      app.innerHTML = h;
+    }
+
+    function createDeck() { const s = ['♠', '♥', '♦', '♣'], v = ['2','3','4','5','6','7','8','9','10','J','Q','K','A']; let d = []; for(let x of s) for(let y of v) d.push({s:x, v:y}); return d.sort(() => Math.random() - 0.5); }
+    function showToast(m, e=false) { const t = document.getElementById("toast"); t.innerText = m; t.className = e ? 'show error' : 'show'; setTimeout(() => t.className = '', 4000); }
+    function getCookie(n) { return document.cookie.split("; ").find(r=>r.startsWith(n+"="))?.split("=")[1] || null; }
+    function resetToHome() { if (STATE.channels.game) STATE.channels.game.unsubscribe(); if (STATE.channels.players) STATE.channels.players.unsubscribe(); STATE.game = null; STATE.view = 'home'; renderView(); }
+
+    window.setView = (v) => { STATE.view = v; renderView(); };
+    window.create = handleCreateRoom;
+    window.join = handleJoinRoom;
+    window.start = handleStart;
+    window.act = handleAction;
+    window.kick = async (uid) => { if (!STATE.game.is_casual) await supabase.rpc('poker_refund', { p_uid: uid, p_amt: STATE.game.entry_fee }); await supabase.from("poker_players").delete().eq("room_id", STATE.game.id).eq("user_id", uid); };
+    init();
   </script>
 </body>
 </html>

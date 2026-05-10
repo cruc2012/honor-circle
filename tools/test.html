@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Indian Poker | Elite Rules</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;800&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #020617; --panel: #0f172a; --panel-light: #1e293b; --text: #f1f5f9;
+      --text-muted: #94a3b8; --accent: #f59e0b; --accent-hover: #d97706; --border: #1e293b;
+      --shadow: rgba(0,0,0,0.6); --success: #10b981; --error: #ef4444; --cyan: #06b6d4;
+      --gold: #ffd700; --felt: #1a472a; --felt-dark: #051a0e; --wood: #5c3a1e;
+    }
+    body { min-height: 100vh; background: var(--bg); color: var(--text); font-family: 'DM Sans', system-ui, sans-serif; overflow-x: hidden; }
+    #app { max-width: 1400px; margin: 0 auto; padding: 20px; min-height: 100vh; }
+    
+    .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 25px; box-shadow: 0 4px 20px var(--shadow); }
+    .brand-name { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; letter-spacing: 3px; background: linear-gradient(to right, var(--accent), #fbbf24); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .user-details { text-align: right; }
+    .user-balance { font-size: 0.85rem; color: var(--accent); font-weight: 600; }
+
+    .hero { text-align: center; padding: 60px 20px; }
+    .hero h1 { font-family: 'Bebas Neue', sans-serif; font-size: 5rem; letter-spacing: 5px; margin-bottom: 30px; background: linear-gradient(to right, #fff, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; max-width: 700px; margin: 0 auto; }
+    .menu-card { background: var(--panel); border: 2px solid var(--border); border-radius: 24px; padding: 40px; text-align: center; cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; align-items: center; gap: 15px; }
+    .menu-card:hover { border-color: var(--accent); transform: translateY(-8px); box-shadow: 0 20px 40px rgba(245,158,11,0.2); }
+    .menu-card .icon { font-size: 4rem; }
+    .menu-card h3 { font-size: 1.4rem; font-weight: 800; }
+
+    .setup-card { background: var(--panel); border: 1px solid var(--border); border-radius: 24px; padding: 40px; max-width: 550px; margin: 0 auto; box-shadow: 0 20px 50px var(--shadow); }
+    .setup-card h2 { font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; letter-spacing: 3px; margin-bottom: 30px; }
+    .form-group { margin-bottom: 25px; }
+    .form-label { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+    .form-label span.val { color: var(--accent); font-size: 1.2rem; }
+    input[type="range"] { width: 100%; height: 6px; background: var(--panel-light); appearance: none; cursor: pointer; border-radius: 5px; }
+    input[type="range"]::-webkit-slider-thumb { appearance: none; width: 20px; height: 20px; background: var(--accent); border-radius: 50%; cursor: pointer; }
+    .btn { width: 100%; padding: 18px; border-radius: 14px; border: none; font-size: 1rem; font-weight: 800; cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px; font-family: 'DM Sans', sans-serif; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-primary { background: var(--accent); color: #000; }
+    .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+    .btn-secondary { background: var(--panel-light); color: var(--text); border: 1px solid var(--border); }
+    .btn-danger { background: var(--error); color: white; }
+
+    /* LOBBY */
+    .lobby-layout { display: grid; grid-template-columns: 320px 1fr; gap: 30px; }
+    .sidebar { background: var(--panel); border: 1px solid var(--border); border-radius: 20px; padding: 25px; height: 75vh; display: flex; flex-direction: column; gap: 15px; }
+    .sidebar h3 { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; letter-spacing: 2px; color: var(--text-muted); }
+    .player-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+    .player-row { display: flex; align-items: center; gap: 12px; padding: 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; transition: 0.2s; }
+    .player-row.is-host { border-color: var(--accent); }
+    .p-avatar { width: 34px; height: 34px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.85rem; color: #000; flex-shrink: 0; }
+    .p-name { flex: 1; font-weight: 600; font-size: 0.9rem; }
+    .kick-btn { color: var(--error); cursor: pointer; font-weight: bold; font-size: 1.2rem; padding: 4px 8px; border-radius: 6px; transition: 0.2s; }
+    .kick-btn:hover { background: rgba(239,68,68,0.15); }
+    .code-box { background: var(--bg); padding: 30px; border-radius: 20px; border: 2px dashed var(--border); text-align: center; }
+    .code-label { font-size: 0.75rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+    .code-val { font-size: 4.5rem; font-weight: 900; color: var(--accent); letter-spacing: 18px; font-family: 'Bebas Neue', monospace; }
+
+    /* GAME — KEY LAYOUT FIX */
+    .game-layout { display: grid; grid-template-columns: 280px 1fr; gap: 25px; align-items: start; }
+    .game-sidebar { background: var(--panel); border: 1px solid var(--border); border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+    .game-sidebar h3 { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; letter-spacing: 2px; color: var(--text-muted); margin-bottom: 5px; }
+    .game-player-card { background: var(--bg); border: 2px solid var(--border); border-radius: 14px; padding: 12px; display: flex; align-items: center; gap: 12px; transition: 0.3s; }
+    .game-player-card.is-active { border-color: var(--accent); box-shadow: 0 0 15px rgba(245,158,11,0.3); }
+    .game-player-card.folded { opacity: 0.35; }
+    .card-visual { width: 46px; height: 68px; background: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #111; font-weight: 900; font-size: 1.2rem; flex-shrink: 0; box-shadow: 0 3px 10px rgba(0,0,0,0.4); }
+    .card-visual.hidden { background: linear-gradient(135deg, #1e3a5f, #0c1f35); border: 2px solid #2a4a70; background-image: repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(245,158,11,0.08) 4px, rgba(245,158,11,0.08) 8px); color: transparent; }
+    
+    /* ROUND TABLE FIX — equal width/height so it's actually round */
+    .table-area { display: flex; flex-direction: column; gap: 20px; align-items: center; }
+    .table-felt {
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle at 40% 35%, #2d6a3f 0%, var(--felt) 40%, var(--felt-dark) 100%);
+      border-radius: 50%;
+      border: 14px solid var(--wood);
+      box-shadow: 0 0 0 4px #3d2010, 0 20px 60px rgba(0,0,0,0.8), inset 0 2px 20px rgba(0,0,0,0.4);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .pot-val { font-family: 'Bebas Neue', sans-serif; font-size: 4rem; color: var(--gold); letter-spacing: 3px; line-height: 1; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+    .pot-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,215,0,0.6); }
+    .round-label { font-size: 0.85rem; font-weight: 700; color: rgba(255,255,255,0.5); letter-spacing: 1px; }
+    
+    .turn-indicator { font-size: 1.1rem; font-weight: 800; color: var(--accent); text-align: center; padding: 10px; }
+
+    /* GAME CONTROLS — raise input does NOT get blown away on re-render */
+    .game-controls { background: var(--panel); border: 1px solid var(--border); border-radius: 20px; padding: 20px; }
+    .action-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .raise-section { display: flex; align-items: center; gap: 8px; }
+    .raise-input-box { background: var(--bg); border: 2px solid var(--border); border-radius: 10px; padding: 10px 8px; width: 70px; color: var(--accent); font-weight: 800; text-align: center; font-size: 1.1rem; font-family: 'DM Sans', sans-serif; }
+    .raise-input-box:focus { outline: none; border-color: var(--accent); }
+    .disabled-overlay { opacity: 0.45; pointer-events: none; }
+
+    /* QUICK PROMPTS */
+    .prompts-bar { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding: 15px 0 5px; }
+    .prompt-chip { background: var(--panel-light); border: 1px solid var(--border); border-radius: 20px; padding: 8px 18px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: 0.2s; color: var(--text-muted); white-space: nowrap; }
+    .prompt-chip:hover { border-color: var(--accent); color: var(--accent); background: rgba(245,158,11,0.08); }
+
+    #toast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--panel); border: 2px solid var(--accent); padding: 16px 36px; border-radius: 16px; z-index: 9999; font-weight: 700; transition: 0.4s; opacity: 0; pointer-events: none; max-width: 360px; text-align: center; }
+    #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    #toast.error { border-color: var(--error); color: var(--error); }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="toast"></div>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+    const supabase = createClient("https://mdymxbgwhauapvphscrr.supabase.co", "sb_publishable_nOrq936I1SMh4v21KzE2og_tAEbcAzK");
+
+    // ─── Raise amount is stored HERE, not in DOM — survives re-renders ───
+    let RAISE_AMT = 1;
+
+    const STATE = {
+      uuid: getCookie("uuid"), username: getCookie("username"),
+      user: { balance: 0 }, game: null, players: [], myPlayer: null,
+      channels: { game: null, players: null }, view: 'home', isProcessing: false,
+      syncInterval: null
+    };
+
+    async function init() {
+      if (!STATE.uuid) { document.getElementById("app").innerHTML = "<div style='text-align:center; padding:100px;'><h1>Login Required</h1></div>"; return; }
+      const { data: tokens } = await supabase.from("tokens").select("balance").eq("uuid", STATE.uuid).single();
+      STATE.user.balance = tokens?.balance || 0;
+      renderView();
+    }
+
+    function startDoubleSync() {
+      if (STATE.channels.game) STATE.channels.game.unsubscribe();
+      if (STATE.channels.players) STATE.channels.players.unsubscribe();
+      STATE.channels.game = supabase.channel(`gr_${STATE.game.id}`).on('postgres_changes', { event: '*', schema: 'public', table: 'poker_rooms', filter: `id=eq.${STATE.game.id}` }, p => {
+        if (!p.new || Object.keys(p.new).length === 0) { resetToHome(); return; }
+        STATE.game = p.new;
+        if (STATE.game.game_status === 'playing') STATE.view = 'game';
+        if (STATE.game.game_status === 'finished') { alert("Game Over! Tokens have been refunded."); window.location.reload(); }
+        renderView();
+      }).subscribe();
+      STATE.channels.players = supabase.channel(`pr_${STATE.game.id}`).on('postgres_changes', { event: '*', schema: 'public', table: 'poker_players', filter: `room_id=eq.${STATE.game.id}` }, () => syncData()).subscribe();
+      if (STATE.syncInterval) clearInterval(STATE.syncInterval);
+      STATE.syncInterval = setInterval(() => syncData(), 2000);
+      syncData();
+    }
+
+    async function syncData() {
+      if (!STATE.game) return;
+      const { data: g } = await supabase.from("poker_rooms").select("*").eq("id", STATE.game.id).single();
+      if (g) { STATE.game = g; if (STATE.game.game_status === 'playing') STATE.view = 'game'; }
+      const { data: p } = await supabase.from("poker_players").select("*").eq("room_id", STATE.game.id).order('seat_index');
+      if (p) {
+        STATE.players = p;
+        STATE.myPlayer = STATE.players.find(pl => pl.user_id === STATE.uuid);
+        if (!STATE.myPlayer && STATE.game.game_status !== 'finished') { resetToHome(); return; }
+        // Host triggers resolve when active_seat_index hits 999
+        if (STATE.game.host_id === STATE.uuid && STATE.game.active_seat_index === 999) resolve();
+      }
+      renderView();
+    }
+
+    async function handleCreateRoom() {
+      if (STATE.isProcessing) return;
+      const casual = document.getElementById("casualMode")?.checked || false;
+      const stack = parseInt(document.getElementById("startStack")?.value || 30);
+      const rounds = parseInt(document.getElementById("totalRounds")?.value || 5);
+      if (!casual && STATE.user.balance < stack) return showToast("Insufficient Tokens!", true);
+      STATE.isProcessing = true;
+      try {
+        const { data: g, error } = await supabase.from("poker_rooms").insert({ host_id: STATE.uuid, is_casual: casual, entry_fee: stack, rounds_limit: rounds, game_status: 'lobby' }).select().single();
+        if (error) throw error;
+        await supabase.from("poker_players").insert({ room_id: g.id, user_id: STATE.uuid, user_name: STATE.username, chips: stack, is_host: true, seat_index: 0 });
+        STATE.game = g; STATE.view = 'lobby'; startDoubleSync();
+      } catch (err) { showToast("Create Error: " + err.message, true); } finally { STATE.isProcessing = false; renderView(); }
+    }
+
+    async function handleJoinRoom() {
+      const code = document.getElementById("roomCodeInput")?.value?.trim().toUpperCase();
+      if (!code || code.length !== 4) return showToast("Enter 4-digit code!", true);
+      STATE.isProcessing = true;
+      try {
+        const { data: g, error } = await supabase.from("poker_rooms").select("*").eq("code", code).neq('game_status', 'finished').single();
+        if (error || !g) return showToast("Room not found!", true);
+        if (g.game_status !== 'lobby') return showToast("Game already started!", true);
+        if (!g.is_casual && STATE.user.balance < g.entry_fee) return showToast("Not enough tokens!", true);
+        const { data: pCount } = await supabase.from("poker_players").select("id").eq("room_id", g.id);
+        const seat = pCount.length;
+        await supabase.from("poker_players").insert({ room_id: g.id, user_id: STATE.uuid, user_name: STATE.username, chips: g.entry_fee, is_host: false, seat_index: seat });
+        STATE.game = g; STATE.view = 'lobby'; startDoubleSync();
+      } catch (err) { showToast("Join Error: " + err.message, true); } finally { STATE.isProcessing = false; renderView(); }
+    }
+
+    async function handleStart() {
+      const ante = 1;
+      const deck = createDeck();
+      for (let p of STATE.players) {
+        const c = deck.pop();
+        await supabase.from("poker_players").update({ card_val: c.v, card_suit: c.s, is_folded: false, round_bet: ante, chips: p.chips - ante }).eq("id", p.id);
+        if (!STATE.game.is_casual) await supabase.rpc('poker_deduct', { p_uid: p.user_id, p_amt: ante });
+      }
+      await supabase.from("poker_rooms").update({
+        game_status: 'playing', current_round: 1, active_seat_index: 0,
+        max_seats: STATE.players.length, pot_total: STATE.players.length * ante,
+        current_high_bet: ante, rotation_count: 0
+      }).eq("id", STATE.game.id);
+    }
+
+    async function handleAction(type) {
+      if (STATE.game.active_seat_index !== STATE.myPlayer.seat_index || STATE.isProcessing) return;
+      STATE.isProcessing = true;
+      try {
+        let uP = { chips: STATE.myPlayer.chips, round_bet: STATE.myPlayer.round_bet, is_folded: STATE.myPlayer.is_folded };
+        let uG = { pot_total: STATE.game.pot_total, current_high_bet: STATE.game.current_high_bet, rotation_count: STATE.game.rotation_count };
+
+        if (type === 'fold') {
+          uP.is_folded = true;
+        } else if (type === 'call') {
+          const diff = uG.current_high_bet - uP.round_bet;
+          const actual = Math.min(uP.chips, diff);
+          uP.chips -= actual; uP.round_bet += actual; uG.pot_total += actual;
+          if (!STATE.game.is_casual && actual > 0) await supabase.rpc('poker_deduct', { p_uid: STATE.uuid, p_amt: actual });
+        } else if (type === 'raise') {
+          // RAISE FIX: use RAISE_AMT variable, not stale DOM value
+          const raiseAmt = Math.max(1, RAISE_AMT);
+          const diff = (uG.current_high_bet - uP.round_bet) + raiseAmt;
+          const actual = Math.min(uP.chips, diff);
+          uP.chips -= actual; uP.round_bet += actual; uG.pot_total += actual; uG.current_high_bet = uP.round_bet;
+          // Reset rotation when someone raises so everyone gets to act again
+          uG.rotation_count = 0;
+          if (!STATE.game.is_casual && actual > 0) await supabase.rpc('poker_deduct', { p_uid: STATE.uuid, p_amt: actual });
+        }
+
+        await supabase.from("poker_players").update(uP).eq("id", STATE.myPlayer.id);
+
+        // Compute next with the UPDATED player state (not stale STATE.players)
+        const nextResult = computeNext(uP, uG);
+
+        // Only increment rotation_count if we wrapped around AND it wasn't already reset by a raise
+        if (nextResult.wrapped && type !== 'raise') uG.rotation_count += 1;
+
+        await supabase.from("poker_rooms").update({
+          pot_total: uG.pot_total,
+          current_high_bet: uG.current_high_bet,
+          active_seat_index: nextResult.nextIndex,
+          rotation_count: uG.rotation_count
+        }).eq("id", STATE.game.id);
+      } catch (err) { showToast("Action Error: " + err.message, true); } finally { STATE.isProcessing = false; }
+    }
+
+    // BUG FIX: computeNext uses freshly-updated player data, not stale STATE
+    function computeNext(updatedMyPlayer, updatedGame) {
+      // Build the player list with MY updated state spliced in
+      const players = STATE.players.map(p =>
+        p.id === STATE.myPlayer.id ? { ...p, ...updatedMyPlayer } : p
+      );
+
+      const activePlayers = players.filter(p => !p.is_folded);
+
+      // Only one not folded — resolve
+      if (activePlayers.length <= 1) return { nextIndex: 999, wrapped: false };
+
+      // Everyone who can still bet is all-in — resolve
+      const canAct = activePlayers.filter(p => p.chips > 0);
+      if (canAct.length === 0) return { nextIndex: 999, wrapped: false };
+
+      // Find next non-folded seat
+      let nextIdx = (STATE.myPlayer.seat_index + 1) % STATE.game.max_seats;
+      let loops = 0;
+      while (players[nextIdx]?.is_folded) {
+        nextIdx = (nextIdx + 1) % STATE.game.max_seats;
+        if (++loops > STATE.game.max_seats) return { nextIndex: 999, wrapped: false };
+      }
+
+      const wrapped = nextIdx <= STATE.myPlayer.seat_index;
+
+      // Check if everyone remaining has matched the high bet (or is all-in)
+      const allMatched = activePlayers.every(p =>
+        p.round_bet >= updatedGame.current_high_bet || p.chips === 0
+      );
+
+      // If all matched and we're about to pass turn to seat 0 (full rotation done) → resolve
+      if (allMatched && (wrapped || updatedGame.rotation_count >= 1)) {
+        return { nextIndex: 999, wrapped };
+      }
+
+      return { nextIndex: nextIdx, wrapped };
+    }
+
+    async function resolve() {
+      if (STATE.isProcessing) return;
+      STATE.isProcessing = true;
+      try {
+        // Re-fetch fresh player data before resolving
+        const { data: freshPlayers } = await supabase.from("poker_players").select("*").eq("room_id", STATE.game.id).order('seat_index');
+        if (freshPlayers) STATE.players = freshPlayers;
+
+        const active = STATE.players.filter(p => !p.is_folded);
+        let win = null;
+        if (active.length === 1) {
+          win = active[0];
+        } else {
+          const v = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+          const sorted = [...active].sort((a, b) => v.indexOf(b.card_val) - v.indexOf(a.card_val));
+          win = sorted[0];
+        }
+
+        const winnerNewChips = win.chips + STATE.game.pot_total;
+        await supabase.from("poker_players").update({ chips: winnerNewChips }).eq("id", win.id);
+
+        if (STATE.game.current_round >= STATE.game.rounds_limit) {
+          // Game over — refund everyone
+          for (let p of STATE.players) {
+            const finalChips = p.id === win.id ? winnerNewChips : p.chips;
+            if (!STATE.game.is_casual) await supabase.rpc('poker_refund', { p_uid: p.user_id, p_amt: finalChips });
+          }
+          await supabase.from("poker_rooms").update({ game_status: 'finished' }).eq("id", STATE.game.id);
+        } else {
+          // Next round
+          const ante = 1;
+          const deck = createDeck();
+          for (let p of STATE.players) {
+            const chipSource = p.id === win.id ? winnerNewChips : p.chips;
+            const c = deck.pop();
+            await supabase.from("poker_players").update({
+              card_val: c.v, card_suit: c.s, is_folded: false,
+              round_bet: ante, chips: chipSource - ante
+            }).eq("id", p.id);
+            if (!STATE.game.is_casual) await supabase.rpc('poker_deduct', { p_uid: p.user_id, p_amt: ante });
+          }
+          await supabase.from("poker_rooms").update({
+            current_round: STATE.game.current_round + 1,
+            pot_total: STATE.players.length * ante,
+            current_high_bet: ante, active_seat_index: 0, rotation_count: 0
+          }).eq("id", STATE.game.id);
+        }
+      } catch (err) { console.error("Resolve error:", err); } finally { STATE.isProcessing = false; }
+    }
+
+    function renderView() {
+      const app = document.getElementById("app");
+
+      const header = `<div class="header">
+        <div class="brand-name">INDIAN POKER</div>
+        <div class="user-details">
+          <div class="user-name" style="font-weight:700">${STATE.username || 'Guest'}</div>
+          <div class="user-balance">${STATE.user.balance} Tokens</div>
+        </div>
+      </div>`;
+
+      let body = '';
+
+      if (STATE.view === 'home') {
+        body = `
+          <div class="hero">
+            <h1>Master the Bluff</h1>
+            <div class="menu-grid">
+              <div class="menu-card" onclick="window.setView('host')">
+                <span class="icon">👑</span><h3>Host Game</h3>
+                <p style="color:var(--text-muted); font-size:0.85rem">Create a room & invite friends</p>
+              </div>
+              <div class="menu-card" onclick="window.setView('join')">
+                <span class="icon">🤝</span><h3>Join Game</h3>
+                <p style="color:var(--text-muted); font-size:0.85rem">Enter a room code to play</p>
+              </div>
+            </div>
+          </div>`;
+
+      } else if (STATE.view === 'host') {
+        body = `
+          <div class="setup-card">
+            <h2>Host Game</h2>
+            <div class="form-group">
+              <div class="form-label"><span>Starting Stack</span><span class="val" id="sv">30</span></div>
+              <input type="range" id="startStack" min="10" max="100" step="5" value="30" oninput="document.getElementById('sv').innerText=this.value">
+            </div>
+            <div class="form-group">
+              <div class="form-label"><span>Rounds</span><span class="val" id="rv">5</span></div>
+              <input type="range" id="totalRounds" min="1" max="15" value="5" oninput="document.getElementById('rv').innerText=this.value">
+            </div>
+            <div class="form-group" style="display:flex;align-items:center;gap:10px">
+              <input type="checkbox" id="casualMode" style="width:18px;height:18px;accent-color:var(--accent)">
+              <label for="casualMode" style="cursor:pointer">Casual Play (no tokens deducted)</label>
+            </div>
+            <button class="btn btn-primary" onclick="window.create()">Create Room</button>
+            <button class="btn btn-secondary" style="margin-top:10px" onclick="window.setView('home')">Back</button>
+          </div>`;
+
+      } else if (STATE.view === 'join') {
+        body = `
+          <div class="setup-card">
+            <h2>Join Game</h2>
+            <div class="form-group">
+              <div class="form-label">Room Code</div>
+              <input type="text" id="roomCodeInput" maxlength="4"
+                style="width:100%;padding:20px;background:var(--bg);border:2px solid var(--border);border-radius:16px;color:var(--accent);font-size:3rem;text-align:center;letter-spacing:15px;font-weight:900;font-family:'Bebas Neue',monospace;text-transform:uppercase">
+            </div>
+            <button class="btn btn-primary" onclick="window.join()">Join Room</button>
+            <button class="btn btn-secondary" style="margin-top:10px" onclick="window.setView('home')">Back</button>
+          </div>`;
+
+      } else if (STATE.view === 'lobby') {
+        const isHost = STATE.game.host_id === STATE.uuid;
+        body = `
+          <div class="lobby-layout">
+            <div class="sidebar">
+              <h3>Players (${STATE.players.length})</h3>
+              <div class="player-list">
+                ${STATE.players.map(p => `
+                  <div class="player-row ${p.is_host ? 'is-host' : ''}">
+                    <div class="p-avatar">${p.user_name.charAt(0).toUpperCase()}</div>
+                    <div class="p-name">${p.user_name} ${p.is_host ? '👑' : ''}</div>
+                    ${isHost && !p.is_host ? `<span class="kick-btn" onclick="window.kick('${p.user_id}')">✕</span>` : ''}
+                  </div>`).join('')}
+              </div>
+              ${isHost
+                ? `<button class="btn btn-primary" onclick="window.start()" ${STATE.players.length < 2 ? 'disabled' : ''}>
+                    ${STATE.players.length < 2 ? 'Need 2+ players' : 'Start Game'}
+                  </button>`
+                : `<div style="text-align:center;color:var(--text-muted);padding:15px">⏳ Waiting for host to start…</div>`}
+            </div>
+            <div style="display:flex;flex-direction:column;gap:20px">
+              <div class="code-box">
+                <div class="code-label">Room Code</div>
+                <div class="code-val">${STATE.game.code}</div>
+                <div style="color:var(--text-muted);font-size:0.8rem;margin-top:10px">Share this with friends to join</div>
+              </div>
+              <div style="background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:20px">
+                <div style="font-size:0.75rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px">Game Settings</div>
+                <div style="display:flex;gap:20px">
+                  <div><div style="font-size:0.7rem;color:var(--text-muted)">STACK</div><div style="font-size:1.5rem;font-weight:800;color:var(--accent)">${STATE.game.entry_fee}</div></div>
+                  <div><div style="font-size:0.7rem;color:var(--text-muted)">ROUNDS</div><div style="font-size:1.5rem;font-weight:800;color:var(--accent)">${STATE.game.rounds_limit}</div></div>
+                  <div><div style="font-size:0.7rem;color:var(--text-muted)">MODE</div><div style="font-size:1.5rem;font-weight:800;color:var(--accent)">${STATE.game.is_casual ? 'Casual' : 'Ranked'}</div></div>
+                </div>
+              </div>
+            </div>
+          </div>`;
+
+      } else if (STATE.view === 'game') {
+        const isMyTurn = STATE.game.active_seat_index === STATE.myPlayer?.seat_index;
+        const iAmFolded = STATE.myPlayer?.is_folded;
+        const callDiff = Math.max(0, STATE.game.current_high_bet - (STATE.myPlayer?.round_bet || 0));
+
+        body = `
+          <div class="game-layout">
+            <div class="game-sidebar">
+              <h3>Players</h3>
+              ${STATE.players.map(p => `
+                <div class="game-player-card ${STATE.game.active_seat_index === p.seat_index ? 'is-active' : ''} ${p.is_folded ? 'folded' : ''}">
+                  <div class="card-visual ${p.user_id === STATE.uuid ? 'hidden' : ''}" style="color:${p.card_suit === '♥' || p.card_suit === '♦' ? '#e11d48' : '#111'}">
+                    ${p.user_id === STATE.uuid ? '' : (p.card_val + p.card_suit)}
+                  </div>
+                  <div style="min-width:0">
+                    <div style="font-weight:700;font-size:0.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                      ${p.user_id === STATE.uuid ? '🫵 ' : ''}${p.user_name}
+                    </div>
+                    <div style="color:var(--accent);font-size:0.8rem">💰 ${p.chips} chips</div>
+                    <div style="color:var(--text-muted);font-size:0.7rem">Bet: ${p.round_bet}</div>
+                    ${p.is_folded ? '<div style="color:var(--error);font-size:0.7rem;font-weight:700">FOLDED</div>' : ''}
+                  </div>
+                </div>`).join('')}
+            </div>
+
+            <div class="table-area">
+              <div class="table-felt">
+                <div class="pot-label">Pot</div>
+                <div class="pot-val">${STATE.game.pot_total}</div>
+                <div class="round-label">Round ${STATE.game.current_round} / ${STATE.game.rounds_limit}</div>
+                <div style="font-size:0.7rem;color:rgba(255,255,255,0.3);margin-top:4px">High bet: ${STATE.game.current_high_bet}</div>
+              </div>
+
+              <div class="turn-indicator">
+                ${isMyTurn && !iAmFolded ? '🌟 YOUR TURN — make your move!' : iAmFolded ? '🃏 You folded — watching the round' : '⏳ Waiting for other players…'}
+              </div>
+
+              <div class="game-controls ${isMyTurn && !iAmFolded ? '' : 'disabled-overlay'}">
+                <div class="action-row">
+                  <button class="btn btn-danger" style="flex:1;padding:14px" onclick="window.act('fold')">Fold</button>
+                  <button class="btn btn-secondary" style="flex:2;padding:14px" onclick="window.act('call')">
+                    ${callDiff > 0 ? `Call +${callDiff}` : 'Check'}
+                  </button>
+                  <div class="raise-section">
+                    <input
+                      type="number"
+                      id="raiseAmountInput"
+                      class="raise-input-box"
+                      value="${RAISE_AMT}"
+                      min="1"
+                      max="${STATE.myPlayer?.chips || 999}"
+                      oninput="window.setRaise(this.value)"
+                    >
+                    <button class="btn btn-primary" style="padding:14px 20px;width:auto" onclick="window.act('raise')">Raise</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="prompts-bar">
+                <span style="font-size:0.75rem;color:var(--text-muted);align-self:center">Ask:</span>
+                <button class="prompt-chip" onclick="window.sendPrompt('What are the rules of Indian Poker?')">How do I play?</button>
+                <button class="prompt-chip" onclick="window.sendPrompt('What is the best strategy for Indian Poker?')">Strategy tips</button>
+                <button class="prompt-chip" onclick="window.sendPrompt('When should I fold in Indian Poker?')">When to fold?</button>
+                <button class="prompt-chip" onclick="window.sendPrompt('Explain the betting rules')">Betting rules</button>
+              </div>
+            </div>
+          </div>`;
+      }
+
+      app.innerHTML = header + body;
+    }
+
+    function createDeck() {
+      const s = ['♠', '♥', '♦', '♣'], v = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+      let d = [];
+      for (let x of s) for (let y of v) d.push({ s: x, v: y });
+      return d.sort(() => Math.random() - 0.5);
+    }
+    function showToast(m, e = false) { const t = document.getElementById("toast"); t.innerText = m; t.className = e ? 'show error' : 'show'; setTimeout(() => t.className = '', 4000); }
+    function getCookie(n) { return document.cookie.split("; ").find(r => r.startsWith(n + "="))?.split("=")[1] || null; }
+    function resetToHome() {
+      if (STATE.channels.game) STATE.channels.game.unsubscribe();
+      if (STATE.channels.players) STATE.channels.players.unsubscribe();
+      if (STATE.syncInterval) clearInterval(STATE.syncInterval);
+      STATE.game = null; STATE.view = 'home'; renderView();
+    }
+
+    window.setView = (v) => { STATE.view = v; renderView(); };
+    window.create = handleCreateRoom;
+    window.join = handleJoinRoom;
+    window.start = handleStart;
+    window.act = handleAction;
+    // Raise amount saved to JS variable — NOT read from DOM on action, survives re-renders
+    window.setRaise = (v) => { RAISE_AMT = Math.max(1, parseInt(v) || 1); };
+    window.kick = async (uid) => {
+      if (!STATE.game.is_casual) await supabase.rpc('poker_refund', { p_uid: uid, p_amt: STATE.game.entry_fee });
+      await supabase.from("poker_players").delete().eq("room_id", STATE.game.id).eq("user_id", uid);
+    };
+    window.sendPrompt = (text) => { showToast("💬 " + text); };
+
+    init();
+  </script>
+</body>
+</html>
