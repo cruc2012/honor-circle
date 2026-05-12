@@ -140,6 +140,21 @@
     .hub-link:hover { color: var(--accent); }
     .crown-btn { color: var(--gold); cursor: pointer; font-weight: bold; font-size: 1.1rem; margin-right: 8px; transition: transform 0.2s; }
     .crown-btn:hover { transform: scale(1.2); }
+
+    .settings-panel {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 16px;
+      padding: 20px; margin-top: 15px;
+    }
+    .settings-panel h4 { margin-bottom: 15px; color: var(--accent); }
+    .settings-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .settings-row label { font-size: 0.85rem; color: var(--text-muted); }
+    .settings-row input {
+      width: 80px; padding: 8px; background: var(--panel-light); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); text-align: center; font-weight: 700;
+    }
+    .settings-save {
+      margin-top: 10px; padding: 10px; font-size: 0.9rem;
+    }
   </style>
 <base target="_blank">
 <base target="_blank">
@@ -212,8 +227,15 @@
       }
       try {
         const { data: tokens, error } = await supabase.from("tokens").select("balance").eq("uuid", STATE.uuid).single();
-        if (error) { showToast("DB Error: " + error.message, true); return; }
-        STATE.user.balance = tokens?.balance || 0;
+        if (error) {
+          if (error.code === 'PGRST116') {
+            STATE.user.balance = 0;
+          } else {
+            showToast("DB Error: " + error.message, true); return;
+          }
+        } else {
+          STATE.user.balance = tokens?.balance || 0;
+        }
         renderView();
       } catch (err) { showToast("Init Error: " + err.message, true); }
     }
@@ -228,15 +250,30 @@
           console.log('[ROOM RT]', payload.eventType, payload.new);
           const newData = payload.new || payload.record || null;
           if (!newData || typeof newData !== 'object') return;
+
+          // Handle return to lobby from game (endGame sets status to 'lobby')
+          if (newData.game_status === 'lobby' && STATE.view === 'game') {
+            hideRevealOverlay();
+            STATE.view = 'lobby';
+            STATE.lastRenderedView = null;
+            STATE.isRevealing = false;
+            STATE.game = newData;
+            renderView();
+            showToast("Game ended! Back to lobby.", false);
+            return;
+          }
+
           if (newData.game_status === 'finished') { 
             hideRevealOverlay();
             STATE.view = 'lobby'; 
             STATE.lastRenderedView = null;
             STATE.isRevealing = false;
+            STATE.game = newData;
             renderView();
             showToast("Game Over! Returning to lobby...", false);
             return; 
           }
+
           STATE.game = newData;
           if (STATE.game.game_status === 'playing') { STATE.view = 'game'; STATE.lobbyJoinTime = 0; }
           syncData();
@@ -272,6 +309,13 @@
           STATE.game = g;
           if (STATE.game.game_status === 'playing' && STATE.view !== 'game') {
             STATE.view = 'game'; STATE.lastRenderedView = null;
+          }
+          // Handle return to lobby from game
+          if (STATE.game.game_status === 'lobby' && STATE.view === 'game') {
+            hideRevealOverlay();
+            STATE.view = 'lobby';
+            STATE.lastRenderedView = null;
+            STATE.isRevealing = false;
           }
           if (STATE.game.game_status === 'finished' && STATE.view === 'game') {
             hideRevealOverlay();
@@ -403,7 +447,19 @@
 
     async function endGame() {
       hideRevealOverlay();
-      await supabase.from("poker_rooms").update({ game_status: 'finished' }).eq("id", STATE.game.id);
+      // Reset all players' chips back to original entry fee
+      const entryFee = STATE.game.entry_fee;
+      for (let p of STATE.players) {
+        await supabase.from("poker_players").update({ chips: entryFee }).eq("id", p.id);
+      }
+      // Set status back to lobby so host can start a new game
+      await supabase.from("poker_rooms").update({ 
+        game_status: 'lobby', 
+        current_round: 0, 
+        pot_total: 0, 
+        current_high_bet: 0,
+        active_seat_index: -1
+      }).eq("id", STATE.game.id);
     }
 
     async function dealNextRound() {
@@ -750,7 +806,7 @@
         h += `<div class="setup-card"><h2>Join Game</h2><div class="form-group"><label class="form-label">Room Code</label><input type="text" id="roomCodeInput" maxlength="4" style="width:100%; padding:20px; background:var(--bg); border:2px solid var(--border); border-radius:16px; color:var(--accent); font-size:3rem; text-align:center; letter-spacing:15px; font-weight:900;"></div><button class="btn btn-primary" onclick="window.join()">Join Room</button><button class="btn btn-secondary" style="margin-top:10px" onclick="window.setView('home')">Back</button></div>`;
       }
       else if (STATE.view === 'lobby') {
-        h += `<div class="lobby-layout"><div class="sidebar"><h3 id="player-count">Players (${STATE.players.length})</h3><div class="player-list" id="player-list">${renderPlayerList()}</div><div id="host-controls">${renderHostControls()}</div><button class="btn btn-danger" style="margin-top:15px" onclick="window.leave()">Leave Room</button></div><div class="lobby-main"><div class="code-box"><div class="code-val" id="room-code">${STATE.game?.code || ''}</div></div><div id="change-code-area"></div><p>Share code to invite friends.</p></div></div>`;
+        h += `<div class="lobby-layout"><div class="sidebar"><h3 id="player-count">Players (${STATE.players.length})</h3><div class="player-list" id="player-list">${renderPlayerList()}</div><div id="host-controls">${renderHostControls()}</div><button class="btn btn-danger" style="margin-top:15px" onclick="window.leave()">Leave Room</button></div><div class="lobby-main"><div class="code-box"><div class="code-val" id="room-code">${STATE.game?.code || ''}</div></div><div id="change-code-area"></div><div id="settings-area"></div><p>Share code to invite friends.</p></div></div>`;
       }
       else if (STATE.view === 'game') {
         const isResolving = STATE.game?.active_seat_index === -1;
@@ -759,6 +815,12 @@
         h += `<div class="game-layout"><div class="game-sidebar" id="game-sidebar">${renderGameSidebar()}</div><div><div class="table-felt"><div class="pot-val" id="pot-val">${STATE.game?.pot_total || 0}</div><div class="round-badge" id="round-badge">ROUND ${STATE.game?.current_round || 1} / ${STATE.game?.rounds_limit || 1}</div></div><div class="turn-indicator" id="turn-indicator">${isResolving ? '🎴 Revealing cards...' : (isMyTurn ? '🌟 YOUR TURN!' : 'Waiting for others...')}</div><div class="game-controls" id="game-controls" style="opacity: ${(isMyTurn && !isResolving) ? '1' : '0.5'}; pointer-events: ${(isMyTurn && !isResolving) ? 'all' : 'none'}"><div class="action-row"><button class="btn btn-secondary" style="flex:1" onclick="window.act('fold')">Fold</button><button class="btn btn-primary" style="flex:2" onclick="window.act('call')" id="call-btn">${renderCallText()}</button><input type="number" id="raiseAmountInput" class="raise-input-box" value="1" min="1"><button class="btn btn-primary" style="flex:1" onclick="window.act('raise')">Raise</button></div></div></div></div>`;
       }
       return h;
+    }
+
+    function renderSettingsPanel() {
+      const stack = STATE.game?.entry_fee || 30;
+      const rounds = STATE.game?.rounds_limit || 5;
+      return `<div class="settings-panel" id="settings-panel"><h4>⚙️ Game Settings</h4><div class="settings-row"><label>Starting Stack</label><input type="number" id="settingsStack" value="${stack}" min="10" max="100" step="5"></div><div class="settings-row"><label>Rounds Limit</label><input type="number" id="settingsRounds" value="${rounds}" min="1" max="15"></div><button class="btn btn-secondary settings-save" onclick="window.saveSettings()">Save Settings</button></div>`;
     }
 
     function renderPlayerList() {
@@ -784,6 +846,7 @@
       const hostEl = document.getElementById("host-controls");
       const codeEl = document.getElementById("room-code");
       const changeCodeArea = document.getElementById("change-code-area");
+      const settingsArea = document.getElementById("settings-area");
 
       if (countEl) countEl.textContent = `Players (${STATE.players.length})`;
       if (listEl) { const currentHTML = renderPlayerList(); if (listEl.innerHTML !== currentHTML) listEl.innerHTML = currentHTML; }
@@ -796,6 +859,12 @@
           ? `<button class="btn btn-secondary" style="margin-top:15px;max-width:200px;margin-left:auto;margin-right:auto;display:block;" onclick="window.changeCode()">🔄 Change Code</button>` 
           : '';
         if (changeCodeArea.innerHTML !== newHTML) changeCodeArea.innerHTML = newHTML;
+      }
+
+      if (settingsArea) {
+        const isHost = STATE.game?.host_id === STATE.uuid;
+        const newHTML = isHost ? renderSettingsPanel() : '';
+        if (settingsArea.innerHTML !== newHTML) settingsArea.innerHTML = newHTML;
       }
     }
 
@@ -926,6 +995,32 @@
         await supabase.from("poker_players").update({ is_host: true }).eq("room_id", STATE.game.id).eq("user_id", uid);
         await syncData();
       } catch (err) { showToast("Transfer Error: " + err.message, true); }
+    };
+    window.saveSettings = async () => {
+      if (STATE.game?.host_id !== STATE.uuid) { showToast("Only the host can change settings", true); return; }
+      const newStack = parseInt(document.getElementById("settingsStack")?.value || 30);
+      const newRounds = parseInt(document.getElementById("settingsRounds")?.value || 5);
+
+      if (newStack < 10 || newStack > 100) { showToast("Stack must be 10-100", true); return; }
+      if (newRounds < 1 || newRounds > 15) { showToast("Rounds must be 1-15", true); return; }
+
+      try {
+        const { error } = await supabase.from("poker_rooms").update({ 
+          entry_fee: newStack, 
+          rounds_limit: newRounds 
+        }).eq("id", STATE.game.id);
+        if (error) throw error;
+
+        // Update all players' chips to new stack amount
+        for (let p of STATE.players) {
+          await supabase.from("poker_players").update({ chips: newStack }).eq("id", p.id);
+        }
+
+        STATE.game.entry_fee = newStack;
+        STATE.game.rounds_limit = newRounds;
+        showToast("Settings updated!", false);
+        syncData();
+      } catch (err) { showToast("Settings Error: " + err.message, true); }
     };
 
     init();
