@@ -506,7 +506,7 @@
               </div>
 
               <div class="games-grid">
-                <a href="/tools/development.html" class="game-card">
+                <a href="/tools/gambling/indian_poker.html" class="game-card">
                 <div class="game-icon">🃏</div>
                 <div class="game-title">Indian Poker</div>
                 <div class="game-desc">Test your skills!</div>
@@ -527,7 +527,7 @@
     function showToast(message, type) {
       const toast = document.getElementById("toast");
       toast.textContent = message;
-      toast.className = `toast ${type}`;
+      toast.className = `toast ${type}`; 
       setTimeout(() => toast.classList.add("show"), 10);
       setTimeout(() => {
         toast.classList.remove("show");

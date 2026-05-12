@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Indian Poker | Elite Rules</title>
+  <title>Indian Poker BETA | Elite Rules</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -14,9 +14,11 @@
     }
     body { min-height: 100vh; background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; overflow-x: hidden; }
     #app { max-width: 1400px; margin: 0 auto; padding: 20px; min-height: 100vh; }
-    
+
     .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 25px; box-shadow: 0 4px 20px var(--shadow); }
-    .brand-name { font-size: 1.4rem; font-weight: 800; background: linear-gradient(to right, var(--accent), #fbbf24); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .header-center { justify-content: center !important; }
+    .header-left { justify-content: flex-start !important; gap: 15px; }
+    .brand-name { font-size: 1.4rem; font-weight: 800; background: linear-gradient(to right, var(--accent), #fbbf24); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
     .user-details { text-align: right; }
     .user-balance { font-size: 0.85rem; color: var(--accent); font-weight: 600; }
 
@@ -36,6 +38,8 @@
     .btn { width: 100%; padding: 18px; border-radius: 14px; border: none; font-size: 1.1rem; font-weight: 800; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
     .btn-primary { background: var(--accent); color: white; }
     .btn-secondary { background: var(--panel-light); color: var(--text); border: 1px solid var(--border); }
+    .btn-danger { background: var(--error); color: white; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
     .lobby-layout { display: grid; grid-template-columns: 350px 1fr; gap: 30px; }
     .sidebar { background: var(--panel); border: 1px solid var(--border); border-radius: 20px; padding: 25px; height: 75vh; display: flex; flex-direction: column; }
@@ -48,89 +52,579 @@
     .code-box { background: var(--bg); padding: 30px 50px; border-radius: 20px; border: 2px dashed var(--border); margin-bottom: 30px; text-align: center; }
     .code-val { font-size: 4rem; font-weight: 900; color: var(--accent); letter-spacing: 15px; font-family: monospace; }
 
-    .game-layout { display: grid; grid-template-columns: 300px 1fr; gap: 30px; }
-    .game-player-card { background: var(--bg); border: 2px solid var(--border); border-radius: 16px; padding: 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 15px; }
-    .game-player-card.is-active { border-color: var(--accent); box-shadow: 0 0 10px var(--accent); }
+    .game-layout { display: grid; grid-template-columns: 300px 1fr; gap: 30px; align-items: start; }
+    .game-player-card { background: var(--bg); border: 2px solid var(--border); border-radius: 16px; padding: 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 15px; transition: all 0.3s; }
+    .game-player-card.is-active { border-color: var(--accent); box-shadow: 0 0 15px var(--accent); }
     .game-player-card.folded { opacity: 0.4; }
-    .card-visual { width: 50px; height: 75px; background: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: black; font-weight: 800; font-size: 1.4rem; flex-shrink: 0; }
+    .game-player-card.winner { border-color: var(--gold); box-shadow: 0 0 20px var(--gold); animation: winnerPulse 1s ease-in-out infinite; }
+    @keyframes winnerPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
+    .card-visual { width: 50px; height: 75px; background: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: black; font-weight: 800; font-size: 1.4rem; flex-shrink: 0; transition: all 0.3s; }
     .card-visual.hidden { background: linear-gradient(135deg, #1e293b, #0f172a); border: 2px solid #334155; color: transparent; background-image: radial-gradient(var(--accent) 1px, transparent 1px); background-size: 8px 8px; }
-    .table-felt { flex: 1; background: radial-gradient(circle at center, var(--felt) 0%, var(--felt-dark) 100%); border-radius: 50%; border: 12px solid var(--wood); min-height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
-    .pot-val { font-size: 4.5rem; font-weight: 900; color: var(--gold); }
-    
-    .game-controls { background: var(--panel); border: 1px solid var(--border); border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+    .card-visual.revealed { background: white; color: black; border: 2px solid var(--gold); box-shadow: 0 0 15px var(--gold); }
+    .table-felt { background: radial-gradient(circle at center, var(--felt) 0%, var(--felt-dark) 100%); border-radius: 50%; border: 12px solid var(--wood); width: min(500px, 90vw); height: min(500px, 90vw); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; margin: 0 auto; aspect-ratio: 1 / 1; flex-shrink: 0; }
+    .pot-val { font-size: clamp(2rem, 8vw, 4.5rem); font-weight: 900; color: var(--gold); transition: all 0.3s; }
+
+    .game-controls { background: var(--panel); border: 1px solid var(--border); border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 15px; transition: opacity 0.3s; }
     .action-row { display: flex; gap: 10px; align-items: center; }
     .raise-input-box { background: var(--bg); border: 2px solid var(--border); border-radius: 12px; padding: 10px; width: 80px; color: var(--accent); font-weight: 800; text-align: center; font-size: 1.2rem; }
-    
+
     #toast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--panel); border: 2px solid var(--accent); padding: 18px 40px; border-radius: 16px; z-index: 9999; font-weight: 700; transition: 0.4s; opacity: 0; pointer-events: none; }
     #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
     #toast.error { border-color: var(--error); color: var(--error); }
+
+    .turn-indicator { text-align: center; margin: 20px 0; font-weight: bold; color: var(--accent); font-size: 1.1rem; min-height: 28px; }
+    .round-badge { color: var(--accent); font-weight: bold; font-size: 1.2rem; }
+
+    #reveal-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.85); z-index: 10000;
+      display: none; align-items: center; justify-content: center; flex-direction: column;
+      backdrop-filter: blur(8px);
+    }
+    #reveal-overlay.show { display: flex; }
+    .reveal-title { font-size: 2.5rem; font-weight: 900; color: var(--gold); margin-bottom: 30px; text-align: center; }
+    .reveal-winner-text { font-size: 1.5rem; color: var(--gold); margin-bottom: 20px; font-weight: 700; }
+    .reveal-cards { display: flex; gap: 30px; margin-bottom: 30px; flex-wrap: wrap; justify-content: center; }
+    .reveal-card-item { text-align: center; }
+    .reveal-card-visual {
+      width: 80px; height: 110px; background: white; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      color: black; font-weight: 900; font-size: 2rem; margin-bottom: 10px;
+      border: 3px solid var(--border); transition: all 0.3s;
+    }
+    .reveal-card-visual.winner-card { border-color: var(--gold); box-shadow: 0 0 25px var(--gold); transform: scale(1.1); }
+    .reveal-card-visual.folded-card { opacity: 0.4; background: #334155; color: #94a3b8; }
+    .reveal-player-name { font-size: 0.9rem; font-weight: 600; }
+    .reveal-timer { font-size: 1rem; color: var(--text-muted); }
+
+    .login-required {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .login-card {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 16px;
+      padding: 50px 40px; text-align: center; max-width: 400px; width: 100%;
+      box-shadow: 0 10px 40px var(--shadow);
+    }
+    .login-icon { font-size: 4rem; margin-bottom: 20px; }
+    .login-card h1 { font-size: 1.5rem; margin-bottom: 10px; }
+    .login-card p { color: var(--text-muted); margin-bottom: 20px; }
+    .login-btn {
+      display: inline-block; padding: 14px 32px; background: var(--accent); color: white;
+      text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 1rem;
+      transition: background 0.2s;
+    }
+    .login-btn:hover { background: var(--accent-hover); }
+
+    .back-btn {
+      color: var(--text-muted); text-decoration: none; font-size: 0.9rem;
+      display: inline-flex; align-items: center; gap: 5px;
+      transition: color 0.2s; cursor: pointer; background: none; border: none;
+      padding: 0; font-family: inherit;
+    }
+    .back-btn:hover { color: var(--text); }
+
+    .leave-btn {
+      color: var(--text) !important; background: none !important; border: none !important;
+      padding: 0 !important; font-size: 0.9rem;
+    }
+    .leave-btn:hover { color: var(--error) !important; }
+
+    .hub-link {
+      display: inline-flex; align-items: center; gap: 8px;
+      color: var(--text-muted); text-decoration: none;
+      font-size: 0.9rem; transition: color 0.2s;
+      margin-bottom: 20px; cursor: pointer;
+      background: none; border: none; padding: 0;
+      font-family: inherit;
+    }
+    .hub-link:hover { color: var(--accent); }
+    .crown-btn { color: var(--gold); cursor: pointer; font-weight: bold; font-size: 1.1rem; margin-right: 8px; transition: transform 0.2s; }
+    .crown-btn:hover { transform: scale(1.2); }
   </style>
+<base target="_blank">
+<base target="_blank">
+<base target="_blank">
 </head>
 <body>
   <div id="app"></div>
   <div id="toast"></div>
 
+  <div id="reveal-overlay">
+    <div class="reveal-title">🎴 Round Complete!</div>
+    <div class="reveal-winner-text" id="reveal-winner"></div>
+    <div class="reveal-cards" id="reveal-cards"></div>
+    <div class="reveal-timer" id="reveal-timer">Next round in 4...</div>
+  </div>
+
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-    const supabase = createClient("https://mdymxbgwhauapvphscrr.supabase.co", "sb_publishable_nOrq936I1SMh4v21KzE2og_tAEbcAzK");
-    
+
+    function getCookie(name) {
+      if (!document.cookie) return null;
+      const cookies = document.cookie.split(';');
+      for (let c of cookies) {
+        c = c.trim();
+        if (c.indexOf(name + '=') === 0) {
+          return decodeURIComponent(c.substring(name.length + 1));
+        }
+      }
+      return null;
+    }
+
+    const SUPABASE_URL = "https://mdymxbgwhauapvphscrr.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_nOrq936I1SMh4v21KzE2og_tAEbcAzK";
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
     const STATE = {
-      uuid: getCookie("uuid"), username: getCookie("username"),
-      user: { balance: 0 }, game: null, players: [], myPlayer: null,
-      channels: { game: null, players: null }, view: 'home', isProcessing: false,
-      syncInterval: null
+      uuid: getCookie("uuid"), 
+      username: getCookie("username"),
+      user: { balance: 0 }, 
+      game: null, 
+      players: [], 
+      myPlayer: null,
+      channels: { game: null, players: null }, 
+      view: 'home', 
+      isProcessing: false,
+      syncInterval: null, 
+      lastRenderedView: null,
+      isRevealing: false,
+      lobbyJoinTime: 0,
+      syncDebounceTimer: null,
+      isSyncing: false,
+      revealTimerInterval: null,
+      startingSeatIndex: 0
     };
 
+    const CARD_VALUES = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+
     async function init() {
-      if (!STATE.uuid) { document.getElementById("app").innerHTML = "<div style='text-align:center; padding:100px;'><h1>Login Required</h1></div>"; return; }
-      const { data: tokens } = await supabase.from("tokens").select("balance").eq("uuid", STATE.uuid).single();
-      STATE.user.balance = tokens?.balance || 0;
-      renderView();
+      if (!STATE.uuid) { 
+        document.getElementById("app").innerHTML = `
+          <div class="login-required">
+            <div class="login-card">
+              <div class="login-icon">🃏</div>
+              <h1>Access Required</h1>
+              <p>Please log in to play Indian Poker BETA.</p>
+              <a href="/login.html" class="login-btn">Sign In</a>
+            </div>
+          </div>`; 
+        return; 
+      }
+      try {
+        const { data: tokens, error } = await supabase.from("tokens").select("balance").eq("uuid", STATE.uuid).single();
+        if (error) { showToast("DB Error: " + error.message, true); return; }
+        STATE.user.balance = tokens?.balance || 0;
+        renderView();
+      } catch (err) { showToast("Init Error: " + err.message, true); }
     }
 
     function startDoubleSync() {
       if (STATE.channels.game) STATE.channels.game.unsubscribe();
       if (STATE.channels.players) STATE.channels.players.unsubscribe();
-      STATE.channels.game = supabase.channel(`gr_${STATE.game.id}`).on('postgres_changes', { event: '*', schema: 'public', table: 'poker_rooms', filter: `id=eq.${STATE.game.id}` }, p => {
-        if (!p.new || Object.keys(p.new).length === 0) { resetToHome(); return; }
-        STATE.game = p.new;
-        if (STATE.game.game_status === 'playing') STATE.view = 'game';
-        if (STATE.game.game_status === 'finished') { alert("Game Over! Tokens have been refunded to your account."); window.location.reload(); }
-        renderView();
-      }).subscribe();
-      STATE.channels.players = supabase.channel(`pr_${STATE.game.id}`).on('postgres_changes', { event: '*', schema: 'public', table: 'poker_players', filter: `room_id=eq.${STATE.game.id}` }, () => { syncData(); }).subscribe();
+
+      STATE.channels.game = supabase
+        .channel(`gr_${STATE.game.id}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'poker_rooms', filter: `id=eq.${STATE.game.id}` }, payload => {
+          console.log('[ROOM RT]', payload.eventType, payload.new);
+          const newData = payload.new || payload.record || null;
+          if (!newData || typeof newData !== 'object') return;
+          if (newData.game_status === 'finished') { 
+            hideRevealOverlay();
+            STATE.view = 'lobby'; 
+            STATE.lastRenderedView = null;
+            STATE.isRevealing = false;
+            renderView();
+            showToast("Game Over! Returning to lobby...", false);
+            return; 
+          }
+          STATE.game = newData;
+          if (STATE.game.game_status === 'playing') { STATE.view = 'game'; STATE.lobbyJoinTime = 0; }
+          syncData();
+        })
+        .subscribe();
+
+      STATE.channels.players = supabase
+        .channel(`pr_${STATE.game.id}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'poker_players', filter: `room_id=eq.${STATE.game.id}` }, payload => {
+          console.log('[PLAYERS RT]', payload.eventType, payload.new?.user_name || payload.old?.user_name);
+          if (payload.eventType === 'DELETE' && payload.old?.user_id === STATE.uuid) {
+            showToast("You have been removed from the room", true);
+            resetToHome();
+            return;
+          }
+          if (STATE.syncDebounceTimer) clearTimeout(STATE.syncDebounceTimer);
+          STATE.syncDebounceTimer = setTimeout(() => syncData(), 150);
+        })
+        .subscribe();
+
       if (STATE.syncInterval) clearInterval(STATE.syncInterval);
-      STATE.syncInterval = setInterval(() => syncData(), 2000);
-      syncData();
+      STATE.syncInterval = setInterval(() => syncData(), 3000);
+      setTimeout(() => syncData(), 300);
     }
 
     async function syncData() {
-      if (!STATE.game) return;
-      const { data: g } = await supabase.from("poker_rooms").select("*").eq("id", STATE.game.id).single();
-      if (g) { STATE.game = g; if (STATE.game.game_status === 'playing') STATE.view = 'game'; }
-      const { data: p } = await supabase.from("poker_players").select("*").eq("room_id", STATE.game.id).order('seat_index');
-      if (p) { 
-        STATE.players = p; 
-        STATE.myPlayer = STATE.players.find(pl => pl.user_id === STATE.uuid); 
-        if (!STATE.myPlayer && STATE.game.game_status !== 'finished') { resetToHome(); return; } 
-        if (STATE.game.host_id === STATE.uuid && STATE.game.active_seat_index === 999) { resolve(); }
+      if (!STATE.game || STATE.isSyncing) return;
+      STATE.isSyncing = true;
+      try {
+        const { data: g, error: gErr } = await supabase.from("poker_rooms").select("*").eq("id", STATE.game.id).single();
+        if (gErr) console.log('[SYNC] Room err:', gErr.message);
+        else if (g) {
+          STATE.game = g;
+          if (STATE.game.game_status === 'playing' && STATE.view !== 'game') {
+            STATE.view = 'game'; STATE.lastRenderedView = null;
+          }
+          if (STATE.game.game_status === 'finished' && STATE.view === 'game') {
+            hideRevealOverlay();
+            STATE.view = 'lobby';
+            STATE.lastRenderedView = null;
+            STATE.isRevealing = false;
+          }
+        }
+
+        const { data: p, error: pErr } = await supabase.from("poker_players").select("*").eq("room_id", STATE.game.id).order('seat_index');
+        if (pErr) console.log('[SYNC] Players err:', pErr.message);
+        else if (p) {
+          STATE.players = p;
+          STATE.myPlayer = STATE.players.find(pl => pl.user_id === STATE.uuid);
+          if (!STATE.myPlayer && STATE.view !== 'home') {
+            showToast("You have been removed from the room", true);
+            resetToHome();
+            return;
+          }
+          console.log('[SYNC] mySeat:', STATE.myPlayer?.seat_index, 'active:', STATE.game?.active_seat_index, 'players:', STATE.players.length);
+        }
+        renderView();
+      } catch (err) { console.error('[SYNC] Error:', err); }
+      finally { STATE.isSyncing = false; }
+    }
+
+    function hideRevealOverlay() {
+      const overlay = document.getElementById('reveal-overlay');
+      if (overlay) overlay.classList.remove('show');
+      if (STATE.revealTimerInterval) {
+        clearInterval(STATE.revealTimerInterval);
+        STATE.revealTimerInterval = null;
       }
+    }
+
+    function getActivePlayers(players) {
+      return (players || STATE.players).filter(p => !p.is_folded);
+    }
+
+    function shouldResolveWithState(gameState, playersState) {
+      const active = getActivePlayers(playersState);
+      if (active.length <= 1) return true;
+      const allHaveActed = active.every(p => p.has_acted_this_round === true);
+      const highestBet = Math.max(...active.map(p => p.round_bet));
+      const allBetsMatched = active.every(p => p.round_bet === highestBet || p.chips === 0);
+      return allHaveActed && allBetsMatched;
+    }
+
+    function findNextActivePlayerWithState(startIndex, gameState, playersState) {
+      const maxSeats = gameState.max_seats;
+      let idx = (startIndex + 1) % maxSeats;
+      let loops = 0;
+      while (loops < maxSeats) {
+        const player = playersState.find(p => p.seat_index === idx);
+        if (player && !player.is_folded) {
+          const needsToAct = !player.has_acted_this_round || (player.round_bet < gameState.current_high_bet && player.chips > 0);
+          if (needsToAct) return idx;
+        }
+        idx = (idx + 1) % maxSeats;
+        loops++;
+      }
+      return -1;
+    }
+
+    async function resolveRound() {
+      if (STATE.isRevealing) return;
+      STATE.isRevealing = true;
+      const active = getActivePlayers();
+      let winner = null;
+      let winReason = "";
+
+      if (active.length === 0) {
+        winReason = "Everyone folded!";
+      } else if (active.length === 1) {
+        winner = active[0];
+        winReason = `${winner.user_name} wins ${STATE.game.pot_total} tokens! (everyone else folded)`;
+      } else {
+        const sorted = [...active].sort((a, b) => CARD_VALUES.indexOf(b.card_val) - CARD_VALUES.indexOf(a.card_val));
+        winner = sorted[0];
+        const tied = sorted.filter(p => p.card_val === winner.card_val);
+        if (tied.length > 1) {
+          const suits = ['♣', '♦', '♥', '♠'];
+          tied.sort((a, b) => suits.indexOf(b.card_suit) - suits.indexOf(a.card_suit));
+          winner = tied[0];
+        }
+        winReason = `${winner.user_name} wins ${STATE.game.pot_total} tokens! (${winner.card_val}${winner.card_suit} high)`;
+      }
+
+      showRevealOverlay(winner, winReason);
+      setTimeout(async () => {
+        if (winner) {
+          await supabase.from("poker_players").update({ chips: winner.chips + STATE.game.pot_total }).eq("id", winner.id);
+        }
+        if (STATE.game.current_round >= STATE.game.rounds_limit) { 
+          await endGame(); 
+          return; 
+        }
+        await dealNextRound();
+        hideRevealOverlay();
+        STATE.isRevealing = false;
+      }, 4000);
+    }
+
+    function showRevealOverlay(winner, winReason) {
+      const overlay = document.getElementById('reveal-overlay');
+      const revealCards = document.getElementById('reveal-cards');
+      const revealWinner = document.getElementById('reveal-winner');
+      const revealTimer = document.getElementById('reveal-timer');
+      revealWinner.textContent = winReason;
+      revealCards.innerHTML = STATE.players.map(p => {
+        const isWinner = winner && p.user_id === winner.user_id;
+        const isFolded = p.is_folded;
+        const cardDisplay = isFolded ? 'FOLD' : `${p.card_val}${p.card_suit}`;
+        return `<div class="reveal-card-item"><div class="reveal-card-visual ${isWinner ? 'winner-card' : ''} ${isFolded ? 'folded-card' : ''}">${cardDisplay}</div><div class="reveal-player-name">${p.user_name} ${isWinner ? '👑' : ''}</div></div>`;
+      }).join('');
+      overlay.classList.add('show');
+      let countdown = 4;
+      revealTimer.textContent = `Next round in ${countdown}...`;
+      if (STATE.revealTimerInterval) clearInterval(STATE.revealTimerInterval);
+      STATE.revealTimerInterval = setInterval(() => {
+        countdown--;
+        if (countdown > 0) revealTimer.textContent = `Next round in ${countdown}...`;
+        else {
+          clearInterval(STATE.revealTimerInterval);
+          STATE.revealTimerInterval = null;
+        }
+      }, 1000);
+    }
+
+    async function endGame() {
+      hideRevealOverlay();
+      await supabase.from("poker_rooms").update({ game_status: 'finished' }).eq("id", STATE.game.id);
+    }
+
+    async function dealNextRound() {
+      const ante = 1;
+      const deck = createDeck();
+      const { data: freshPlayers } = await supabase.from("poker_players").select("*").eq("room_id", STATE.game.id).order('seat_index');
+
+      const updatedPlayers = [];
+
+      for (let p of freshPlayers) {
+        const c = deck.pop();
+        const newChips = Math.max(0, p.chips - ante);
+        await supabase.from("poker_players").update({ 
+          card_val: c.v, card_suit: c.s, is_folded: false, round_bet: ante, chips: newChips, has_acted_this_round: false
+        }).eq("id", p.id);
+        updatedPlayers.push({
+          ...p,
+          card_val: c.v,
+          card_suit: c.s,
+          is_folded: false,
+          round_bet: ante,
+          chips: newChips,
+          has_acted_this_round: false
+        });
+      }
+
+      STATE.startingSeatIndex = (STATE.startingSeatIndex + 1) % STATE.game.max_seats;
+
+      const newPot = freshPlayers.length * ante;
+      const { data: updatedRoom } = await supabase.from("poker_rooms").update({ 
+        current_round: STATE.game.current_round + 1, 
+        pot_total: newPot, 
+        current_high_bet: ante, 
+        active_seat_index: STATE.startingSeatIndex
+      }).eq("id", STATE.game.id).select().single();
+
+      if (updatedRoom) {
+        STATE.game = updatedRoom;
+      } else {
+        STATE.game = {
+          ...STATE.game,
+          current_round: STATE.game.current_round + 1,
+          pot_total: newPot,
+          current_high_bet: ante,
+          active_seat_index: STATE.startingSeatIndex
+        };
+      }
+      STATE.players = updatedPlayers;
+      STATE.myPlayer = STATE.players.find(pl => pl.user_id === STATE.uuid);
+      STATE.lastRenderedView = null;
       renderView();
+    }
+
+    async function handleAction(type) {
+      console.log('[ACTION] Clicked:', type, 'isProcessing:', STATE.isProcessing);
+      console.log('[ACTION] mySeat:', STATE.myPlayer?.seat_index, 'active:', STATE.game?.active_seat_index);
+
+      if (!STATE.myPlayer || !STATE.game) { 
+        console.log('[ACTION] Missing state'); 
+        showToast("Game state not ready", true); 
+        return; 
+      }
+
+      if (STATE.game.active_seat_index !== STATE.myPlayer.seat_index) {
+        console.log('[ACTION] NOT MY TURN - my seat:', STATE.myPlayer.seat_index, 'active:', STATE.game.active_seat_index);
+        showToast("Not your turn!", true);
+        return;
+      }
+
+      if (STATE.isProcessing) {
+        console.log('[ACTION] Already processing');
+        return;
+      }
+
+      if (STATE.isRevealing) {
+        console.log('[ACTION] Round revealing');
+        return;
+      }
+
+      STATE.isProcessing = true;
+
+      try {
+        let playerUpdates = {};
+        let roomUpdates = {};
+        const currentBet = STATE.game.current_high_bet;
+        const myBet = STATE.myPlayer.round_bet;
+        const diff = currentBet - myBet;
+        const mySeat = STATE.myPlayer.seat_index;
+
+        if (type === 'raise') {
+          playerUpdates.has_acted_this_round = false;
+        } else {
+          playerUpdates.has_acted_this_round = true;
+        }
+
+        if (type === 'fold') {
+          playerUpdates.is_folded = true;
+        } 
+        else if (type === 'call') {
+          const callAmount = Math.min(STATE.myPlayer.chips, diff);
+          playerUpdates.chips = STATE.myPlayer.chips - callAmount;
+          playerUpdates.round_bet = myBet + callAmount;
+          roomUpdates.pot_total = STATE.game.pot_total + callAmount;
+        } 
+        else if (type === 'raise') {
+          const raiseAmt = parseInt(document.getElementById("raiseAmountInput")?.value || 1);
+          const totalNeeded = diff + raiseAmt;
+          const actualDeduct = Math.min(STATE.myPlayer.chips, totalNeeded);
+          playerUpdates.chips = STATE.myPlayer.chips - actualDeduct;
+          playerUpdates.round_bet = myBet + actualDeduct;
+          roomUpdates.pot_total = STATE.game.pot_total + actualDeduct;
+          roomUpdates.current_high_bet = myBet + actualDeduct;
+        }
+
+        const tempGame = { ...STATE.game, ...roomUpdates };
+
+        const myPlayerIndex = STATE.players.findIndex(p => p.user_id === STATE.uuid);
+        let tempPlayers = [...STATE.players];
+        if (myPlayerIndex >= 0) {
+          tempPlayers[myPlayerIndex] = { ...tempPlayers[myPlayerIndex], ...playerUpdates };
+        }
+
+        if (type === 'raise') {
+          for (let i = 0; i < tempPlayers.length; i++) {
+            if (!tempPlayers[i].is_folded) {
+              tempPlayers[i] = { ...tempPlayers[i], has_acted_this_round: false };
+            }
+          }
+        }
+
+        const nextSeat = findNextActivePlayerWithState(mySeat, tempGame, tempPlayers);
+        console.log('[ACTION] Computed nextSeat:', nextSeat);
+
+        const shouldResolveNow = shouldResolveWithState(tempGame, tempPlayers);
+
+        STATE.players = tempPlayers;
+        if (nextSeat === -1 || shouldResolveNow) {
+          STATE.game = { ...tempGame, active_seat_index: -1 };
+        } else {
+          STATE.game = { ...tempGame, active_seat_index: nextSeat };
+        }
+
+        console.log('[ACTION] Optimistic render - active now:', STATE.game.active_seat_index);
+        renderView();
+
+        if (nextSeat === -1 || shouldResolveNow) {
+          roomUpdates.active_seat_index = -1;
+          await supabase.from("poker_rooms").update(roomUpdates).eq("id", STATE.game.id);
+          await supabase.from("poker_players").update(playerUpdates).eq("id", STATE.myPlayer.id);
+
+          if (type === 'raise') {
+            for (let p of STATE.players) {
+              if (!p.is_folded && p.user_id !== STATE.uuid) {
+                await supabase.from("poker_players").update({ has_acted_this_round: false }).eq("id", p.id);
+              }
+            }
+          }
+
+          await resolveRound();
+        } else {
+          roomUpdates.active_seat_index = nextSeat;
+          await supabase.from("poker_rooms").update(roomUpdates).eq("id", STATE.game.id);
+          await supabase.from("poker_players").update(playerUpdates).eq("id", STATE.myPlayer.id);
+
+          if (type === 'raise') {
+            for (let p of STATE.players) {
+              if (!p.is_folded && p.user_id !== STATE.uuid) {
+                await supabase.from("poker_players").update({ has_acted_this_round: false }).eq("id", p.id);
+              }
+            }
+          }
+        }
+
+        console.log('[ACTION] DB update complete');
+      } catch (err) { 
+        console.error('[ACTION] Error:', err);
+        showToast("Action Error: " + err.message, true); 
+        syncData();
+      } finally { 
+        STATE.isProcessing = false; 
+      }
     }
 
     async function handleCreateRoom() {
       if (STATE.isProcessing) return;
-      const casual = document.getElementById("casualMode")?.checked || false;
       const stack = parseInt(document.getElementById("startStack")?.value || 30);
       const rounds = parseInt(document.getElementById("totalRounds")?.value || 5);
-      if (!casual && STATE.user.balance < stack) return showToast("Insufficient Tokens!", true);
+
       STATE.isProcessing = true;
       try {
-        const { data: g, error } = await supabase.from("poker_rooms").insert({ host_id: STATE.uuid, is_casual: casual, entry_fee: stack, rounds_limit: rounds, game_status: 'lobby' }).select().single();
+        let roomCode = generateRoomCode();
+        let { data: g, error } = await supabase.from("poker_rooms").insert({ 
+          host_id: STATE.uuid, is_casual: true, entry_fee: stack, rounds_limit: rounds, 
+          game_status: 'lobby', code: roomCode
+        }).select().single();
         if (error) throw error;
-        await supabase.from("poker_players").insert({ room_id: g.id, user_id: STATE.uuid, user_name: STATE.username, chips: stack, is_host: true, seat_index: 0 });
-        STATE.game = g; STATE.view = 'lobby'; startDoubleSync();
-      } catch (err) { showToast("Create Error: " + err.message, true); } finally { STATE.isProcessing = false; renderView(); }
+        if (!g) throw new Error('No data');
+
+        const hasLetters = /[A-Z]/.test(g.code);
+        if (!hasLetters) {
+          roomCode = generateRoomCode();
+          const { data: updated, error: updErr } = await supabase.from("poker_rooms")
+            .update({ code: roomCode }).eq("id", g.id).select().single();
+          if (updated) g = updated;
+        }
+
+        const { error: pError } = await supabase.from("poker_players").insert({ 
+          room_id: g.id, user_id: STATE.uuid, user_name: STATE.username, 
+          chips: stack, is_host: true, seat_index: 0, has_acted_this_round: false
+        });
+        if (pError) throw pError;
+
+        STATE.game = g; 
+        STATE.startingSeatIndex = 0;
+        STATE.view = 'lobby'; 
+        STATE.lastRenderedView = null; 
+        STATE.lobbyJoinTime = Date.now();
+        renderView(); 
+        startDoubleSync();
+      } catch (err) { showToast("Create Error: " + err.message, true); }
+      finally { STATE.isProcessing = false; }
     }
 
     async function handleJoinRoom() {
@@ -141,152 +635,299 @@
         const { data: g, error } = await supabase.from("poker_rooms").select("*").eq("code", code).neq('game_status', 'finished').single();
         if (error || !g) return showToast("Room not found!", true);
         if (g.game_status !== 'lobby') return showToast("Started!", true);
-        if (!g.is_casual && STATE.user.balance < g.entry_fee) return showToast("Not enough tokens!", true);
+
         const { data: pCount } = await supabase.from("poker_players").select("id").eq("room_id", g.id);
-        const seat = pCount.length;
-        await supabase.from("poker_players").insert({ room_id: g.id, user_id: STATE.uuid, user_name: STATE.username, chips: g.entry_fee, is_host: false, seat_index: seat });
-        STATE.game = g; STATE.view = 'lobby'; startDoubleSync();
-      } catch (err) { showToast("Join Error: " + err.message, true); } finally { STATE.isProcessing = false; renderView(); }
+        const seat = pCount ? pCount.length : 0;
+
+        const { error: pError } = await supabase.from("poker_players").insert({ 
+          room_id: g.id, user_id: STATE.uuid, user_name: STATE.username, 
+          chips: g.entry_fee, is_host: false, seat_index: seat, has_acted_this_round: false
+        });
+        if (pError) throw pError;
+
+        STATE.game = g; 
+        STATE.view = 'lobby'; 
+        STATE.lastRenderedView = null; 
+        STATE.lobbyJoinTime = Date.now();
+        renderView(); 
+        startDoubleSync();
+      } catch (err) { showToast("Join Error: " + err.message, true); }
+      finally { STATE.isProcessing = false; }
+    }
+
+    async function handleLeaveRoom() {
+      if (!STATE.game || STATE.isProcessing) return;
+
+      if (STATE.game.game_status === 'playing') {
+        showToast("You can't leave during a match!", true);
+        return;
+      }
+
+      if (!confirm("Leave this room?")) return;
+      STATE.isProcessing = true;
+      try {
+        await supabase.from("poker_players").delete().eq("room_id", STATE.game.id).eq("user_id", STATE.uuid);
+
+        const { data: remaining } = await supabase.from("poker_players").select("*").eq("room_id", STATE.game.id).order('seat_index');
+        if (remaining) {
+          for (let i = 0; i < remaining.length; i++) {
+            if (remaining[i].seat_index !== i) {
+              await supabase.from("poker_players").update({ seat_index: i }).eq("id", remaining[i].id);
+            }
+          }
+        }
+
+        if (STATE.game.host_id === STATE.uuid && remaining && remaining.length > 0) {
+          const newHost = remaining[0];
+          await supabase.from("poker_rooms").update({ host_id: newHost.user_id }).eq("id", STATE.game.id);
+          await supabase.from("poker_players").update({ is_host: true }).eq("id", newHost.id);
+        } else if (!remaining || remaining.length === 0) {
+          await supabase.from("poker_rooms").update({ game_status: 'finished' }).eq("id", STATE.game.id);
+        }
+        resetToHome(); 
+        showToast("Left room", false);
+      } catch (err) { showToast("Leave Error: " + err.message, true); }
+      finally { STATE.isProcessing = false; }
     }
 
     async function handleStart() {
       const ante = 1;
       const deck = createDeck();
+
+      STATE.startingSeatIndex = 0;
+
       for (let p of STATE.players) {
         const c = deck.pop();
-        await supabase.from("poker_players").update({ card_val: c.v, card_suit: c.s, is_folded: false, round_bet: ante, chips: p.chips - ante }).eq("id", p.id);
-        if (!STATE.game.is_casual) await supabase.rpc('poker_deduct', { p_uid: p.user_id, p_amt: ante });
+        await supabase.from("poker_players").update({ 
+          card_val: c.v, card_suit: c.s, is_folded: false, round_bet: ante, 
+          chips: p.chips - ante, has_acted_this_round: false
+        }).eq("id", p.id);
       }
       await supabase.from("poker_rooms").update({ 
         game_status: 'playing', current_round: 1, active_seat_index: 0, 
-        max_seats: STATE.players.length, pot_total: STATE.players.length * ante, current_high_bet: ante, rotation_count: 0
+        max_seats: STATE.players.length, pot_total: STATE.players.length * ante, current_high_bet: ante
       }).eq("id", STATE.game.id);
     }
 
-    async function handleAction(type) {
-      if (STATE.game.active_seat_index !== STATE.myPlayer.seat_index || STATE.isProcessing) return;
-      STATE.isProcessing = true;
-      try {
-        let uP = { chips: STATE.myPlayer.chips, round_bet: STATE.myPlayer.round_bet, is_folded: STATE.myPlayer.is_folded };
-        let uG = { pot_total: STATE.game.pot_total, current_high_bet: STATE.game.current_high_bet, rotation_count: STATE.game.rotation_count };
-        
-        if (type === 'fold') {
-          uP.is_folded = true;
-        } else if (type === 'call') {
-          const diff = STATE.game.current_high_bet - STATE.myPlayer.round_bet;
-          const actualDeduct = Math.min(uP.chips, diff);
-          uP.chips -= actualDeduct; uP.round_bet += actualDeduct; uG.pot_total += actualDeduct;
-          if (!STATE.game.is_casual && actualDeduct > 0) await supabase.rpc('poker_deduct', { p_uid: STATE.uuid, p_amt: actualDeduct });
-        } else if (type === 'raise') {
-          const raiseAmt = parseInt(document.getElementById("raiseAmountInput")?.value || 1);
-          const diff = (STATE.game.current_high_bet - STATE.myPlayer.round_bet) + raiseAmt;
-          const actualDeduct = Math.min(uP.chips, diff);
-          uP.chips -= actualDeduct; uP.round_bet += actualDeduct; uG.pot_total += actualDeduct; uG.current_high_bet = uP.round_bet;
-          if (!STATE.game.is_casual && actualDeduct > 0) await supabase.rpc('poker_deduct', { p_uid: STATE.uuid, p_amt: actualDeduct });
-        }
-
-        await supabase.from("poker_players").update(uP).eq("id", STATE.myPlayer.id);
-        const res = getNext();
-        
-        // If we cycled back to the start, increment rotation
-        if (res.nextIndex === 0) uG.rotation_count += 1;
-        
-        await supabase.from("poker_rooms").update({ 
-          pot_total: uG.pot_total, 
-          current_high_bet: uG.current_high_bet, 
-          active_seat_index: res.nextIndex,
-          rotation_count: uG.rotation_count
-        }).eq("id", STATE.game.id);
-      } catch (err) { showToast("Action Error", true); } finally { STATE.isProcessing = false; }
-    }
-
-    function getNext() {
-      const active = STATE.players.filter(p => !p.is_folded);
-      // RULE: If only one person left, resolve immediately
-      if (active.length <= 1) return { nextIndex: 999 };
-      
-      // RULE: If everyone is all-in, resolve immediately
-      const canAct = active.filter(p => p.chips > 0);
-      if (canAct.length === 0) return { nextIndex: 999 };
-
-      let nextIdx = (STATE.myPlayer.seat_index + 1) % STATE.game.max_seats;
-      while (STATE.players[nextIdx].is_folded) { nextIdx = (nextIdx + 1) % STATE.game.max_seats; }
-      
-      // RULE: If we have gone around twice (rotation_count >= 2) and everyone matched, resolve
-      const allMatched = STATE.players.every(p => p.is_folded || p.round_bet === STATE.game.current_high_bet || p.chips === 0);
-      if (allMatched && (nextIdx === 0 || STATE.game.rotation_count >= 2)) return { nextIndex: 999 };
-      
-      return { nextIndex: nextIdx };
-    }
-
-    async function resolve() {
-      if (STATE.isProcessing) return;
-      STATE.isProcessing = true;
-      try {
-        const active = STATE.players.filter(p => !p.is_folded);
-        let win = null;
-        if (active.length === 1) win = active[0];
-        else {
-          const v = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
-          active.sort((a, b) => v.indexOf(b.card_val) - v.indexOf(a.card_val));
-          win = active[0];
-        }
-        await supabase.from("poker_players").update({ chips: win.chips + STATE.game.pot_total }).eq("id", win.id);
-        if (STATE.game.current_round >= STATE.game.rounds_limit) {
-          for (let p of STATE.players) {
-            let finalChips = p.chips;
-            if (p.id === win.id) finalChips += STATE.game.pot_total;
-            if (!STATE.game.is_casual) await supabase.rpc('poker_refund', { p_uid: p.user_id, p_amt: finalChips });
-          }
-          await supabase.from("poker_rooms").update({ game_status: 'finished' }).eq("id", STATE.game.id);
-        } else {
-          const ante = 1;
-          const deck = createDeck();
-          for (let p of STATE.players) {
-            const c = deck.pop();
-            await supabase.from("poker_players").update({ card_val: c.v, card_suit: c.s, is_folded: false, round_bet: ante, chips: p.chips - ante }).eq("id", p.id);
-            if (!STATE.game.is_casual) await supabase.rpc('poker_deduct', { p_uid: p.user_id, p_amt: ante });
-          }
-          await supabase.from("poker_rooms").update({ 
-            current_round: STATE.game.current_round + 1, pot_total: STATE.players.length * ante, 
-            current_high_bet: ante, active_seat_index: 0, rotation_count: 0
-          }).eq("id", STATE.game.id);
-        }
-      } catch (err) { console.error(err); } finally { STATE.isProcessing = false; }
-    }
-
     function renderView() {
+      console.log('[RENDER] view:', STATE.view, 'mySeat:', STATE.myPlayer?.seat_index, 'active:', STATE.game?.active_seat_index, 'myName:', STATE.myPlayer?.user_name);
       const app = document.getElementById("app");
-      let h = `<div class="header"><div class="brand-name">INDIAN POKER</div><div class="user-details"><div class="user-name">${STATE.username}</div><div class="user-balance">${STATE.user.balance} Tokens</div></div></div>`;
-      if (STATE.view === 'home') h += `<div class="hero"><h1>Master the Bluff</h1><div class="menu-grid"><div class="menu-card" onclick="window.setView('host')"><span class="icon">👑</span><h3>Host Game</h3></div><div class="menu-card" onclick="window.setView('join')"><span class="icon">🤝</span><h3>Join Game</h3></div></div></div>`;
-      else if (STATE.view === 'host') h += `<div class="setup-card"><h2>Host Game</h2><div class="form-group"><div class="form-label"><span>Stack</span><span class="val" id="sv">30</span></div><input type="range" id="startStack" min="10" max="100" step="5" value="30" oninput="document.getElementById('sv').innerText=this.value"></div><div class="form-group"><div class="form-label"><span>Rounds</span><span class="val" id="rv">5</span></div><input type="range" id="totalRounds" min="1" max="15" value="5" oninput="document.getElementById('rv').innerText=this.value"></div><div class="form-group"><label><input type="checkbox" id="casualMode"> Casual Play</label></div><button class="btn btn-primary" onclick="window.create()">Create Room</button><button class="btn btn-secondary" style="margin-top:10px" onclick="window.setView('home')">Back</button></div>`;
-      else if (STATE.view === 'join') h += `<div class="setup-card"><h2>Join Game</h2><div class="form-group"><label class="form-label">Room Code</label><input type="text" id="roomCodeInput" maxlength="4" style="width:100%; padding:20px; background:var(--bg); border:2px solid var(--border); border-radius:16px; color:var(--accent); font-size:3rem; text-align:center; letter-spacing:15px; font-weight:900;"></div><button class="btn btn-primary" onclick="window.join()">Join Room</button><button class="btn btn-secondary" style="margin-top:10px" onclick="window.setView('home')">Back</button></div>`;
-      else if (STATE.view === 'lobby') h += `<div class="lobby-layout"><div class="sidebar"><h3>Players (${STATE.players.length})</h3><div class="player-list">${STATE.players.map(p => `<div class="player-row ${p.is_host ? 'is-host' : ''}"><div class="p-avatar">${p.user_name.charAt(0).toUpperCase()}</div><div class="p-name">${p.user_name}</div>${STATE.game.host_id === STATE.uuid && !p.is_host ? `<span class="kick-btn" onclick="window.kick('${p.user_id}')">✕</span>` : ''}</div>`).join('')}</div>${STATE.game.host_id === STATE.uuid ? `<button class="btn btn-primary" onclick="window.start()" ${STATE.players.length < 2 ? 'disabled' : ''}>Start Game</button>` : `<div class="text-center">Waiting...</div>`}</div><div class="lobby-main"><div class="code-box"><div class="code-val">${STATE.game.code}</div></div><p>Share code to invite friends.</p></div></div>`;
-      else if (STATE.view === 'game') {
-        const isMyTurn = STATE.game.active_seat_index === STATE.myPlayer.seat_index;
-        h += `<div class="game-layout"><div class="game-sidebar"><h3>Table</h3>${STATE.players.map((p, idx) => `<div class="game-player-card ${STATE.game.active_seat_index === p.seat_index ? 'is-active' : ''} ${p.is_folded ? 'folded' : ''}"><div class="card-visual ${p.user_id === STATE.uuid ? 'hidden' : ''}">${p.user_id === STATE.uuid ? '' : p.card_val + p.card_suit}</div><div><div style="font-weight:bold">#${p.seat_index+1} ${p.user_name}</div><div style="color:var(--accent)">Chips: ${p.chips}</div><div style="font-size:0.7rem">Bet: ${p.round_bet}</div></div></div>`).join('')}</div><div><div class="table-felt"><div class="pot-val">${STATE.game.pot_total}</div><div style="color:var(--accent); font-weight:bold;">ROUND ${STATE.game.current_round} / ${STATE.game.rounds_limit}</div></div><div style="text-align:center; margin:20px 0; font-weight:bold; color:var(--accent)">${isMyTurn ? '🌟 YOUR TURN!' : 'Waiting for others...'}</div><div class="game-controls" style="opacity: ${isMyTurn ? '1' : '0.5'}; pointer-events: ${isMyTurn ? 'all' : 'none'}">
-          <div class="action-row">
-            <button class="btn btn-secondary" style="flex:1" onclick="window.act('fold')">Fold</button>
-            <button class="btn btn-primary" style="flex:2" onclick="window.act('call')">${STATE.game.current_high_bet > (STATE.myPlayer?.round_bet || 0) ? `Call ${STATE.game.current_high_bet - STATE.myPlayer.round_bet}` : 'Call'}</button>
-            <input type="number" id="raiseAmountInput" class="raise-input-box" value="1" min="1">
-            <button class="btn btn-primary" style="flex:1" onclick="window.act('raise')">Raise</button>
-          </div>
-        </div></div></div>`;
+      if (STATE.lastRenderedView !== STATE.view) {
+        app.innerHTML = buildFullHTML();
+        STATE.lastRenderedView = STATE.view;
+        return;
       }
-      app.innerHTML = h;
+      if (STATE.view === 'lobby') updateLobby();
+      else if (STATE.view === 'game') updateGame();
     }
 
-    function createDeck() { const s = ['♠', '♥', '♦', '♣'], v = ['2','3','4','5','6','7','8','9','10','J','Q','K','A']; let d = []; for(let x of s) for(let y of v) d.push({s:x, v:y}); return d.sort(() => Math.random() - 0.5); }
-    function showToast(m, e=false) { const t = document.getElementById("toast"); t.innerText = m; t.className = e ? 'show error' : 'show'; setTimeout(() => t.className = '', 4000); }
-    function getCookie(n) { return document.cookie.split("; ").find(r=>r.startsWith(n+"="))?.split("=")[1] || null; }
-    function resetToHome() { if (STATE.channels.game) STATE.channels.game.unsubscribe(); if (STATE.channels.players) STATE.channels.players.unsubscribe(); if (STATE.syncInterval) clearInterval(STATE.syncInterval); STATE.game = null; STATE.view = 'home'; renderView(); }
+    function buildFullHTML() {
+      let h = '';
 
-    window.setView = (v) => { STATE.view = v; renderView(); };
+      if (STATE.view === 'home') {
+        h += `<div class="header"><div class="brand-name">INDIAN POKER BETA</div><div class="user-details"><div class="user-name">${STATE.username || 'Guest'}</div><div class="user-balance">${STATE.user.balance} Tokens</div></div></div>`;
+      }
+      else if (STATE.view === 'host' || STATE.view === 'join') {
+        h += `<div class="header header-center"><div class="brand-name">INDIAN POKER BETA</div></div>`;
+      }
+      else if (STATE.view === 'lobby') {
+        h += `<div class="header header-center"><div class="brand-name">INDIAN POKER BETA</div></div>`;
+      }
+      else if (STATE.view === 'game') {
+        h += `<div class="header header-left">`;
+        h += `<div class="brand-name">INDIAN POKER BETA</div>`;
+        h += `<div class="user-details" style="margin-left:auto;"><div class="user-name">${STATE.username || 'Guest'}</div><div class="user-balance">${STATE.user.balance} Tokens</div></div></div>`;
+      }
+
+      if (STATE.view === 'home') {
+        h += `<div style="text-align:center; margin-bottom:10px;"><button class="hub-link" onclick="window.location.href='/tools/gambling/'">← Back to Gambling Hub</button></div>`;
+        h += `<div class="hero"><h1>Master the Bluff</h1><div class="menu-grid"><div class="menu-card" onclick="window.setView('host')"><span class="icon">👑</span><h3>Host Game</h3></div><div class="menu-card" onclick="window.setView('join')"><span class="icon">🤝</span><h3>Join Game</h3></div></div></div>`;
+      }
+      else if (STATE.view === 'host') {
+        h += `<div class="setup-card"><h2>Host Game</h2><div class="form-group"><div class="form-label"><span>Stack</span><span class="val" id="sv">30</span></div><input type="range" id="startStack" min="10" max="100" step="5" value="30" oninput="document.getElementById('sv').innerText=this.value"></div><div class="form-group"><div class="form-label"><span>Rounds</span><span class="val" id="rv">5</span></div><input type="range" id="totalRounds" min="1" max="15" value="5" oninput="document.getElementById('rv').innerText=this.value"></div><button class="btn btn-primary" onclick="window.create()">Create Room</button><button class="btn btn-secondary" style="margin-top:10px" onclick="window.setView('home')">Back</button></div>`;
+      }
+      else if (STATE.view === 'join') {
+        h += `<div class="setup-card"><h2>Join Game</h2><div class="form-group"><label class="form-label">Room Code</label><input type="text" id="roomCodeInput" maxlength="4" style="width:100%; padding:20px; background:var(--bg); border:2px solid var(--border); border-radius:16px; color:var(--accent); font-size:3rem; text-align:center; letter-spacing:15px; font-weight:900;"></div><button class="btn btn-primary" onclick="window.join()">Join Room</button><button class="btn btn-secondary" style="margin-top:10px" onclick="window.setView('home')">Back</button></div>`;
+      }
+      else if (STATE.view === 'lobby') {
+        h += `<div class="lobby-layout"><div class="sidebar"><h3 id="player-count">Players (${STATE.players.length})</h3><div class="player-list" id="player-list">${renderPlayerList()}</div><div id="host-controls">${renderHostControls()}</div><button class="btn btn-danger" style="margin-top:15px" onclick="window.leave()">Leave Room</button></div><div class="lobby-main"><div class="code-box"><div class="code-val" id="room-code">${STATE.game?.code || ''}</div></div><div id="change-code-area"></div><p>Share code to invite friends.</p></div></div>`;
+      }
+      else if (STATE.view === 'game') {
+        const isResolving = STATE.game?.active_seat_index === -1;
+        const isMyTurn = !isResolving && STATE.game?.active_seat_index === STATE.myPlayer?.seat_index;
+        console.log('[BUILD] isMyTurn:', isMyTurn, 'mySeat:', STATE.myPlayer?.seat_index, 'active:', STATE.game?.active_seat_index, 'resolving:', isResolving);
+        h += `<div class="game-layout"><div class="game-sidebar" id="game-sidebar">${renderGameSidebar()}</div><div><div class="table-felt"><div class="pot-val" id="pot-val">${STATE.game?.pot_total || 0}</div><div class="round-badge" id="round-badge">ROUND ${STATE.game?.current_round || 1} / ${STATE.game?.rounds_limit || 1}</div></div><div class="turn-indicator" id="turn-indicator">${isResolving ? '🎴 Revealing cards...' : (isMyTurn ? '🌟 YOUR TURN!' : 'Waiting for others...')}</div><div class="game-controls" id="game-controls" style="opacity: ${(isMyTurn && !isResolving) ? '1' : '0.5'}; pointer-events: ${(isMyTurn && !isResolving) ? 'all' : 'none'}"><div class="action-row"><button class="btn btn-secondary" style="flex:1" onclick="window.act('fold')">Fold</button><button class="btn btn-primary" style="flex:2" onclick="window.act('call')" id="call-btn">${renderCallText()}</button><input type="number" id="raiseAmountInput" class="raise-input-box" value="1" min="1"><button class="btn btn-primary" style="flex:1" onclick="window.act('raise')">Raise</button></div></div></div></div>`;
+      }
+      return h;
+    }
+
+    function renderPlayerList() {
+      if (!STATE.players) return '';
+      return STATE.players.map(p => {
+        const isHost = STATE.game?.host_id === STATE.uuid;
+        const canManage = isHost && !p.is_host && p.user_id !== STATE.uuid;
+        return `<div class="player-row ${p.is_host ? 'is-host' : ''}" data-uid="${p.user_id}"><div class="p-avatar">${p.user_name.charAt(0).toUpperCase()}</div><div class="p-name">${p.user_name}</div>${canManage ? `<span class="crown-btn" onclick="window.crown('${p.user_id}')" title="Make Host">👑</span><span class="kick-btn" onclick="window.kick('${p.user_id}')" title="Kick">✕</span>` : ''}</div>`;
+      }).join('');
+    }
+
+    function renderHostControls() {
+      if (!STATE.game) return '';
+      if (STATE.game.host_id === STATE.uuid) {
+        return `<button class="btn btn-primary" onclick="window.start()" ${STATE.players.length < 2 ? 'disabled' : ''}>Start Game</button>`;
+      }
+      return `<div style="text-align:center;color:var(--text-muted)">Waiting for host...</div>`;
+    }
+
+    function updateLobby() {
+      const countEl = document.getElementById("player-count");
+      const listEl = document.getElementById("player-list");
+      const hostEl = document.getElementById("host-controls");
+      const codeEl = document.getElementById("room-code");
+      const changeCodeArea = document.getElementById("change-code-area");
+
+      if (countEl) countEl.textContent = `Players (${STATE.players.length})`;
+      if (listEl) { const currentHTML = renderPlayerList(); if (listEl.innerHTML !== currentHTML) listEl.innerHTML = currentHTML; }
+      if (hostEl) { const newControls = renderHostControls(); if (hostEl.innerHTML !== newControls) hostEl.innerHTML = newControls; }
+      if (codeEl && STATE.game?.code) codeEl.textContent = STATE.game.code;
+
+      if (changeCodeArea) {
+        const isHost = STATE.game?.host_id === STATE.uuid;
+        const newHTML = isHost 
+          ? `<button class="btn btn-secondary" style="margin-top:15px;max-width:200px;margin-left:auto;margin-right:auto;display:block;" onclick="window.changeCode()">🔄 Change Code</button>` 
+          : '';
+        if (changeCodeArea.innerHTML !== newHTML) changeCodeArea.innerHTML = newHTML;
+      }
+    }
+
+    function renderGameSidebar() {
+      if (!STATE.players || !STATE.game) return '';
+      const isRevealing = STATE.game.active_seat_index === -1;
+      return `<h3>Table</h3>` + STATE.players.map(p => {
+        const isActive = STATE.game.active_seat_index === p.seat_index;
+        const isFolded = p.is_folded;
+        const isMe = p.user_id === STATE.uuid;
+        const showCard = isRevealing || !isMe;
+        return `<div class="game-player-card ${isActive ? 'is-active' : ''} ${isFolded ? 'folded' : ''}" data-seat="${p.seat_index}"><div class="card-visual ${(!showCard && !isRevealing) ? 'hidden' : ''} ${isRevealing ? 'revealed' : ''}">${(!showCard && !isRevealing) ? '' : (isFolded ? 'FOLD' : p.card_val + p.card_suit)}</div><div><div style="font-weight:bold">#${p.seat_index+1} ${p.user_name}</div><div style="color:var(--accent)">Chips: ${p.chips}</div><div style="font-size:0.7rem">Bet: ${p.round_bet}</div></div></div>`;
+      }).join('');
+    }
+
+    function renderCallText() {
+      if (!STATE.myPlayer || !STATE.game) return 'Call';
+      if (STATE.myPlayer.is_folded) return 'Folded';
+      const diff = STATE.game.current_high_bet - STATE.myPlayer.round_bet;
+      if (diff <= 0) return 'Check';
+      if (diff >= STATE.myPlayer.chips) return 'All In';
+      return `Call ${diff}`;
+    }
+
+    function updateGame() {
+      if (!STATE.game) return;
+      const isResolving = STATE.game.active_seat_index === -1;
+      const isMyTurn = !isResolving && STATE.game.active_seat_index === STATE.myPlayer?.seat_index;
+      console.log('[UPDATE] active:', STATE.game.active_seat_index, 'mySeat:', STATE.myPlayer?.seat_index, 'isMyTurn:', isMyTurn, 'myName:', STATE.myPlayer?.user_name);
+
+      const sidebar = document.getElementById("game-sidebar");
+      if (sidebar) { const newSidebar = renderGameSidebar(); if (sidebar.innerHTML !== newSidebar) sidebar.innerHTML = newSidebar; }
+
+      const potEl = document.getElementById("pot-val");
+      if (potEl) potEl.textContent = STATE.game.pot_total;
+
+      const roundEl = document.getElementById("round-badge");
+      if (roundEl) roundEl.textContent = `ROUND ${STATE.game.current_round} / ${STATE.game.rounds_limit}`;
+
+      const turnEl = document.getElementById("turn-indicator");
+      if (turnEl) turnEl.textContent = isResolving ? '🎴 Revealing cards...' : (isMyTurn ? '🌟 YOUR TURN!' : 'Waiting for others...');
+
+      const controls = document.getElementById("game-controls");
+      if (controls) {
+        controls.style.opacity = (isMyTurn && !isResolving) ? '1' : '0.5';
+        controls.style.pointerEvents = (isMyTurn && !isResolving) ? 'all' : 'none';
+      }
+
+      const callBtn = document.getElementById("call-btn");
+      if (callBtn) { const newText = renderCallText(); if (callBtn.textContent !== newText) callBtn.textContent = newText; }
+    }
+
+    function createDeck() { 
+      const s = ['♠', '♥', '♦', '♣'], v = ['2','3','4','5','6','7','8','9','10','J','Q','K','A']; 
+      let d = []; 
+      for(let x of s) for(let y of v) d.push({s:x, v:y}); 
+      return d.sort(() => Math.random() - 0.5); 
+    }
+
+    function generateRoomCode() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let code = '';
+      const arr = new Uint32Array(4);
+      crypto.getRandomValues(arr);
+      for (let i = 0; i < 4; i++) code += chars.charAt(arr[i] % chars.length);
+      return code;
+    }
+
+    function showToast(m, e=false) { 
+      const t = document.getElementById("toast"); 
+      t.innerText = m; 
+      t.className = e ? 'show error' : 'show'; 
+      setTimeout(() => t.className = '', 4000); 
+    }
+
+    function resetToHome() { 
+      if (STATE.channels.game) STATE.channels.game.unsubscribe(); 
+      if (STATE.channels.players) STATE.channels.players.unsubscribe(); 
+      if (STATE.syncInterval) clearInterval(STATE.syncInterval);
+      if (STATE.syncDebounceTimer) clearTimeout(STATE.syncDebounceTimer);
+      if (STATE.revealTimerInterval) clearInterval(STATE.revealTimerInterval);
+      hideRevealOverlay();
+      STATE.game = null; 
+      STATE.view = 'home'; 
+      STATE.lastRenderedView = null; 
+      STATE.isRevealing = false; 
+      STATE.lobbyJoinTime = 0; 
+      STATE.isSyncing = false;
+      STATE.startingSeatIndex = 0;
+      renderView(); 
+    }
+
+    window.setView = (v) => { STATE.view = v; STATE.lastRenderedView = null; renderView(); };
     window.create = handleCreateRoom;
     window.join = handleJoinRoom;
+    window.leave = handleLeaveRoom;
     window.start = handleStart;
     window.act = handleAction;
-    window.kick = async (uid) => { if (!STATE.game.is_casual) await supabase.rpc('poker_refund', { p_uid: uid, p_amt: STATE.game.entry_fee }); await supabase.from("poker_players").delete().eq("room_id", STATE.game.id).eq("user_id", uid); };
+    window.changeCode = async () => {
+      if (STATE.game?.host_id !== STATE.uuid) { showToast("Only the host can change the code", true); return; }
+      if (!confirm("Are you sure you want to change the room code?")) return;
+      const newCode = generateRoomCode();
+      try {
+        const { error } = await supabase.from("poker_rooms").update({ code: newCode }).eq("id", STATE.game.id);
+        if (error) throw error;
+        STATE.game.code = newCode;
+        showToast("Room code changed to: " + newCode, false);
+        renderView();
+      } catch (err) { showToast("Error changing code: " + err.message, true); }
+    };
+    window.kick = async (uid) => { 
+      if (!confirm("Are you sure you want to kick this player?")) return;
+      await supabase.from("poker_players").delete().eq("room_id", STATE.game.id).eq("user_id", uid);
+      const { data: remaining } = await supabase.from("poker_players").select("*").eq("room_id", STATE.game.id).order('seat_index');
+      if (remaining) {
+        for (let i = 0; i < remaining.length; i++) {
+          if (remaining[i].seat_index !== i) {
+            await supabase.from("poker_players").update({ seat_index: i }).eq("id", remaining[i].id);
+          }
+        }
+      }
+    };
+    window.crown = async (uid) => {
+      if (!confirm("Make this player the new host?")) return;
+      try {
+        await supabase.from("poker_rooms").update({ host_id: uid }).eq("id", STATE.game.id);
+        await supabase.from("poker_players").update({ is_host: false }).eq("room_id", STATE.game.id).eq("user_id", STATE.uuid);
+        await supabase.from("poker_players").update({ is_host: true }).eq("room_id", STATE.game.id).eq("user_id", uid);
+        await syncData();
+      } catch (err) { showToast("Transfer Error: " + err.message, true); }
+    };
+
     init();
   </script>
 </body>
