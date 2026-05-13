@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cruc Games Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #0a0a0f;
+      --panel: #12121a;
+      --card: #1a1a25;
+      --card-hover: #222230;
+      --text: #e8e8f0;
+      --text-muted: #8888a0;
+      --accent: #ff4757;
+      --accent-hover: #ff6b81;
+      --border: #2a2a3a;
+      --shadow: rgba(0, 0, 0, 0.6);
+      --success: #2ed573;
+      --danger: #ff4757;
+    }
+
+    html.light {
+      --bg: #f0f2f5;
+      --panel: #ffffff;
+      --card: #ffffff;
+      --card-hover: #f5f5f5;
+      --text: #1a1a2e;
+      --text-muted: #666680;
+      --accent: #ff4757;
+      --accent-hover: #e04050;
+      --border: #e0e0e8;
+      --shadow: rgba(0, 0, 0, 0.1);
+      --success: #2ed573;
+      --danger: #ff4757;
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    /* ========== LOGIN REQUIRED ========== */
+    .login-required {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 60px 40px;
+      text-align: center;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 20px 60px var(--shadow);
+    }
+
+    .login-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+    }
+
+    .login-card h1 {
+      font-size: 1.8rem;
+      margin-bottom: 10px;
+    }
+
+    .login-card p {
+      color: var(--text-muted);
+      margin-bottom: 25px;
+    }
+
+    .login-btn {
+      display: inline-block;
+      padding: 14px 36px;
+      background: var(--accent);
+      color: white;
+      text-decoration: none;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 1rem;
+      transition: transform 0.2s, background 0.2s;
+    }
+
+    .login-btn:hover {
+      transform: translateY(-2px);
+      background: var(--accent-hover);
+    }
+
+    /* ========== NAVBAR ========== */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), #ff9f43);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      cursor: pointer;
+    }
+
+    .nav-btn {
+      padding: 8px 18px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .nav-btn:hover {
+      background: var(--card-hover);
+      transform: translateY(-1px);
+    }
+
+    .nav-btn.admin-btn {
+      background: linear-gradient(135deg, var(--accent), #ff6b81);
+      color: white;
+      border: none;
+    }
+
+    .nav-btn.admin-btn:hover {
+      filter: brightness(1.1);
+    }
+
+    /* ========== HOME PAGE ========== */
+    #homePage {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 30px 24px;
+    }
+
+    .section {
+      margin-bottom: 40px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .scroll-controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    .scroll-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .scroll-btn:hover {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .scroll-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    /* ========== GAME ROWS (HORIZONTAL SCROLL) ========== */
+    .games-row-container {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .games-row {
+      display: flex;
+      gap: 20px;
+      overflow-x: auto;
+      scroll-behavior: smooth;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      padding: 10px 4px;
+    }
+
+    .games-row::-webkit-scrollbar {
+      display: none;
+    }
+
+    .game-card {
+      flex: 0 0 220px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+    }
+
+    .game-card:hover {
+      transform: translateY(-6px) scale(1.02);
+      box-shadow: 0 12px 40px var(--shadow);
+      border-color: var(--accent);
+    }
+
+    .game-thumb {
+      width: 100%;
+      height: 140px;
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .game-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .game-info {
+      padding: 14px;
+    }
+
+    .game-name {
+      font-weight: 700;
+      font-size: 1rem;
+      margin-bottom: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .game-clicks {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .top-badge {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: linear-gradient(135deg, #ffd700, #ff9500);
+      color: #1a1a2e;
+      font-weight: 800;
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    /* ========== GAME PLAYER PAGE ========== */
+    #gamePage {
+      display: none;
+      height: 100vh;
+      flex-direction: column;
+    }
+
+    .game-toolbar {
+      height: 56px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      flex-shrink: 0;
+    }
+
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .back-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+
+    .back-btn:hover {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .fullscreen-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+
+    .fullscreen-btn:hover {
+      background: var(--card-hover);
+    }
+
+    .game-title-bar {
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    .game-layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .game-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .game-iframe-container {
+      flex: 1;
+      position: relative;
+      background: #000;
+    }
+
+    .game-iframe-container iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .game-iframe-container.fullscreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1000;
+    }
+
+    .game-iframe-container.fullscreen ~ .game-sidebar,
+    .game-iframe-container.fullscreen ~ .game-toolbar {
+      display: none;
+    }
+
+    /* Sidebar */
+    .game-sidebar {
+      width: 300px;
+      background: var(--panel);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar-section {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-title {
+      font-weight: 700;
+      font-size: 0.9rem;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--accent);
+    }
+
+    .sidebar-games {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .sidebar-game {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+    }
+
+    .sidebar-game:hover {
+      background: var(--card);
+      border-color: var(--border);
+    }
+
+    .sidebar-thumb {
+      width: 50px;
+      height: 50px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .sidebar-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .sidebar-info {
+      min-width: 0;
+    }
+
+    .sidebar-name {
+      font-weight: 600;
+      font-size: 0.85rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sidebar-clicks {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* Bottom random games */
+    .bottom-games {
+      height: 160px;
+      background: var(--panel);
+      border-top: 1px solid var(--border);
+      padding: 12px 20px;
+      flex-shrink: 0;
+    }
+
+    .bottom-games .games-row {
+      gap: 14px;
+    }
+
+    .bottom-games .game-card {
+      flex: 0 0 160px;
+    }
+
+    .bottom-games .game-thumb {
+      height: 90px;
+    }
+
+    .bottom-games .game-info {
+      padding: 10px;
+    }
+
+    .bottom-games .game-name {
+      font-size: 0.85rem;
+    }
+
+    /* ========== ADMIN MODAL ========== */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 100;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 600px;
+      width: 95%;
+      margin: 40px auto;
+      box-shadow: 0 20px 60px var(--shadow);
+    }
+
+    .modal h2 {
+      text-align: center;
+      margin-bottom: 8px;
+      font-size: 1.5rem;
+    }
+
+    .modal-subtitle {
+      text-align: center;
+      color: var(--text-muted);
+      margin-bottom: 25px;
+      font-size: 0.9rem;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .add-game-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--accent), #ff6b81);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .add-game-btn:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+
+    .games-list {
+      margin-top: 25px;
+    }
+
+    .games-list-title {
+      font-weight: 700;
+      margin-bottom: 12px;
+      font-size: 1rem;
+    }
+
+    .admin-game-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 8px;
+    }
+
+    .admin-game-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .admin-game-name {
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .admin-game-clicks {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .remove-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: none;
+      background: var(--danger);
+      color: white;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .remove-btn:hover {
+      filter: brightness(1.2);
+      transform: scale(1.1);
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .modal-btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+
+    .modal-btn.primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .modal-btn.secondary {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .modal-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    /* ========== LOADING & EMPTY STATES ========== */
+    .loading {
+      text-align: center;
+      padding: 60px;
+      color: var(--text-muted);
+      font-size: 1.2rem;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px;
+      color: var(--text-muted);
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
+      margin-bottom: 16px;
+    }
+
+    /* ========== RESPONSIVE ========== */
+    @media (max-width: 900px) {
+      .game-sidebar {
+        display: none;
+      }
+
+      .game-card {
+        flex: 0 0 160px;
+      }
+
+      .game-thumb {
+        height: 100px;
+      }
+
+      .section-title {
+        font-size: 1.1rem;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .navbar {
+        padding: 0 12px;
+      }
+
+      .logo {
+        font-size: 1.2rem;
+      }
+
+      .nav-btn span {
+        display: none;
+      }
+
+      #homePage {
+        padding: 20px 12px;
+      }
+
+      .game-card {
+        flex: 0 0 140px;
+      }
+
+      .game-thumb {
+        height: 90px;
+      }
+
+      .game-info {
+        padding: 10px;
+      }
+
+      .game-name {
+        font-size: 0.85rem;
+      }
+    }
+
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-weight: 600;
+      z-index: 200;
+      opacity: 0;
+      transition: all 0.3s;
+      box-shadow: 0 10px 40px var(--shadow);
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success {
+      border-color: var(--success);
+      color: var(--success);
+    }
+
+    .toast.error {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+  </style>
+</head>
+<body>
+  <div id="content"></div>
+
+  <!-- Admin Modal -->
+  <div class="modal-overlay" id="adminModal">
+    <div class="modal">
+      <h2>⚙️ Admin Panel</h2>
+      <p class="modal-subtitle">Add or remove games from the portal</p>
+
+      <div class="form-group">
+        <label>Game Name</label>
+        <input type="text" id="newGameName" placeholder="e.g. Shell Shockers">
+      </div>
+      <div class="form-group">
+        <label>Game URL (iframe src)</label>
+        <input type="text" id="newGameUrl" placeholder="https://example.com/game">
+      </div>
+      <div class="form-group">
+        <label>Thumbnail URL (optional)</label>
+        <input type="text" id="newGameThumb" placeholder="https://example.com/thumb.jpg">
+      </div>
+      <button class="add-game-btn" onclick="addGame()">➕ Add Game</button>
+
+      <div class="games-list" id="adminGamesList"></div>
+
+      <div class="modal-buttons">
+        <button class="modal-btn secondary" onclick="closeAdminModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+    const supabase = createClient(
+      "https://mdymxbgwhauapvphscrr.supabase.co",
+      "sb_publishable_nOrq936I1SMh4v21KzE2og_tAEbcAzK"
+    );
+
+    function getCookie(name) {
+      return document.cookie.split("; ").find(r => r.startsWith(name + "="))?.split("=")[1] || null;
+    }
+
+    function applyTheme() {
+      if (getCookie("theme") === "light") {
+        document.documentElement.classList.add("light");
+      } else {
+        document.documentElement.classList.remove("light");
+      }
+    }
+
+    applyTheme();
+
+    const uuid = getCookie("uuid");
+    const username = getCookie("username");
+    const content = document.getElementById("content");
+
+    let games = [];
+    let canEdit = false;
+    let currentGameId = null;
+
+    // ========== AUTH CHECK ==========
+    if (!uuid || !username) {
+      content.innerHTML = `
+        <div class="login-required">
+          <div class="login-card">
+            <div class="login-icon">🎮</div>
+            <h1>Access Required</h1>
+            <p>Please log in to access the Games Portal.</p>
+            <a href="/" class="login-btn">Sign In</a>
+          </div>
+        </div>
+      `;
+    } else {
+      content.innerHTML = `
+        <div id="homePage">
+          <div class="navbar">
+            <div class="nav-left">
+              <div class="logo" onclick="showHome()">🎮 Cruc Games</div>
+              <button class="nav-btn" onclick="showHome()">🏠 Home</button>
+              <button class="nav-btn admin-btn" id="adminBtn" style="display:none;" onclick="openAdminModal()">
+                ⚙️ <span>Admin</span>
+              </button>
+            </div>
+          </div>
+          <div id="homeContent">
+            <div class="loading" id="loading">Loading games...</div>
+          </div>
+        </div>
+        <div id="gamePage">
+          <div class="game-toolbar">
+            <div class="toolbar-left">
+              <button class="back-btn" onclick="showHome()">← Back to Home</button>
+            </div>
+            <div class="game-title-bar" id="gameTitle">Game</div>
+            <div class="toolbar-right">
+              <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+            </div>
+          </div>
+          <div class="game-layout">
+            <div class="game-main">
+              <div class="game-iframe-container" id="iframeContainer">
+                <iframe id="gameFrame" allowfullscreen></iframe>
+              </div>
+              <div class="bottom-games">
+                <div class="section-header" style="margin-bottom:10px;">
+                  <div class="section-title" style="font-size:0.9rem;">🎲 More Games</div>
+                  <div class="scroll-controls">
+                    <button class="scroll-btn" onclick="scrollRow('bottomRow', -1)">←</button>
+                    <button class="scroll-btn" onclick="scrollRow('bottomRow', 1)">→</button>
+                  </div>
+                </div>
+                <div class="games-row" id="bottomRow"></div>
+              </div>
+            </div>
+            <div class="game-sidebar">
+              <div class="sidebar-section">
+                <div class="sidebar-title">🔥 Top Games</div>
+                <div class="sidebar-games" id="sidebarTop"></div>
+              </div>
+              <div class="sidebar-section">
+                <div class="sidebar-title">🎲 Random Picks</div>
+                <div class="sidebar-games" id="sidebarRandom"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      loadData();
+    }
+
+    // ========== DATA LOADING ==========
+    async function loadData() {
+      try {
+        // Check rank
+        const { data: userData } = await supabase.from("users").select("rank").eq("uuid", uuid).single();
+
+        if (!userData) {
+          content.innerHTML = `
+            <div class="login-required">
+              <div class="login-card">
+                <div class="login-icon">⚠️</div>
+                <h1>Session Expired</h1>
+                <p>Please sign in again.</p>
+                <a href="/login.html" class="login-btn">Sign In</a>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        canEdit = ['owner', 'manager', 'admin'].includes(userData.rank.toLowerCase());
+        if (canEdit) {
+          document.getElementById('adminBtn').style.display = 'flex';
+        }
+
+        // Load games
+        const { data: gamesData, error } = await supabase.from("games").select("*").order("created_at", { ascending: false });
+        
+        if (error) throw error;
+        
+        games = gamesData || [];
+        renderHome();
+        document.getElementById('loading').style.display = 'none';
+
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to load games', 'error');
+      }
+    }
+
+    // ========== HOME PAGE RENDERING ==========
+    function renderHome() {
+      const homeContent = document.getElementById('homeContent');
+      
+      if (games.length === 0) {
+        homeContent.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🎮</div>
+            <h2>No games yet</h2>
+            <p>${canEdit ? 'Use the Admin panel to add games!' : 'Check back later!'}</p>
+          </div>
+        `;
+        return;
+      }
+
+      const topGames = [...games].sort((a, b) => (b.clicks || 0) - (a.clicks || 0)).slice(0, 10);
+      const randomGames = [...games].sort(() => Math.random() - 0.5).slice(0, 10);
+
+      homeContent.innerHTML = `
+        <!-- Top Games Section -->
+        <div class="section">
+          <div class="section-header">
+            <div class="section-title">🔥 Top Games</div>
+            <div class="scroll-controls">
+              <button class="scroll-btn" onclick="scrollRow('topGamesRow', -1)">←</button>
+              <button class="scroll-btn" onclick="scrollRow('topGamesRow', 1)">→</button>
+            </div>
+          </div>
+          <div class="games-row-container">
+            <div class="games-row" id="topGamesRow">
+              ${topGames.map((g, i) => renderGameCard(g, i + 1)).join('')}
+            </div>
+          </div>
+        </div>
+
+        <!-- All Games Section -->
+        <div class="section">
+          <div class="section-header">
+            <div class="section-title">🎮 All Games</div>
+            <div class="scroll-controls">
+              <button class="scroll-btn" onclick="scrollRow('allGamesRow', -1)">←</button>
+              <button class="scroll-btn" onclick="scrollRow('allGamesRow', 1)">→</button>
+            </div>
+          </div>
+          <div class="games-row-container">
+            <div class="games-row" id="allGamesRow">
+              ${games.map(g => renderGameCard(g)).join('')}
+            </div>
+          </div>
+        </div>
+
+        <!-- Random Games Section -->
+        <div class="section">
+          <div class="section-header">
+            <div class="section-title">🎲 Random Picks</div>
+            <div class="scroll-controls">
+              <button class="scroll-btn" onclick="scrollRow('randomGamesRow', -1)">←</button>
+              <button class="scroll-btn" onclick="scrollRow('randomGamesRow', 1)">→</button>
+            </div>
+          </div>
+          <div class="games-row-container">
+            <div class="games-row" id="randomGamesRow">
+              ${randomGames.map(g => renderGameCard(g)).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderGameCard(game, rank = null) {
+      const thumb = game.thumbnail_url 
+        ? `<img src="${escapeHtml(game.thumbnail_url)}" alt="" onerror="this.style.display='none';this.parentElement.innerHTML='🎮'">` 
+        : '🎮';
+      
+      const badge = rank && rank <= 3 ? `<div class="top-badge">#${rank}</div>` : '';
+      
+      return `
+        <div class="game-card" onclick="playGame(${game.id})">
+          <div class="game-thumb">${badge}${thumb}</div>
+          <div class="game-info">
+            <div class="game-name">${escapeHtml(game.name)}</div>
+            <div class="game-clicks">👁 ${formatClicks(game.clicks || 0)} plays</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function formatClicks(n) {
+      if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+      if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+      return n.toString();
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ========== SCROLLING ==========
+    window.scrollRow = function(rowId, direction) {
+      const row = document.getElementById(rowId);
+      if (!row) return;
+      const scrollAmount = 240;
+      row.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+    };
+
+    // ========== PLAY GAME ==========
+    window.playGame = async function(gameId) {
+      const game = games.find(g => g.id === gameId);
+      if (!game) return;
+
+      currentGameId = gameId;
+
+      // Increment clicks
+      try {
+        await supabase.from("games").update({ 
+          clicks: (game.clicks || 0) + 1,
+          updated_at: new Date().toISOString()
+        }).eq("id", gameId);
+        
+        // Update local
+        game.clicks = (game.clicks || 0) + 1;
+      } catch (e) {
+        console.error('Failed to track click', e);
+      }
+
+      // Show game page
+      document.getElementById('homePage').style.display = 'none';
+      document.getElementById('gamePage').style.display = 'flex';
+      document.getElementById('gameTitle').textContent = game.name;
+      
+      const frame = document.getElementById('gameFrame');
+      frame.src = game.url;
+
+      // Render sidebar
+      renderSidebar();
+      
+      // Render bottom random games (exclude current)
+      const otherGames = games.filter(g => g.id !== gameId);
+      const randomBottom = [...otherGames].sort(() => Math.random() - 0.5).slice(0, 8);
+      
+      document.getElementById('bottomRow').innerHTML = randomBottom.map(g => `
+        <div class="game-card" onclick="playGame(${g.id})">
+          <div class="game-thumb">${g.thumbnail_url ? `<img src="${escapeHtml(g.thumbnail_url)}" alt="" onerror="this.style.display='none';this.parentElement.innerHTML='🎮'">` : '🎮'}</div>
+          <div class="game-info">
+            <div class="game-name">${escapeHtml(g.name)}</div>
+            <div class="game-clicks">👁 ${formatClicks(g.clicks || 0)}</div>
+          </div>
+        </div>
+      `).join('');
+    };
+
+    function renderSidebar() {
+      const topGames = [...games].sort((a, b) => (b.clicks || 0) - (a.clicks || 0)).slice(0, 5);
+      const randomGames = [...games].filter(g => g.id !== currentGameId).sort(() => Math.random() - 0.5).slice(0, 5);
+
+      document.getElementById('sidebarTop').innerHTML = topGames.map(g => renderSidebarGame(g)).join('');
+      document.getElementById('sidebarRandom').innerHTML = randomGames.map(g => renderSidebarGame(g)).join('');
+    }
+
+    function renderSidebarGame(game) {
+      return `
+        <div class="sidebar-game" onclick="playGame(${game.id})">
+          <div class="sidebar-thumb">
+            ${game.thumbnail_url ? `<img src="${escapeHtml(game.thumbnail_url)}" alt="" onerror="this.style.display='none';this.parentElement.innerHTML='🎮'">` : '🎮'}
+          </div>
+          <div class="sidebar-info">
+            <div class="sidebar-name">${escapeHtml(game.name)}</div>
+            <div class="sidebar-clicks">👁 ${formatClicks(game.clicks || 0)} plays</div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ========== NAVIGATION ==========
+    window.showHome = function() {
+      document.getElementById('gamePage').style.display = 'none';
+      document.getElementById('homePage').style.display = 'block';
+      document.getElementById('gameFrame').src = '';
+      currentGameId = null;
+      
+      // Refresh data to show updated clicks
+      loadData();
+    };
+
+    // ========== FULLSCREEN ==========
+    window.toggleFullscreen = function() {
+      const container = document.getElementById('iframeContainer');
+      
+      if (!document.fullscreenElement) {
+        if (container.requestFullscreen) {
+          container.requestFullscreen();
+        } else if (container.webkitRequestFullscreen) {
+          container.webkitRequestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+      }
+    };
+
+    // ========== ADMIN MODAL ==========
+    window.openAdminModal = function() {
+      if (!canEdit) return;
+      renderAdminGamesList();
+      document.getElementById('adminModal').classList.add('active');
+    };
+
+    window.closeAdminModal = function() {
+      document.getElementById('adminModal').classList.remove('active');
+      document.getElementById('newGameName').value = '';
+      document.getElementById('newGameUrl').value = '';
+      document.getElementById('newGameThumb').value = '';
+    };
+
+    function renderAdminGamesList() {
+      const list = document.getElementById('adminGamesList');
+      if (games.length === 0) {
+        list.innerHTML = '<p style="color:var(--text-muted);text-align:center;">No games yet</p>';
+        return;
+      }
+
+      list.innerHTML = `
+        <div class="games-list-title">📋 Current Games (${games.length})</div>
+        ${games.map(g => `
+          <div class="admin-game-item">
+            <div class="admin-game-info">
+              <div>
+                <div class="admin-game-name">${escapeHtml(g.name)}</div>
+                <div class="admin-game-clicks">👁 ${formatClicks(g.clicks || 0)} plays</div>
+              </div>
+            </div>
+            <button class="remove-btn" onclick="removeGame(${g.id})" title="Remove game">✕</button>
+          </div>
+        `).join('')}
+      `;
+    }
+
+    window.addGame = async function() {
+      const name = document.getElementById('newGameName').value.trim();
+      const url = document.getElementById('newGameUrl').value.trim();
+      const thumb = document.getElementById('newGameThumb').value.trim();
+
+      if (!name || !url) {
+        showToast('Name and URL are required', 'error');
+        return;
+      }
+
+      try {
+        const { error } = await supabase.from("games").insert({
+          name: name,
+          url: url,
+          thumbnail_url: thumb || null,
+          clicks: 0
+        });
+
+        if (error) throw error;
+
+        showToast('Game added successfully!', 'success');
+        document.getElementById('newGameName').value = '';
+        document.getElementById('newGameUrl').value = '';
+        document.getElementById('newGameThumb').value = '';
+
+        // Refresh
+        await loadData();
+        renderAdminGamesList();
+
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to add game', 'error');
+      }
+    };
+
+    window.removeGame = async function(gameId) {
+      if (!confirm('Are you sure you want to remove this game?')) return;
+
+      try {
+        const { error } = await supabase.from("games").delete().eq("id", gameId);
+        if (error) throw error;
+
+        showToast('Game removed', 'success');
+        games = games.filter(g => g.id !== gameId);
+        renderAdminGamesList();
+        renderHome();
+
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to remove game', 'error');
+      }
+    };
+
+    // ========== TOAST ==========
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = `toast ${type} show`;
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // ========== MODAL CLICK OUTSIDE ==========
+    document.getElementById('adminModal')?.addEventListener('click', (e) => {
+      if (e.target.id === 'adminModal') closeAdminModal();
+    });
+
+    // Keyboard: Escape to close modal
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeAdminModal();
+      }
+    });
+  </script>
+</body>
+</html>
