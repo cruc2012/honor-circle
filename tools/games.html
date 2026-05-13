@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Cruc Games Portal</title>
+  <title>CrazyGames Portal</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     * {
@@ -12,40 +12,47 @@
     }
 
     :root {
-      --bg: #0a0a0f;
-      --panel: #12121a;
-      --card: #1a1a25;
-      --card-hover: #222230;
-      --text: #e8e8f0;
-      --text-muted: #8888a0;
-      --accent: #ff4757;
-      --accent-hover: #ff6b81;
-      --border: #2a2a3a;
-      --shadow: rgba(0, 0, 0, 0.6);
-      --success: #2ed573;
-      --danger: #ff4757;
+      --bg: #020617;
+      --panel: #0f172a;
+      --card: #0f172a;
+      --card-hover: #1e293b;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --border: #1e293b;
+      --table-bg: #1e293b;
+      --table-border: #334155;
+      --seat-bg: #0f172a;
+      --seat-border: #475569;
+      --seat-text: #e2e8f0;
+      --shadow: rgba(0, 0, 0, 0.5);
+      --drag-bg: rgba(59, 130, 246, 0.2);
+      --drop-hover: rgba(59, 130, 246, 0.4);
+      --success: #22c55e;
+      --danger: #ef4444;
     }
 
     html.light {
-      --bg: #f0f2f5;
+      --bg: #f8fafc;
       --panel: #ffffff;
       --card: #ffffff;
-      --card-hover: #f5f5f5;
-      --text: #1a1a2e;
-      --text-muted: #666680;
-      --accent: #ff4757;
-      --accent-hover: #e04050;
-      --border: #e0e0e8;
+      --card-hover: #f1f5f9;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --border: #e2e8f0;
       --shadow: rgba(0, 0, 0, 0.1);
-      --success: #2ed573;
-      --danger: #ff4757;
+      --success: #16a34a;
+      --danger: #dc2626;
     }
 
     body {
       min-height: 100vh;
       background: var(--bg);
       color: var(--text);
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-family: system-ui, -apple-system, sans-serif;
       transition: background 0.3s, color 0.3s;
     }
 
@@ -61,12 +68,12 @@
     .login-card {
       background: var(--panel);
       border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 60px 40px;
+      border-radius: 16px;
+      padding: 50px 40px;
       text-align: center;
-      max-width: 420px;
+      max-width: 400px;
       width: 100%;
-      box-shadow: 0 20px 60px var(--shadow);
+      box-shadow: 0 10px 40px var(--shadow);
     }
 
     .login-icon {
@@ -86,18 +93,17 @@
 
     .login-btn {
       display: inline-block;
-      padding: 14px 36px;
+      padding: 14px 32px;
       background: var(--accent);
       color: white;
       text-decoration: none;
-      border-radius: 10px;
-      font-weight: 700;
-      font-size: 1rem;
-      transition: transform 0.2s, background 0.2s;
+      border-radius: 8px;
+      font-weight: 600;
+      margin-top: 15px;
+      transition: background 0.2s;
     }
 
     .login-btn:hover {
-      transform: translateY(-2px);
       background: var(--accent-hover);
     }
 
@@ -124,15 +130,14 @@
     .logo {
       font-size: 1.5rem;
       font-weight: 800;
-      background: linear-gradient(135deg, var(--accent), #ff9f43);
+      background: linear-gradient(135deg, var(--accent), #60a5fa);
       -webkit-background-clip: text;
-      background-clip: text;
       -webkit-text-fill-color: transparent;
       cursor: pointer;
     }
 
     .nav-btn {
-      padding: 8px 18px;
+      padding: 10px 20px;
       border-radius: 8px;
       border: 1px solid var(--border);
       background: var(--card);
@@ -148,17 +153,16 @@
 
     .nav-btn:hover {
       background: var(--card-hover);
-      transform: translateY(-1px);
     }
 
     .nav-btn.admin-btn {
-      background: linear-gradient(135deg, var(--accent), #ff6b81);
+      background: var(--accent);
       color: white;
-      border: none;
+      border-color: var(--accent);
     }
 
     .nav-btn.admin-btn:hover {
-      filter: brightness(1.1);
+      background: var(--accent-hover);
     }
 
     /* ========== HOME PAGE ========== */
@@ -193,13 +197,13 @@
     }
 
     .scroll-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
       border: 1px solid var(--border);
       background: var(--card);
       color: var(--text);
-      font-size: 1.2rem;
+      font-size: 1rem;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -211,11 +215,6 @@
       background: var(--accent);
       color: white;
       border-color: var(--accent);
-    }
-
-    .scroll-btn:disabled {
-      opacity: 0.3;
-      cursor: not-allowed;
     }
 
     /* ========== GAME ROWS (HORIZONTAL SCROLL) ========== */
@@ -241,7 +240,7 @@
     .game-card {
       flex: 0 0 220px;
       background: var(--card);
-      border: 1px solid var(--border);
+      border: 2px solid var(--seat-border);
       border-radius: 16px;
       overflow: hidden;
       cursor: pointer;
@@ -250,15 +249,15 @@
     }
 
     .game-card:hover {
-      transform: translateY(-6px) scale(1.02);
-      box-shadow: 0 12px 40px var(--shadow);
+      transform: translateY(-4px);
+      box-shadow: 0 10px 30px var(--shadow);
       border-color: var(--accent);
     }
 
     .game-thumb {
       width: 100%;
       height: 140px;
-      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      background: linear-gradient(135deg, var(--table-bg), #1e293b);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -279,7 +278,7 @@
 
     .game-name {
       font-weight: 700;
-      font-size: 1rem;
+      font-size: 0.95rem;
       margin-bottom: 6px;
       white-space: nowrap;
       overflow: hidden;
@@ -298,8 +297,8 @@
       position: absolute;
       top: 10px;
       left: 10px;
-      background: linear-gradient(135deg, #ffd700, #ff9500);
-      color: #1a1a2e;
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      color: #1e293b;
       font-weight: 800;
       font-size: 0.75rem;
       padding: 4px 10px;
@@ -406,20 +405,6 @@
       border: none;
     }
 
-    .game-iframe-container.fullscreen {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: 1000;
-    }
-
-    .game-iframe-container.fullscreen ~ .game-sidebar,
-    .game-iframe-container.fullscreen ~ .game-toolbar {
-      display: none;
-    }
-
     /* Sidebar */
     .game-sidebar {
       width: 300px;
@@ -463,7 +448,7 @@
     }
 
     .sidebar-game:hover {
-      background: var(--card);
+      background: var(--card-hover);
       border-color: var(--border);
     }
 
@@ -471,7 +456,7 @@
       width: 50px;
       height: 50px;
       border-radius: 10px;
-      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      background: linear-gradient(135deg, var(--table-bg), #1e293b);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -540,7 +525,7 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0, 0, 0, 0.85);
+      background: rgba(2, 6, 23, 0.9);
       z-index: 100;
       align-items: flex-start;
       justify-content: center;
@@ -555,12 +540,12 @@
     .modal {
       background: var(--panel);
       border: 1px solid var(--border);
-      border-radius: 20px;
+      border-radius: 16px;
       padding: 30px;
       max-width: 600px;
       width: 95%;
       margin: 40px auto;
-      box-shadow: 0 20px 60px var(--shadow);
+      box-shadow: 0 10px 40px var(--shadow);
     }
 
     .modal h2 {
@@ -592,7 +577,7 @@
       padding: 12px 16px;
       background: var(--bg);
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 8px;
       color: var(--text);
       font-size: 1rem;
       transition: border-color 0.2s;
@@ -606,19 +591,18 @@
     .add-game-btn {
       width: 100%;
       padding: 14px;
-      background: linear-gradient(135deg, var(--accent), #ff6b81);
+      background: var(--accent);
       color: white;
       border: none;
-      border-radius: 10px;
-      font-weight: 700;
+      border-radius: 8px;
+      font-weight: 600;
       font-size: 1rem;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: background 0.2s;
     }
 
     .add-game-btn:hover {
-      filter: brightness(1.1);
-      transform: translateY(-1px);
+      background: var(--accent-hover);
     }
 
     .games-list {
@@ -691,9 +675,9 @@
     .modal-btn {
       flex: 1;
       padding: 12px;
-      border-radius: 10px;
+      border-radius: 8px;
       border: none;
-      font-weight: 700;
+      font-weight: 600;
       cursor: pointer;
       font-size: 1rem;
       transition: all 0.2s;
@@ -711,7 +695,7 @@
     }
 
     .modal-btn:hover {
-      transform: translateY(-1px);
+      opacity: 0.9;
     }
 
     /* ========== LOADING & EMPTY STATES ========== */
@@ -865,6 +849,12 @@
       return document.cookie.split("; ").find(r => r.startsWith(name + "="))?.split("=")[1] || null;
     }
 
+    function setCookie(name, value, days = 365) {
+      const d = new Date();
+      d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+      document.cookie = `${name}=${value};expires=${d.toUTCString()};path=/`;
+    }
+
     function applyTheme() {
       if (getCookie("theme") === "light") {
         document.documentElement.classList.add("light");
@@ -900,7 +890,7 @@
         <div id="homePage">
           <div class="navbar">
             <div class="nav-left">
-              <div class="logo" onclick="showHome()">🎮 Cruc Games</div>
+              <div class="logo" onclick="showHome()">🎮 CrazyGames</div>
               <button class="nav-btn" onclick="showHome()">🏠 Home</button>
               <button class="nav-btn admin-btn" id="adminBtn" style="display:none;" onclick="openAdminModal()">
                 ⚙️ <span>Admin</span>
@@ -956,7 +946,6 @@
     // ========== DATA LOADING ==========
     async function loadData() {
       try {
-        // Check rank
         const { data: userData } = await supabase.from("users").select("rank").eq("uuid", uuid).single();
 
         if (!userData) {
@@ -978,7 +967,6 @@
           document.getElementById('adminBtn').style.display = 'flex';
         }
 
-        // Load games
         const { data: gamesData, error } = await supabase.from("games").select("*").order("created_at", { ascending: false });
         
         if (error) throw error;
@@ -988,8 +976,11 @@
         document.getElementById('loading').style.display = 'none';
 
       } catch (err) {
-        console.error(err);
-        showToast('Failed to load games', 'error');
+        console.error('Load error:', err);
+        // Only show error toast if we actually failed to load
+        if (games.length === 0) {
+          showToast('Failed to load games', 'error');
+        }
       }
     }
 
@@ -1012,7 +1003,6 @@
       const randomGames = [...games].sort(() => Math.random() - 0.5).slice(0, 10);
 
       homeContent.innerHTML = `
-        <!-- Top Games Section -->
         <div class="section">
           <div class="section-header">
             <div class="section-title">🔥 Top Games</div>
@@ -1028,7 +1018,6 @@
           </div>
         </div>
 
-        <!-- All Games Section -->
         <div class="section">
           <div class="section-header">
             <div class="section-title">🎮 All Games</div>
@@ -1044,7 +1033,6 @@
           </div>
         </div>
 
-        <!-- Random Games Section -->
         <div class="section">
           <div class="section-header">
             <div class="section-title">🎲 Random Picks</div>
@@ -1100,24 +1088,31 @@
       row.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
     };
 
-    // ========== PLAY GAME ==========
+    // ========== PLAY GAME (ONE CLICK PER COMPUTER) ==========
     window.playGame = async function(gameId) {
       const game = games.find(g => g.id === gameId);
       if (!game) return;
 
       currentGameId = gameId;
 
-      // Increment clicks
-      try {
-        await supabase.from("games").update({ 
-          clicks: (game.clicks || 0) + 1,
-          updated_at: new Date().toISOString()
-        }).eq("id", gameId);
+      // Check if this computer has already clicked this game
+      const clickCookie = getCookie(`clicked_game_${gameId}`);
+      
+      if (!clickCookie) {
+        // First time clicking this game on this computer
+        setCookie(`clicked_game_${gameId}`, '1', 365);
         
-        // Update local
-        game.clicks = (game.clicks || 0) + 1;
-      } catch (e) {
-        console.error('Failed to track click', e);
+        // Increment clicks in database
+        try {
+          await supabase.from("games").update({ 
+            clicks: (game.clicks || 0) + 1,
+            updated_at: new Date().toISOString()
+          }).eq("id", gameId);
+          
+          game.clicks = (game.clicks || 0) + 1;
+        } catch (e) {
+          console.error('Failed to track click', e);
+        }
       }
 
       // Show game page
@@ -1128,10 +1123,8 @@
       const frame = document.getElementById('gameFrame');
       frame.src = game.url;
 
-      // Render sidebar
       renderSidebar();
       
-      // Render bottom random games (exclude current)
       const otherGames = games.filter(g => g.id !== gameId);
       const randomBottom = [...otherGames].sort(() => Math.random() - 0.5).slice(0, 8);
       
@@ -1174,8 +1167,6 @@
       document.getElementById('homePage').style.display = 'block';
       document.getElementById('gameFrame').src = '';
       currentGameId = null;
-      
-      // Refresh data to show updated clicks
       loadData();
     };
 
@@ -1260,7 +1251,6 @@
         document.getElementById('newGameUrl').value = '';
         document.getElementById('newGameThumb').value = '';
 
-        // Refresh
         await loadData();
         renderAdminGamesList();
 
@@ -1303,7 +1293,6 @@
       if (e.target.id === 'adminModal') closeAdminModal();
     });
 
-    // Keyboard: Escape to close modal
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         closeAdminModal();
