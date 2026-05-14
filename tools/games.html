@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Cruc Games Portal</title>
+  <title>Cruc games</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     * {
@@ -169,7 +169,7 @@
     #homePage {
       max-width: 1400px;
       margin: 0 auto;
-      padding: 30px 24px;
+      padding: 30px 24px 80px;
     }
 
     .section {
@@ -308,7 +308,7 @@
     /* ========== GAME PLAYER PAGE ========== */
     #gamePage {
       display: none;
-      height: 100vh;
+      min-height: 100vh;
       flex-direction: column;
     }
 
@@ -383,6 +383,7 @@
     .game-layout {
       display: flex;
       flex: 1;
+      min-height: 0;
       overflow: hidden;
     }
 
@@ -391,12 +392,15 @@
       display: flex;
       flex-direction: column;
       min-width: 0;
+      overflow-y: auto;
     }
 
     .game-iframe-container {
-      flex: 1;
+      min-height: 70vh;
+      height: 80vh;
       position: relative;
       background: #000;
+      flex-shrink: 0;
     }
 
     .game-iframe-container iframe {
@@ -490,15 +494,15 @@
 
     /* Bottom random games */
     .bottom-games {
-      height: 160px;
       background: var(--panel);
       border-top: 1px solid var(--border);
-      padding: 12px 20px;
+      padding: 16px 20px 30px;
       flex-shrink: 0;
     }
 
     .bottom-games .games-row {
       gap: 14px;
+      padding-bottom: 10px;
     }
 
     .bottom-games .game-card {
@@ -750,7 +754,7 @@
       }
 
       #homePage {
-        padding: 20px 12px;
+        padding: 20px 12px 80px;
       }
 
       .game-card {
@@ -802,6 +806,7 @@
       color: var(--danger);
     }
   </style>
+<base target="_blank">
 </head>
 <body>
   <div id="content"></div>
@@ -890,7 +895,7 @@
         <div id="homePage">
           <div class="navbar">
             <div class="nav-left">
-              <div class="logo" onclick="showHome()">🎮 Cruc Games</div>
+              <div class="logo" onclick="showHome()">🎮 Cruc games</div>
               <button class="nav-btn" onclick="showHome()">🏠 Home</button>
               <button class="nav-btn admin-btn" id="adminBtn" style="display:none;" onclick="openAdminModal()">
                 ⚙️ <span>Admin</span>
@@ -968,16 +973,15 @@
         }
 
         const { data: gamesData, error } = await supabase.from("games").select("*").order("created_at", { ascending: false });
-        
+
         if (error) throw error;
-        
+
         games = gamesData || [];
         renderHome();
         document.getElementById('loading').style.display = 'none';
 
       } catch (err) {
         console.error('Load error:', err);
-        // Only show error toast if we actually failed to load
         if (games.length === 0) {
           showToast('Failed to load games', 'error');
         }
@@ -987,7 +991,7 @@
     // ========== HOME PAGE RENDERING ==========
     function renderHome() {
       const homeContent = document.getElementById('homeContent');
-      
+
       if (games.length === 0) {
         homeContent.innerHTML = `
           <div class="empty-state">
@@ -1054,9 +1058,9 @@
       const thumb = game.thumbnail_url 
         ? `<img src="${escapeHtml(game.thumbnail_url)}" alt="" onerror="this.style.display='none';this.parentElement.innerHTML='🎮'">` 
         : '🎮';
-      
+
       const badge = rank && rank <= 3 ? `<div class="top-badge">#${rank}</div>` : '';
-      
+
       return `
         <div class="game-card" onclick="playGame(${game.id})">
           <div class="game-thumb">${badge}${thumb}</div>
@@ -1095,39 +1099,35 @@
 
       currentGameId = gameId;
 
-      // Check if this computer has already clicked this game
       const clickCookie = getCookie(`clicked_game_${gameId}`);
-      
+
       if (!clickCookie) {
-        // First time clicking this game on this computer
         setCookie(`clicked_game_${gameId}`, '1', 365);
-        
-        // Increment clicks in database
+
         try {
           await supabase.from("games").update({ 
             clicks: (game.clicks || 0) + 1,
             updated_at: new Date().toISOString()
           }).eq("id", gameId);
-          
+
           game.clicks = (game.clicks || 0) + 1;
         } catch (e) {
           console.error('Failed to track click', e);
         }
       }
 
-      // Show game page
       document.getElementById('homePage').style.display = 'none';
       document.getElementById('gamePage').style.display = 'flex';
       document.getElementById('gameTitle').textContent = game.name;
-      
+
       const frame = document.getElementById('gameFrame');
       frame.src = game.url;
 
       renderSidebar();
-      
+
       const otherGames = games.filter(g => g.id !== gameId);
       const randomBottom = [...otherGames].sort(() => Math.random() - 0.5).slice(0, 8);
-      
+
       document.getElementById('bottomRow').innerHTML = randomBottom.map(g => `
         <div class="game-card" onclick="playGame(${g.id})">
           <div class="game-thumb">${g.thumbnail_url ? `<img src="${escapeHtml(g.thumbnail_url)}" alt="" onerror="this.style.display='none';this.parentElement.innerHTML='🎮'">` : '🎮'}</div>
@@ -1173,7 +1173,7 @@
     // ========== FULLSCREEN ==========
     window.toggleFullscreen = function() {
       const container = document.getElementById('iframeContainer');
-      
+
       if (!document.fullscreenElement) {
         if (container.requestFullscreen) {
           container.requestFullscreen();
