@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Clicker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #020617;
+      --panel: #0f172a;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --border: #1e293b;
+      --shadow: rgba(0, 0, 0, 0.5);
+      --danger: #ef4444;
+      --danger-bg: rgba(239, 68, 68, 0.1);
+    }
+
+    html.light {
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --border: #e2e8f0;
+      --shadow: rgba(0, 0, 0, 0.1);
+      --danger: #dc2626;
+      --danger-bg: rgba(220, 38, 38, 0.1);
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    /* Ban Screen */
+    .ban-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .ban-card {
+      background: var(--panel);
+      border: 2px solid var(--danger);
+      border-radius: 16px;
+      padding: 50px 40px;
+      text-align: center;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 10px 40px var(--shadow);
+    }
+
+    .ban-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+    }
+
+    .ban-card h1 {
+      font-size: 2rem;
+      margin-bottom: 15px;
+      color: var(--danger);
+    }
+
+    .ban-card p {
+      color: var(--text-muted);
+      margin-bottom: 25px;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+
+    .ban-reason {
+      background: var(--danger-bg);
+      border: 1px solid var(--danger);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 25px;
+      color: var(--danger);
+      font-weight: 600;
+    }
+
+    .appeal-btn {
+      display: inline-block;
+      padding: 14px 32px;
+      background: var(--danger);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+
+    .appeal-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+    }
+
+    /* Login Required */
+    .login-required {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 50px 40px;
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 10px 40px var(--shadow);
+    }
+
+    .login-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+    }
+
+    .login-btn {
+      display: inline-block;
+      padding: 14px 32px;
+      background: var(--accent);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      margin-top: 15px;
+    }
+
+    /* Main App */
+    #app {
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, var(--accent), #60a5fa);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header p {
+      color: var(--text-muted);
+    }
+
+    /* Total Clicks Counter */
+    .total-clicks {
+      text-align: center;
+      margin-bottom: 20px;
+      padding: 20px 40px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 10px 40px var(--shadow);
+    }
+
+    .total-clicks .label {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+
+    .total-clicks .number {
+      font-size: 3rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), #60a5fa);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Main Layout */
+    .main-layout {
+      display: flex;
+      gap: 40px;
+      align-items: flex-start;
+      width: 100%;
+      max-width: 1200px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* Clicker Area */
+    .clicker-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    /* The Clickable Pie Chart */
+    .pie-chart-container {
+      position: relative;
+      width: 400px;
+      height: 400px;
+      cursor: pointer;
+      transition: transform 0.1s;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .pie-chart-container:active {
+      transform: scale(0.95);
+    }
+
+    .pie-chart-container.click-anim {
+      animation: clickPulse 0.2s ease;
+    }
+
+    @keyframes clickPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(0.92); }
+      100% { transform: scale(1); }
+    }
+
+    .pie-chart-container svg {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 10px 30px var(--shadow));
+    }
+
+    .pie-slice {
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .pie-slice:hover {
+      opacity: 0.9;
+      transform: scale(1.02);
+      transform-origin: center;
+    }
+
+    .pie-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 120px;
+      height: 120px;
+      background: var(--panel);
+      border: 3px solid var(--border);
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      box-shadow: 0 4px 20px var(--shadow);
+      pointer-events: none;
+    }
+
+    .pie-center .click-here {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .pie-center .my-clicks {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--accent);
+    }
+
+    /* Legend */
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      max-width: 400px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+    }
+
+    .legend-color {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+    }
+
+    .legend-name {
+      font-weight: 600;
+    }
+
+    .legend-clicks {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+
+    /* Leaderboard */
+    .leaderboard {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 25px;
+      width: 320px;
+      box-shadow: 0 10px 40px var(--shadow);
+    }
+
+    .leaderboard h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 1.3rem;
+    }
+
+    .leaderboard-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .leaderboard-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 15px;
+      background: var(--bg);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      transition: all 0.2s;
+    }
+
+    .leaderboard-item:hover {
+      border-color: var(--accent);
+      transform: translateX(4px);
+    }
+
+    .leaderboard-item.me {
+      border-color: var(--accent);
+      background: rgba(59, 130, 246, 0.1);
+    }
+
+    .leaderboard-item.banned {
+      opacity: 0.5;
+      border-color: var(--danger);
+    }
+
+    .rank {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    .rank.gold {
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      color: white;
+    }
+
+    .rank.silver {
+      background: linear-gradient(135deg, #e5e7eb, #9ca3af);
+      color: white;
+    }
+
+    .rank.bronze {
+      background: linear-gradient(135deg, #f97316, #ea580c);
+      color: white;
+    }
+
+    .rank.normal {
+      background: var(--border);
+      color: var(--text-muted);
+    }
+
+    .leaderboard-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .leaderboard-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .leaderboard-clicks {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .leaderboard-bar {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin-top: 6px;
+      overflow: hidden;
+    }
+
+    .leaderboard-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.5s ease;
+    }
+
+    .banned-badge {
+      background: var(--danger);
+      color: white;
+      font-size: 0.65rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: 6px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-muted);
+    }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+      .main-layout {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .pie-chart-container {
+        width: 300px;
+        height: 300px;
+      }
+
+      .pie-center {
+        width: 90px;
+        height: 90px;
+      }
+
+      .pie-center .my-clicks {
+        font-size: 1.5rem;
+      }
+
+      .leaderboard {
+        width: 100%;
+        max-width: 400px;
+      }
+
+      .total-clicks .number {
+        font-size: 2rem;
+      }
+    }
+
+    /* Click feedback */
+    .click-feedback {
+      position: fixed;
+      pointer-events: none;
+      font-weight: 800;
+      font-size: 1.5rem;
+      color: var(--accent);
+      animation: floatUp 0.8s ease forwards;
+      z-index: 1000;
+    }
+
+    @keyframes floatUp {
+      0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-60px) scale(1.5);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="content"></div>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+    const supabase = createClient(
+      "https://mdymxbgwhauapvphscrr.supabase.co",
+      "sb_publishable_nOrq936I1SMh4v21KzE2og_tAEbcAzK"
+    );
+
+    function getCookie(name) {
+      return document.cookie.split("; ").find(r => r.startsWith(name + "="))?.split("=")[1] || null;
+    }
+
+    function applyTheme() {
+      if (getCookie("theme") === "light") {
+        document.documentElement.classList.add("light");
+      } else {
+        document.documentElement.classList.remove("light");
+      }
+    }
+
+    applyTheme();
+
+    const uuid = getCookie("uuid");
+    const username = getCookie("username");
+    const content = document.getElementById("content");
+
+    let allData = [];
+    let myData = null;
+    let totalClicks = 0;
+    let isClicking = false;
+    let isBanned = false;
+
+    // Anti-autoclicker: track last 20 click timestamps
+    const clickTimestamps = [];
+    const CLICK_WINDOW = 20; // number of clicks to track
+    const BAN_THRESHOLD = 20; // clicks per second threshold
+
+    // Vibrant colors for pie chart
+    const colors = [
+      '#3b82f6', '#ef4444', '#10b981', '#f59e0b', 
+      '#8b5cf6', '#ec4899', '#06b6d4', '#f97316',
+      '#84cc16', '#d946ef', '#14b8a6', '#6366f1'
+    ];
+
+    function getColor(index) {
+      return colors[index % colors.length];
+    }
+
+    // Check if user is clicking too fast
+    function checkAutoClicker() {
+      const now = Date.now();
+      clickTimestamps.push(now);
+      
+      // Keep only last CLICK_WINDOW timestamps
+      if (clickTimestamps.length > CLICK_WINDOW) {
+        clickTimestamps.shift();
+      }
+      
+      // Need at least CLICK_WINDOW clicks to check
+      if (clickTimestamps.length < CLICK_WINDOW) {
+        return false;
+      }
+      
+      // Calculate clicks per second over the window
+      const oldest = clickTimestamps[0];
+      const newest = clickTimestamps[clickTimestamps.length - 1];
+      const timeSpan = (newest - oldest) / 1000; // in seconds
+      
+      if (timeSpan <= 0) return false;
+      
+      const clicksPerSecond = clickTimestamps.length / timeSpan;
+      return clicksPerSecond >= BAN_THRESHOLD;
+    }
+
+    // Show ban screen
+    function showBanScreen() {
+      content.innerHTML = `
+        <div class="ban-screen">
+          <div class="ban-card">
+            <div class="ban-icon">🚫</div>
+            <h1>Autoclicker Detected</h1>
+            <div class="ban-reason">
+              You have been banned for using an autoclicker.<br>
+              Click rate detected: ${BAN_THRESHOLD}+ clicks/second
+            </div>
+            <p>Your account has been flagged for automated clicking. If you believe this is a mistake, you can appeal the ban.</p>
+            <a href="https://discord.com/invite/DdH9sQK8Bf" class="appeal-btn" target="_blank">🛡️ Appeal Ban on Discord</a>
+          </div>
+        </div>
+      `;
+    }
+
+    if (!uuid || !username) {
+      content.innerHTML = `
+        <div class="login-required">
+          <div class="login-card">
+            <div class="login-icon">👆</div>
+            <h1>Access Required</h1>
+            <p>Please log in to use the Clicker.</p>
+            <a href="/" class="login-btn">Sign In</a>
+          </div>
+        </div>
+      `;
+    } else {
+      content.innerHTML = `
+        <div id="app">
+          <div class="header">
+            <h1>👆 Clicker</h1>
+            <p>Click the pie chart to add your clicks!</p>
+          </div>
+          <div class="loading" id="loading">Loading...</div>
+          <div id="mainContent" style="display: none;">
+            <div class="total-clicks">
+              <div class="label">Total Clicks</div>
+              <div class="number" id="totalClicks">0</div>
+            </div>
+            <div class="main-layout">
+              <div class="clicker-area">
+                <div class="pie-chart-container" id="pieChart">
+                  <svg viewBox="0 0 200 200" id="pieSvg"></svg>
+                  <div class="pie-center">
+                    <div class="click-here">Click Me!</div>
+                    <div class="my-clicks" id="myClicks">0</div>
+                  </div>
+                </div>
+                <div class="legend" id="legend"></div>
+              </div>
+              <div class="leaderboard">
+                <h2>🏆 Leaderboard</h2>
+                <div class="leaderboard-list" id="leaderboard"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      loadData();
+    }
+
+    async function loadData() {
+      try {
+        const { data: userData } = await supabase.from("users").select("rank").eq("uuid", uuid).single();
+        
+        if (!userData) {
+          content.innerHTML = `<div class="login-required"><div class="login-card"><h1>Session Expired</h1><a href="/login.html" class="login-btn">Sign In</a></div></div>`;
+          return;
+        }
+
+        // Check if user is banned
+        const { data: myRow } = await supabase
+          .from("clicker")
+          .select("isban, clicks")
+          .eq("user_uuid", uuid)
+          .maybeSingle();
+
+        if (myRow && myRow.isban) {
+          isBanned = true;
+          showBanScreen();
+          return;
+        }
+
+        // Fetch all clicker data ordered by clicks desc
+        const { data: clickerData, error } = await supabase
+          .from("clicker")
+          .select("*")
+          .order("clicks", { ascending: false });
+
+        if (error) throw error;
+
+        allData = clickerData || [];
+        
+        // Find my data
+        myData = allData.find(d => d.user_uuid === uuid) || null;
+        
+        // Calculate total (excluding banned users)
+        totalClicks = allData.reduce((sum, d) => sum + ((d.clicks || 0) * (d.isban ? 0 : 1)), 0);
+
+        render();
+        
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+
+        // Setup click handler
+        const pieChart = document.getElementById('pieChart');
+        pieChart.removeEventListener('click', handleClick);
+        pieChart.addEventListener('click', handleClick);
+      } catch (err) {
+        console.error(err);
+        content.innerHTML = `<div class="login-required"><div class="login-card"><h1>Error</h1><p>Failed to load data. Please refresh.</p></div></div>`;
+      }
+    }
+
+    function render() {
+      updateTotal();
+      renderPieChart();
+      renderLegend();
+      renderLeaderboard();
+      updateMyClicks();
+    }
+
+    function updateTotal() {
+      document.getElementById('totalClicks').textContent = totalClicks.toLocaleString();
+    }
+
+    function updateMyClicks() {
+      const myClicks = (myData && !myData.isban) ? (myData.clicks || 0) : 0;
+      document.getElementById('myClicks').textContent = myClicks.toLocaleString();
+    }
+
+    function renderPieChart() {
+      const svg = document.getElementById('pieSvg');
+      svg.innerHTML = '';
+
+      // Filter out banned users from pie chart
+      const activeData = allData.filter(d => !d.isban);
+
+      if (activeData.length === 0 || totalClicks === 0) {
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("cx", "100");
+        circle.setAttribute("cy", "100");
+        circle.setAttribute("r", "90");
+        circle.setAttribute("fill", "var(--border)");
+        svg.appendChild(circle);
+        return;
+      }
+
+      // Only show top 6 in pie chart, group rest as "Others"
+      let chartData = [...activeData];
+      let othersClicks = 0;
+      
+      if (chartData.length > 6) {
+        othersClicks = chartData.slice(6).reduce((sum, d) => sum + (d.clicks || 0), 0);
+        chartData = chartData.slice(0, 6);
+      }
+
+      let currentAngle = -90;
+
+      chartData.forEach((item, index) => {
+        const clicks = item.clicks || 0;
+        const percentage = clicks / totalClicks;
+        const angle = percentage * 360;
+        
+        const path = createPieSlice(100, 100, 90, currentAngle, currentAngle + angle, getColor(index));
+        path.classList.add('pie-slice');
+        path.setAttribute('data-name', item.username);
+        path.setAttribute('data-clicks', clicks);
+        
+        svg.appendChild(path);
+        currentAngle += angle;
+      });
+
+      if (othersClicks > 0) {
+        const angle = (othersClicks / totalClicks) * 360;
+        const path = createPieSlice(100, 100, 90, currentAngle, currentAngle + angle, '#64748b');
+        path.classList.add('pie-slice');
+        path.setAttribute('data-name', 'Others');
+        path.setAttribute('data-clicks', othersClicks);
+        svg.appendChild(path);
+      }
+    }
+
+    function createPieSlice(cx, cy, r, startAngle, endAngle, color) {
+      const start = polarToCartesian(cx, cy, r, endAngle);
+      const end = polarToCartesian(cx, cy, r, startAngle);
+      const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+
+      const d = [
+        "M", cx, cy,
+        "L", start.x, start.y,
+        "A", r, r, 0, largeArcFlag, 0, end.x, end.y,
+        "Z"
+      ].join(" ");
+
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", d);
+      path.setAttribute("fill", color);
+      return path;
+    }
+
+    function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
+      const angleInRadians = (angleInDegrees * Math.PI) / 180.0;
+      return {
+        x: centerX + (radius * Math.cos(angleInRadians)),
+        y: centerY + (radius * Math.sin(angleInRadians))
+      };
+    }
+
+    function renderLegend() {
+      const legend = document.getElementById('legend');
+      legend.innerHTML = '';
+
+      const activeData = allData.filter(d => !d.isban);
+      if (activeData.length === 0) return;
+
+      const top6 = activeData.slice(0, 6);
+      
+      top6.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'legend-item';
+        div.innerHTML = `
+          <div class="legend-color" style="background: ${getColor(index)}"></div>
+          <span class="legend-name">${escapeHtml(item.username)}</span>
+          <span class="legend-clicks">(${item.clicks || 0})</span>
+        `;
+        legend.appendChild(div);
+      });
+
+      if (activeData.length > 6) {
+        const othersClicks = activeData.slice(6).reduce((sum, d) => sum + (d.clicks || 0), 0);
+        const div = document.createElement('div');
+        div.className = 'legend-item';
+        div.innerHTML = `
+          <div class="legend-color" style="background: #64748b"></div>
+          <span class="legend-name">Others</span>
+          <span class="legend-clicks">(${othersClicks})</span>
+        `;
+        legend.appendChild(div);
+      }
+    }
+
+    function renderLeaderboard() {
+      const list = document.getElementById('leaderboard');
+      list.innerHTML = '';
+
+      if (allData.length === 0) {
+        list.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 20px;">No clicks yet. Be the first!</div>';
+        return;
+      }
+
+      const maxClicks = Math.max(...allData.filter(d => !d.isban).map(d => d.clicks || 0), 1);
+
+      allData.forEach((item, index) => {
+        const rank = index + 1;
+        const clicks = item.clicks || 0;
+        const isMe = item.user_uuid === uuid;
+        const banned = item.isban;
+        const percentage = !banned && maxClicks > 0 ? (clicks / maxClicks) * 100 : 0;
+
+        const div = document.createElement('div');
+        div.className = `leaderboard-item ${isMe ? 'me' : ''} ${banned ? 'banned' : ''}`;
+        
+        let rankClass = 'normal';
+        let rankIcon = rank;
+        if (!banned) {
+          if (rank === 1) { rankClass = 'gold'; rankIcon = '🥇'; }
+          else if (rank === 2) { rankClass = 'silver'; rankIcon = '🥈'; }
+          else if (rank === 3) { rankClass = 'bronze'; rankIcon = '🥉'; }
+        } else {
+          rankIcon = '🚫';
+        }
+
+        div.innerHTML = `
+          <div class="rank ${rankClass}">${rankIcon}</div>
+          <div class="leaderboard-info">
+            <div class="leaderboard-name">
+              ${escapeHtml(item.username)} ${isMe ? '(You)' : ''}
+              ${banned ? '<span class="banned-badge">BANNED</span>' : ''}
+            </div>
+            <div class="leaderboard-clicks">${banned ? 'Autoclicker detected' : clicks.toLocaleString() + ' clicks'}</div>
+            ${!banned ? `<div class="leaderboard-bar"><div class="leaderboard-bar-fill" style="width: ${percentage}%"></div></div>` : ''}
+          </div>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    async function handleClick(e) {
+      if (isClicking || isBanned) return;
+
+      // Check for autoclicker
+      if (checkAutoClicker()) {
+        // Ban the user
+        isBanned = true;
+        await banUser();
+        showBanScreen();
+        return;
+      }
+
+      isClicking = true;
+
+      // Visual feedback
+      const container = document.getElementById('pieChart');
+      container.classList.add('click-anim');
+      setTimeout(() => container.classList.remove('click-anim'), 200);
+
+      // Floating +1 text
+      showClickFeedback(e);
+
+      try {
+        let newClicks;
+
+        if (!myData) {
+          const { data, error } = await supabase
+            .from("clicker")
+            .insert({ user_uuid: uuid, username: username, clicks: 1, isban: false })
+            .select()
+            .single();
+
+          if (error) throw error;
+          
+          myData = data;
+          newClicks = 1;
+          allData.push(data);
+        } else {
+          const newClickCount = (myData.clicks || 0) + 1;
+          
+          const { data, error } = await supabase
+            .from("clicker")
+            .update({ clicks: newClickCount, updated_at: new Date().toISOString() })
+            .eq("user_uuid", uuid)
+            .select()
+            .single();
+
+          if (error) throw error;
+          
+          myData = data;
+          newClicks = newClickCount;
+          
+          const idx = allData.findIndex(d => d.user_uuid === uuid);
+          if (idx !== -1) allData[idx] = data;
+        }
+
+        totalClicks = allData.filter(d => !d.isban).reduce((sum, d) => sum + (d.clicks || 0), 0);
+        allData.sort((a, b) => {
+          if (a.isban && !b.isban) return 1;
+          if (!a.isban && b.isban) return -1;
+          return (b.clicks || 0) - (a.clicks || 0);
+        });
+
+        render();
+        
+        const myClicksEl = document.getElementById('myClicks');
+        myClicksEl.style.transform = 'scale(1.3)';
+        myClicksEl.style.transition = 'transform 0.15s';
+        setTimeout(() => {
+          myClicksEl.style.transform = 'scale(1)';
+        }, 150);
+
+      } catch (err) {
+        console.error('Click error:', err);
+        alert('Failed to register click. Please try again.');
+      } finally {
+        isClicking = false;
+      }
+    }
+
+    async function banUser() {
+      try {
+        if (!myData) {
+          // Create row with ban
+          await supabase
+            .from("clicker")
+            .insert({ user_uuid: uuid, username: username, clicks: 0, isban: true });
+        } else {
+          // Update existing row with ban
+          await supabase
+            .from("clicker")
+            .update({ isban: true, updated_at: new Date().toISOString() })
+            .eq("user_uuid", uuid);
+        }
+      } catch (err) {
+        console.error('Ban error:', err);
+      }
+    }
+
+    function showClickFeedback(e) {
+      const feedback = document.createElement('div');
+      feedback.className = 'click-feedback';
+      feedback.textContent = '+1';
+      feedback.style.left = e.clientX + 'px';
+      feedback.style.top = e.clientY + 'px';
+      document.body.appendChild(feedback);
+      setTimeout(() => feedback.remove(), 800);
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Real-time updates
+    const channel = supabase
+      .channel('clicker_changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'clicker' }, 
+        (payload) => {
+          loadData();
+        }
+      )
+      .subscribe();
+
+    // Poll every 3 seconds
+    setInterval(() => {
+      if (!isClicking && !isBanned) {
+        loadData();
+      }
+    }, 3000);
+  </script>
+</body>
+</html>
