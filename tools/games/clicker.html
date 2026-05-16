@@ -23,6 +23,8 @@
       --danger: #ef4444;
       --danger-bg: rgba(239, 68, 68, 0.1);
       --cps: #10b981;
+      --warning: #f59e0b;
+      --warning-bg: rgba(245, 158, 11, 0.1);
     }
 
     html.light {
@@ -37,6 +39,8 @@
       --danger: #dc2626;
       --danger-bg: rgba(220, 38, 38, 0.1);
       --cps: #059669;
+      --warning: #d97706;
+      --warning-bg: rgba(217, 119, 6, 0.1);
     }
 
     body {
@@ -47,7 +51,7 @@
       transition: background 0.3s, color 0.3s;
     }
 
-    .ban-screen {
+    .ban-screen, .captcha-screen {
       min-height: 100vh;
       display: flex;
       align-items: center;
@@ -55,9 +59,8 @@
       padding: 20px;
     }
 
-    .ban-card {
+    .ban-card, .captcha-card {
       background: var(--panel);
-      border: 2px solid var(--danger);
       border-radius: 16px;
       padding: 50px 40px;
       text-align: center;
@@ -66,18 +69,33 @@
       box-shadow: 0 10px 40px var(--shadow);
     }
 
-    .ban-icon {
+    .ban-card {
+      border: 2px solid var(--danger);
+    }
+
+    .captcha-card {
+      border: 2px solid var(--warning);
+    }
+
+    .ban-icon, .captcha-icon {
       font-size: 4rem;
       margin-bottom: 20px;
     }
 
     .ban-card h1 {
-      font-size: 2rem;
-      margin-bottom: 15px;
       color: var(--danger);
     }
 
-    .ban-card p {
+    .captcha-card h1 {
+      color: var(--warning);
+    }
+
+    .ban-card h1, .captcha-card h1 {
+      font-size: 2rem;
+      margin-bottom: 15px;
+    }
+
+    .ban-card p, .captcha-card p {
       color: var(--text-muted);
       margin-bottom: 25px;
       font-size: 1rem;
@@ -87,28 +105,51 @@
     .ban-reason {
       background: var(--danger-bg);
       border: 1px solid var(--danger);
+      color: var(--danger);
+    }
+
+    .captcha-reason {
+      background: var(--warning-bg);
+      border: 1px solid var(--warning);
+      color: var(--warning);
+    }
+
+    .ban-reason, .captcha-reason {
       border-radius: 8px;
       padding: 15px;
       margin-bottom: 25px;
-      color: var(--danger);
       font-weight: 600;
     }
 
-    .appeal-btn {
+    .appeal-btn, .continue-btn {
       display: inline-block;
       padding: 14px 32px;
-      background: var(--danger);
       color: white;
       text-decoration: none;
       border-radius: 8px;
       font-weight: 600;
       font-size: 1rem;
       transition: all 0.2s;
+      border: none;
+      cursor: pointer;
+    }
+
+    .appeal-btn {
+      background: var(--danger);
     }
 
     .appeal-btn:hover {
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+    }
+
+    .continue-btn {
+      background: var(--warning);
+    }
+
+    .continue-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
     }
 
     .login-required {
@@ -242,6 +283,17 @@
 
     .cps-bar-fill.high {
       background: var(--danger);
+    }
+
+    .queue-info {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .queue-info .pending {
+      color: var(--accent);
+      font-weight: 600;
     }
 
     .main-layout {
@@ -585,17 +637,24 @@
     let allData = [];
     let myData = null;
     let totalClicks = 0;
-    let isClicking = false;
     let isBanned = false;
+    let needsCaptcha = false;
     let cpsInterval = null;
 
-    // CPS tracking
+    // ===== CLICK QUEUE SYSTEM =====
+    // Click as fast as you want, but server only receives max 6/sec
+    let clickQueue = 0;
+    let lastServerUpdate = 0;
+    const SERVER_RATE_LIMIT = 1000 / 6; // ~166.67ms between server updates = 6/sec max
+    let isProcessingQueue = false;
+
+    // ===== CPS TRACKING =====
     const cpsClicks = [];
     const CPS_WINDOW_MS = 1000;
     const CPS_RESET_MS = 5000;
     let cpsResetTimer = null;
 
-    // Anti-autoclicker
+    // ===== ANTI-AUTOCLICKER =====
     const recentClicks = [];
     const WINDOW_MS = 1000;
     const BAN_THRESHOLD = 15;
@@ -604,6 +663,12 @@
     const intervalHistory = [];
     const CONSISTENCY_WINDOW = 10;
     const MIN_HUMAN_INTERVAL = 30;
+
+    // ===== 10-MINUTE NONSTOP CAPTCHA =====
+    const NONSTOP_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+    const NONSTOP_CLICKS_THRESHOLD = 3000; // 3000+ clicks in 10 min = ~5/sec sustained
+    const nonstopClicks = [];
+    let captchaTimer = null;
 
     const colors = [
       '#3b82f6', '#ef4444', '#10b981', '#f59e0b', 
@@ -615,6 +680,7 @@
       return colors[index % colors.length];
     }
 
+    // ===== CPS DISPLAY =====
     function updateCPSDisplay() {
       const now = Date.now();
       while (cpsClicks.length > 0 && now - cpsClicks[0] > CPS_WINDOW_MS) {
@@ -624,9 +690,11 @@
       const cps = cpsClicks.length;
       const cpsEl = document.getElementById('cpsValue');
       const cpsBar = document.getElementById('cpsBarFill');
+      const queueEl = document.getElementById('queueInfo');
       
       if (!cpsEl || !cpsBar) return;
       
+      // Show actual CPS with decimal (e.g., 12.5)
       cpsEl.textContent = cps.toFixed(1);
       
       if (cps >= 12) {
@@ -639,6 +707,14 @@
       
       const barPercent = Math.min((cps / 20) * 100, 100);
       cpsBar.style.width = barPercent + '%';
+
+      // Show queue info
+      if (queueEl) {
+        const pending = clickQueue;
+        queueEl.innerHTML = pending > 0 
+          ? `<span class="pending">${pending}</span> clicks queued (sending at 6/sec)`
+          : 'Clicks synced with server';
+      }
     }
 
     function recordClickForCPS() {
@@ -657,6 +733,7 @@
       updateCPSDisplay();
     }
 
+    // ===== ANTI-CHEAT =====
     function checkAutoClicker() {
       const now = Date.now();
       recentClicks.push(now);
@@ -704,6 +781,46 @@
       return { banned: false };
     }
 
+    // ===== NONSTOP CAPTCHA =====
+    function checkNonstopClicks() {
+      const now = Date.now();
+      nonstopClicks.push(now);
+      
+      while (nonstopClicks.length > 0 && now - nonstopClicks[0] > NONSTOP_WINDOW_MS) {
+        nonstopClicks.shift();
+      }
+      
+      if (nonstopClicks.length >= NONSTOP_CLICKS_THRESHOLD) {
+        return true;
+      }
+      return false;
+    }
+
+    function showCaptcha() {
+      needsCaptcha = true;
+      content.innerHTML = `
+        <div class="captcha-screen">
+          <div class="captcha-card">
+            <div class="captcha-icon">⏸️</div>
+            <h1>Are You Still There?</h1>
+            <div class="captcha-reason">
+              You've been clicking nonstop for over 10 minutes.<br>
+              Please confirm you're human to continue.
+            </div>
+            <p>This prevents overnight autoclickers. If you're legitimately clicking, just press continue!</p>
+            <button class="continue-btn" id="continueBtn">✅ Continue Clicking</button>
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('continueBtn').addEventListener('click', () => {
+        needsCaptcha = false;
+        nonstopClicks.length = 0;
+        buildApp();
+        loadData();
+      });
+    }
+
     function showBanScreen(reason) {
       content.innerHTML = `
         <div class="ban-screen">
@@ -721,24 +838,96 @@
       `;
     }
 
-    if (!uuid || !username) {
-      content.innerHTML = `
-        <div class="login-required">
-          <div class="login-card">
-            <div class="login-icon">👆</div>
-            <h1>Access Required</h1>
-            <p>Please log in to use the Clicker.</p>
-            <a href="/" class="login-btn">Sign In</a>
-          </div>
-        </div>
-      `;
-    } else {
-      // Build the app HTML first
+    // ===== SERVER QUEUE PROCESSOR =====
+    async function processClickQueue() {
+      if (isProcessingQueue || clickQueue <= 0 || isBanned || needsCaptcha) return;
+      
+      const now = Date.now();
+      if (now - lastServerUpdate < SERVER_RATE_LIMIT) return;
+      
+      isProcessingQueue = true;
+      
+      try {
+        const clicksToSend = clickQueue;
+        clickQueue = 0;
+        lastServerUpdate = now;
+        
+        let newClickCount;
+        
+        if (!myData) {
+          const { data, error } = await supabase
+            .from("clicker")
+            .insert({ user_uuid: uuid, username: username, clicks: clicksToSend, isban: false })
+            .select()
+            .single();
+
+          if (error) throw error;
+          myData = data;
+          newClickCount = clicksToSend;
+          
+          // Add to local data
+          const existingIdx = allData.findIndex(d => d.user_uuid === uuid);
+          if (existingIdx >= 0) {
+            allData[existingIdx] = data;
+          } else {
+            allData.push(data);
+          }
+        } else {
+          newClickCount = (myData.clicks || 0) + clicksToSend;
+          
+          const { data, error } = await supabase
+            .from("clicker")
+            .update({ clicks: newClickCount, updated_at: new Date().toISOString() })
+            .eq("user_uuid", uuid)
+            .select()
+            .single();
+
+          if (error) throw error;
+          myData = data;
+          
+          const idx = allData.findIndex(d => d.user_uuid === uuid);
+          if (idx !== -1) allData[idx] = data;
+        }
+
+        // Recalculate and render
+        totalClicks = allData.filter(d => !d.isban).reduce((sum, d) => sum + (d.clicks || 0), 0);
+        allData.sort((a, b) => {
+          if (a.isban && !b.isban) return 1;
+          if (!a.isban && b.isban) return -1;
+          return (b.clicks || 0) - (a.clicks || 0);
+        });
+
+        render();
+        
+        // Animate my clicks
+        const myClicksEl = document.getElementById('myClicks');
+        if (myClicksEl) {
+          myClicksEl.style.transform = 'scale(1.3)';
+          myClicksEl.style.transition = 'transform 0.15s';
+          setTimeout(() => {
+            myClicksEl.style.transform = 'scale(1)';
+          }, 150);
+        }
+
+      } catch (err) {
+        console.error('Queue processing error:', err);
+        // Put clicks back in queue
+        clickQueue += clicksToSend;
+      } finally {
+        isProcessingQueue = false;
+      }
+    }
+
+    // Run queue processor frequently
+    setInterval(processClickQueue, 50);
+
+    // ===== BUILD APP =====
+    function buildApp() {
       content.innerHTML = `
         <div id="app">
           <div class="header">
             <h1>👆 Clicker</h1>
-            <p>Click the pie chart to add your clicks!</p>
+            <p>Click as fast as you want! Server syncs at 6/sec max.</p>
           </div>
           <div class="loading" id="loading">Loading...</div>
           <div id="mainContent" style="display: none;">
@@ -751,6 +940,7 @@
                 <div class="cps-bar">
                   <div class="cps-bar-fill" id="cpsBarFill" style="width: 0%"></div>
                 </div>
+                <div class="queue-info" id="queueInfo">Clicks synced with server</div>
               </div>
             </div>
             <div class="main-layout">
@@ -772,17 +962,27 @@
           </div>
         </div>
       `;
-      
-      // Start CPS loop immediately
+    }
+
+    if (!uuid || !username) {
+      content.innerHTML = `
+        <div class="login-required">
+          <div class="login-card">
+            <div class="login-icon">👆</div>
+            <h1>Access Required</h1>
+            <p>Please log in to use the Clicker.</p>
+            <a href="/" class="login-btn">Sign In</a>
+          </div>
+        </div>
+      `;
+    } else {
+      buildApp();
       cpsInterval = setInterval(updateCPSDisplay, 100);
-      
-      // Then load data
       loadData();
     }
 
     async function loadData() {
       try {
-        // Check user exists
         const { data: userData, error: userError } = await supabase
           .from("users")
           .select("rank")
@@ -803,16 +1003,13 @@
           return;
         }
 
-        // Check if banned
         const { data: myRow, error: banError } = await supabase
           .from("clicker")
           .select("isban, clicks")
           .eq("user_uuid", uuid)
           .maybeSingle();
 
-        if (banError) {
-          console.error('Ban check error:', banError);
-        }
+        if (banError) console.error('Ban check error:', banError);
 
         if (myRow && myRow.isban) {
           isBanned = true;
@@ -820,22 +1017,17 @@
           return;
         }
 
-        // Load all clicker data
         const { data: clickerData, error: clickerError } = await supabase
           .from("clicker")
           .select("*")
           .order("clicks", { ascending: false });
 
-        if (clickerError) {
-          console.error('Clicker data error:', clickerError);
-          throw clickerError;
-        }
+        if (clickerError) throw clickerError;
 
         allData = clickerData || [];
         myData = allData.find(d => d.user_uuid === uuid) || null;
         totalClicks = allData.reduce((sum, d) => sum + ((d.clicks || 0) * (d.isban ? 0 : 1)), 0);
 
-        // Show content and render
         const loadingEl = document.getElementById('loading');
         const mainContentEl = document.getElementById('mainContent');
         
@@ -844,7 +1036,6 @@
 
         render();
 
-        // Setup click handler
         const pieChart = document.getElementById('pieChart');
         if (pieChart) {
           pieChart.removeEventListener('click', handleClick);
@@ -883,7 +1074,7 @@
     function updateMyClicks() {
       const el = document.getElementById('myClicks');
       if (!el) return;
-      const myClicks = (myData && !myData.isban) ? (myData.clicks || 0) : 0;
+      const myClicks = (myData && !myData.isban) ? (myData.clicks || 0) + clickQueue : 0;
       el.textContent = myClicks.toLocaleString();
     }
 
@@ -1046,21 +1237,32 @@
       });
     }
 
-    async function handleClick(e) {
-      if (isClicking || isBanned) return;
+    // ===== CLICK HANDLER =====
+    function handleClick(e) {
+      if (isBanned || needsCaptcha) return;
 
+      // 1. Record for CPS display (no limit)
       recordClickForCPS();
 
+      // 2. Anti-cheat check
       const detection = checkAutoClicker();
       if (detection.banned) {
         isBanned = true;
-        await banUser();
+        banUser();
         showBanScreen(detection.reason);
         return;
       }
 
-      isClicking = true;
+      // 3. Nonstop click check
+      if (checkNonstopClicks()) {
+        showCaptcha();
+        return;
+      }
 
+      // 4. Add to queue (click as fast as you want!)
+      clickQueue++;
+
+      // 5. Visual feedback
       const container = document.getElementById('pieChart');
       if (container) {
         container.classList.add('click-anim');
@@ -1069,60 +1271,8 @@
 
       showClickFeedback(e);
 
-      try {
-        if (!myData) {
-          const { data, error } = await supabase
-            .from("clicker")
-            .insert({ user_uuid: uuid, username: username, clicks: 1, isban: false })
-            .select()
-            .single();
-
-          if (error) throw error;
-          
-          myData = data;
-          allData.push(data);
-        } else {
-          const newClickCount = (myData.clicks || 0) + 1;
-          
-          const { data, error } = await supabase
-            .from("clicker")
-            .update({ clicks: newClickCount, updated_at: new Date().toISOString() })
-            .eq("user_uuid", uuid)
-            .select()
-            .single();
-
-          if (error) throw error;
-          
-          myData = data;
-          
-          const idx = allData.findIndex(d => d.user_uuid === uuid);
-          if (idx !== -1) allData[idx] = data;
-        }
-
-        totalClicks = allData.filter(d => !d.isban).reduce((sum, d) => sum + (d.clicks || 0), 0);
-        allData.sort((a, b) => {
-          if (a.isban && !b.isban) return 1;
-          if (!a.isban && b.isban) return -1;
-          return (b.clicks || 0) - (a.clicks || 0);
-        });
-
-        render();
-        
-        const myClicksEl = document.getElementById('myClicks');
-        if (myClicksEl) {
-          myClicksEl.style.transform = 'scale(1.3)';
-          myClicksEl.style.transition = 'transform 0.15s';
-          setTimeout(() => {
-            myClicksEl.style.transform = 'scale(1)';
-          }, 150);
-        }
-
-      } catch (err) {
-        console.error('Click error:', err);
-        alert('Failed to register click. Please try again.');
-      } finally {
-        isClicking = false;
-      }
+      // 6. Update local display immediately
+      updateMyClicks();
     }
 
     async function banUser() {
@@ -1164,7 +1314,7 @@
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'clicker' }, 
         (payload) => {
-          if (!isBanned) {
+          if (!isBanned && !needsCaptcha) {
             loadData();
           }
         }
@@ -1173,7 +1323,7 @@
 
     // Poll every 3 seconds
     setInterval(() => {
-      if (!isClicking && !isBanned) {
+      if (!isBanned && !needsCaptcha) {
         loadData();
       }
     }, 3000);
