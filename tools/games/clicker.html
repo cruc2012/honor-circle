@@ -47,7 +47,6 @@
       transition: background 0.3s, color 0.3s;
     }
 
-    /* Ban Screen */
     .ban-screen {
       min-height: 100vh;
       display: flex;
@@ -112,7 +111,6 @@
       box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
     }
 
-    /* Login Required */
     .login-required {
       min-height: 100vh;
       display: flex;
@@ -148,7 +146,6 @@
       margin-top: 15px;
     }
 
-    /* Main App */
     #app {
       min-height: 100vh;
       padding: 20px;
@@ -175,7 +172,6 @@
       color: var(--text-muted);
     }
 
-    /* Total Clicks Counter */
     .total-clicks {
       text-align: center;
       margin-bottom: 20px;
@@ -203,7 +199,6 @@
       -webkit-text-fill-color: transparent;
     }
 
-    /* CPS Display */
     .cps-display {
       margin-top: 12px;
       padding-top: 12px;
@@ -249,7 +244,6 @@
       background: var(--danger);
     }
 
-    /* Main Layout */
     .main-layout {
       display: flex;
       gap: 40px;
@@ -260,7 +254,6 @@
       flex-wrap: wrap;
     }
 
-    /* Clicker Area */
     .clicker-area {
       display: flex;
       flex-direction: column;
@@ -268,7 +261,6 @@
       gap: 20px;
     }
 
-    /* The Clickable Pie Chart */
     .pie-chart-container {
       position: relative;
       width: 400px;
@@ -342,7 +334,6 @@
       color: var(--accent);
     }
 
-    /* Legend */
     .legend {
       display: flex;
       flex-wrap: wrap;
@@ -377,7 +368,6 @@
       font-size: 0.8rem;
     }
 
-    /* Leaderboard */
     .leaderboard {
       background: var(--panel);
       border: 1px solid var(--border);
@@ -501,14 +491,12 @@
       text-transform: uppercase;
     }
 
-    /* Loading */
     .loading {
       text-align: center;
       padding: 40px;
       color: var(--text-muted);
     }
 
-    /* Mobile */
     @media (max-width: 768px) {
       .main-layout {
         flex-direction: column;
@@ -543,7 +531,6 @@
       }
     }
 
-    /* Click feedback */
     .click-feedback {
       position: fixed;
       pointer-events: none;
@@ -600,33 +587,36 @@
     let totalClicks = 0;
     let isClicking = false;
     let isBanned = false;
+    let cpsInterval = null;
 
-    // ===== CPS TRACKING =====
-    // Track clicks in the last 1 second for live CPS display
+    // CPS tracking
     const cpsClicks = [];
     const CPS_WINDOW_MS = 1000;
-    const CPS_RESET_MS = 5000; // reset after 5 seconds of no clicks
-    let lastClickTime = 0;
+    const CPS_RESET_MS = 5000;
     let cpsResetTimer = null;
 
-    // ===== ANTI-AUTOCLICKER SYSTEM =====
+    // Anti-autoclicker
     const recentClicks = [];
     const WINDOW_MS = 1000;
     const BAN_THRESHOLD = 15;
-
     const BURST_SIZE = 5;
     const BURST_WINDOW_MS = 100;
-
     const intervalHistory = [];
     const CONSISTENCY_WINDOW = 10;
-    const CONSISTENCY_THRESHOLD = 0.95;
-
     const MIN_HUMAN_INTERVAL = 30;
+
+    const colors = [
+      '#3b82f6', '#ef4444', '#10b981', '#f59e0b', 
+      '#8b5cf6', '#ec4899', '#06b6d4', '#f97316',
+      '#84cc16', '#d946ef', '#14b8a6', '#6366f1'
+    ];
+
+    function getColor(index) {
+      return colors[index % colors.length];
+    }
 
     function updateCPSDisplay() {
       const now = Date.now();
-      
-      // Remove clicks older than CPS_WINDOW_MS
       while (cpsClicks.length > 0 && now - cpsClicks[0] > CPS_WINDOW_MS) {
         cpsClicks.shift();
       }
@@ -635,11 +625,10 @@
       const cpsEl = document.getElementById('cpsValue');
       const cpsBar = document.getElementById('cpsBarFill');
       
-      if (!cpsEl) return;
+      if (!cpsEl || !cpsBar) return;
       
       cpsEl.textContent = cps.toFixed(1);
       
-      // Color warning if high
       if (cps >= 12) {
         cpsEl.classList.add('high');
         cpsBar.classList.add('high');
@@ -648,7 +637,6 @@
         cpsBar.classList.remove('high');
       }
       
-      // Bar fill (max 20 cps for visual)
       const barPercent = Math.min((cps / 20) * 100, 100);
       cpsBar.style.width = barPercent + '%';
     }
@@ -656,14 +644,11 @@
     function recordClickForCPS() {
       const now = Date.now();
       cpsClicks.push(now);
-      lastClickTime = now;
       
-      // Clear any existing reset timer
       if (cpsResetTimer) {
         clearTimeout(cpsResetTimer);
       }
       
-      // Set new reset timer - reset after 5 seconds of no clicks
       cpsResetTimer = setTimeout(() => {
         cpsClicks.length = 0;
         updateCPSDisplay();
@@ -674,28 +659,24 @@
 
     function checkAutoClicker() {
       const now = Date.now();
-
-      // === Layer 1: Sliding window ===
       recentClicks.push(now);
+      
       while (recentClicks.length > 0 && now - recentClicks[0] > WINDOW_MS) {
         recentClicks.shift();
       }
+      
       if (recentClicks.length >= BAN_THRESHOLD) {
-        console.log('BAN: Sliding window triggered -', recentClicks.length, 'clicks in 1s');
         return { banned: true, reason: `${recentClicks.length} clicks in 1 second` };
       }
 
-      // === Layer 2: Burst detection ===
       if (recentClicks.length >= BURST_SIZE) {
         const last5 = recentClicks.slice(-BURST_SIZE);
         const burstSpan = last5[last5.length - 1] - last5[0];
         if (burstSpan <= BURST_WINDOW_MS) {
-          console.log('BAN: Burst detected -', BURST_SIZE, 'clicks in', burstSpan, 'ms');
           return { banned: true, reason: `${BURST_SIZE} clicks in ${burstSpan}ms` };
         }
       }
 
-      // === Layer 3: Consistency check ===
       if (recentClicks.length >= 2) {
         const lastInterval = now - recentClicks[recentClicks.length - 2];
         intervalHistory.push(lastInterval);
@@ -708,17 +689,14 @@
           const stdDev = Math.sqrt(variance);
           const cv = stdDev / mean;
           if (cv < 0.1 && mean < 100) {
-            console.log('BAN: Consistency triggered - CV:', cv, 'mean:', mean);
             return { banned: true, reason: 'Bot-like click pattern detected' };
           }
         }
       }
 
-      // === Layer 4: Impossible speed ===
       if (recentClicks.length >= 2) {
         const lastInterval = now - recentClicks[recentClicks.length - 2];
         if (lastInterval < MIN_HUMAN_INTERVAL) {
-          console.log('BAN: Impossible speed -', lastInterval, 'ms between clicks');
           return { banned: true, reason: `Click interval ${lastInterval}ms (too fast)` };
         }
       }
@@ -755,6 +733,7 @@
         </div>
       `;
     } else {
+      // Build the app HTML first
       content.innerHTML = `
         <div id="app">
           <div class="header">
@@ -793,26 +772,47 @@
           </div>
         </div>
       `;
-      loadData();
       
-      // Start CPS update loop
-      setInterval(updateCPSDisplay, 100);
+      // Start CPS loop immediately
+      cpsInterval = setInterval(updateCPSDisplay, 100);
+      
+      // Then load data
+      loadData();
     }
 
     async function loadData() {
       try {
-        const { data: userData } = await supabase.from("users").select("rank").eq("uuid", uuid).single();
+        // Check user exists
+        const { data: userData, error: userError } = await supabase
+          .from("users")
+          .select("rank")
+          .eq("uuid", uuid)
+          .single();
         
-        if (!userData) {
-          content.innerHTML = `<div class="login-required"><div class="login-card"><h1>Session Expired</h1><a href="/login.html" class="login-btn">Sign In</a></div></div>`;
+        if (userError || !userData) {
+          content.innerHTML = `
+            <div class="login-required">
+              <div class="login-card">
+                <div class="login-icon">⚠️</div>
+                <h1>Session Expired</h1>
+                <p>Your session has expired. Please log in again.</p>
+                <a href="/login.html" class="login-btn">Sign In</a>
+              </div>
+            </div>
+          `;
           return;
         }
 
-        const { data: myRow } = await supabase
+        // Check if banned
+        const { data: myRow, error: banError } = await supabase
           .from("clicker")
           .select("isban, clicks")
           .eq("user_uuid", uuid)
           .maybeSingle();
+
+        if (banError) {
+          console.error('Ban check error:', banError);
+        }
 
         if (myRow && myRow.isban) {
           isBanned = true;
@@ -820,28 +820,50 @@
           return;
         }
 
-        const { data: clickerData, error } = await supabase
+        // Load all clicker data
+        const { data: clickerData, error: clickerError } = await supabase
           .from("clicker")
           .select("*")
           .order("clicks", { ascending: false });
 
-        if (error) throw error;
+        if (clickerError) {
+          console.error('Clicker data error:', clickerError);
+          throw clickerError;
+        }
 
         allData = clickerData || [];
         myData = allData.find(d => d.user_uuid === uuid) || null;
         totalClicks = allData.reduce((sum, d) => sum + ((d.clicks || 0) * (d.isban ? 0 : 1)), 0);
 
-        render();
+        // Show content and render
+        const loadingEl = document.getElementById('loading');
+        const mainContentEl = document.getElementById('mainContent');
         
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('mainContent').style.display = 'block';
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (mainContentEl) mainContentEl.style.display = 'block';
 
+        render();
+
+        // Setup click handler
         const pieChart = document.getElementById('pieChart');
-        pieChart.removeEventListener('click', handleClick);
-        pieChart.addEventListener('click', handleClick);
+        if (pieChart) {
+          pieChart.removeEventListener('click', handleClick);
+          pieChart.addEventListener('click', handleClick);
+        }
+
       } catch (err) {
-        console.error(err);
-        content.innerHTML = `<div class="login-required"><div class="login-card"><h1>Error</h1><p>Failed to load data. Please refresh.</p></div></div>`;
+        console.error('Load data error:', err);
+        content.innerHTML = `
+          <div class="login-required">
+            <div class="login-card">
+              <div class="login-icon">❌</div>
+              <h1>Error</h1>
+              <p>Failed to load data. Please refresh the page.</p>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 10px;">${escapeHtml(err.message || 'Unknown error')}</p>
+              <button onclick="location.reload()" class="login-btn" style="margin-top: 15px;">Refresh</button>
+            </div>
+          </div>
+        `;
       }
     }
 
@@ -854,16 +876,20 @@
     }
 
     function updateTotal() {
-      document.getElementById('totalClicks').textContent = totalClicks.toLocaleString();
+      const el = document.getElementById('totalClicks');
+      if (el) el.textContent = totalClicks.toLocaleString();
     }
 
     function updateMyClicks() {
+      const el = document.getElementById('myClicks');
+      if (!el) return;
       const myClicks = (myData && !myData.isban) ? (myData.clicks || 0) : 0;
-      document.getElementById('myClicks').textContent = myClicks.toLocaleString();
+      el.textContent = myClicks.toLocaleString();
     }
 
     function renderPieChart() {
       const svg = document.getElementById('pieSvg');
+      if (!svg) return;
       svg.innerHTML = '';
 
       const activeData = allData.filter(d => !d.isban);
@@ -940,6 +966,7 @@
 
     function renderLegend() {
       const legend = document.getElementById('legend');
+      if (!legend) return;
       legend.innerHTML = '';
 
       const activeData = allData.filter(d => !d.isban);
@@ -973,6 +1000,7 @@
 
     function renderLeaderboard() {
       const list = document.getElementById('leaderboard');
+      if (!list) return;
       list.innerHTML = '';
 
       if (allData.length === 0) {
@@ -980,7 +1008,8 @@
         return;
       }
 
-      const maxClicks = Math.max(...allData.filter(d => !d.isban).map(d => d.clicks || 0), 1);
+      const activeClicks = allData.filter(d => !d.isban).map(d => d.clicks || 0);
+      const maxClicks = activeClicks.length > 0 ? Math.max(...activeClicks) : 1;
 
       allData.forEach((item, index) => {
         const rank = index + 1;
@@ -1020,10 +1049,8 @@
     async function handleClick(e) {
       if (isClicking || isBanned) return;
 
-      // Record for CPS display FIRST
       recordClickForCPS();
 
-      // Anti-cheat check
       const detection = checkAutoClicker();
       if (detection.banned) {
         isBanned = true;
@@ -1035,14 +1062,14 @@
       isClicking = true;
 
       const container = document.getElementById('pieChart');
-      container.classList.add('click-anim');
-      setTimeout(() => container.classList.remove('click-anim'), 200);
+      if (container) {
+        container.classList.add('click-anim');
+        setTimeout(() => container.classList.remove('click-anim'), 200);
+      }
 
       showClickFeedback(e);
 
       try {
-        let newClicks;
-
         if (!myData) {
           const { data, error } = await supabase
             .from("clicker")
@@ -1053,7 +1080,6 @@
           if (error) throw error;
           
           myData = data;
-          newClicks = 1;
           allData.push(data);
         } else {
           const newClickCount = (myData.clicks || 0) + 1;
@@ -1068,7 +1094,6 @@
           if (error) throw error;
           
           myData = data;
-          newClickCount;
           
           const idx = allData.findIndex(d => d.user_uuid === uuid);
           if (idx !== -1) allData[idx] = data;
@@ -1084,11 +1109,13 @@
         render();
         
         const myClicksEl = document.getElementById('myClicks');
-        myClicksEl.style.transform = 'scale(1.3)';
-        myClicksEl.style.transition = 'transform 0.15s';
-        setTimeout(() => {
-          myClicksEl.style.transform = 'scale(1)';
-        }, 150);
+        if (myClicksEl) {
+          myClicksEl.style.transform = 'scale(1.3)';
+          myClicksEl.style.transition = 'transform 0.15s';
+          setTimeout(() => {
+            myClicksEl.style.transform = 'scale(1)';
+          }, 150);
+        }
 
       } catch (err) {
         console.error('Click error:', err);
@@ -1137,7 +1164,9 @@
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'clicker' }, 
         (payload) => {
-          loadData();
+          if (!isBanned) {
+            loadData();
+          }
         }
       )
       .subscribe();
