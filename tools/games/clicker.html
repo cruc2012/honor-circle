@@ -642,10 +642,9 @@
     let cpsInterval = null;
 
     // ===== CLICK QUEUE SYSTEM =====
-    // Click as fast as you want, but server only receives max 6/sec
     let clickQueue = 0;
     let lastServerUpdate = 0;
-    const SERVER_RATE_LIMIT = 1000 / 6; // ~166.67ms between server updates = 6/sec max
+    const SERVER_RATE_LIMIT = 1000 / 6;
     let isProcessingQueue = false;
 
     // ===== CPS TRACKING =====
@@ -654,21 +653,28 @@
     const CPS_RESET_MS = 5000;
     let cpsResetTimer = null;
 
-    // ===== ANTI-AUTOCLICKER =====
+    // ===== ANTI-AUTOCLICKER (FIXED THRESHOLDS) =====
+    // Layer 1: Sliding window - 25+ clicks in 1 second (human world record ~16)
     const recentClicks = [];
     const WINDOW_MS = 1000;
-    const BAN_THRESHOLD = 15;
-    const BURST_SIZE = 5;
-    const BURST_WINDOW_MS = 100;
+    const BAN_THRESHOLD = 25;
+
+    // Layer 2: Burst - 8 clicks in 50ms (impossible humanly, ~125/sec)
+    const BURST_SIZE = 8;
+    const BURST_WINDOW_MS = 50;
+
+    // Layer 3: Consistency - perfectly regular intervals under 50ms
     const intervalHistory = [];
-    const CONSISTENCY_WINDOW = 10;
-    const MIN_HUMAN_INTERVAL = 30;
+    const CONSISTENCY_WINDOW = 15;
+    const MIN_HUMAN_INTERVAL = 15;
+
+    // Layer 4: Impossible speed - clicks under 10ms apart
+    const ABSOLUTE_MIN_INTERVAL = 10;
 
     // ===== 10-MINUTE NONSTOP CAPTCHA =====
-    const NONSTOP_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
-    const NONSTOP_CLICKS_THRESHOLD = 3000; // 3000+ clicks in 10 min = ~5/sec sustained
+    const NONSTOP_WINDOW_MS = 10 * 60 * 1000;
+    const NONSTOP_CLICKS_THRESHOLD = 3000;
     const nonstopClicks = [];
-    let captchaTimer = null;
 
     const colors = [
       '#3b82f6', '#ef4444', '#10b981', '#f59e0b', 
@@ -694,10 +700,9 @@
       
       if (!cpsEl || !cpsBar) return;
       
-      // Show actual CPS with decimal (e.g., 12.5)
       cpsEl.textContent = cps.toFixed(1);
       
-      if (cps >= 12) {
+      if (cps >= 20) {
         cpsEl.classList.add('high');
         cpsBar.classList.add('high');
       } else {
@@ -705,10 +710,9 @@
         cpsBar.classList.remove('high');
       }
       
-      const barPercent = Math.min((cps / 20) * 100, 100);
+      const barPercent = Math.min((cps / 30) * 100, 100);
       cpsBar.style.width = barPercent + '%';
 
-      // Show queue info
       if (queueEl) {
         const pending = clickQueue;
         queueEl.innerHTML = pending > 0 
@@ -733,48 +737,56 @@
       updateCPSDisplay();
     }
 
-    // ===== ANTI-CHEAT =====
+    // ===== ANTI-CHEAT (FIXED) =====
     function checkAutoClicker() {
       const now = Date.now();
+
+      // === Layer 1: Sliding window (25+ in 1s) ===
       recentClicks.push(now);
-      
       while (recentClicks.length > 0 && now - recentClicks[0] > WINDOW_MS) {
         recentClicks.shift();
       }
-      
-      if (recentClicks.length >= BAN_THRESHOLD) {
+      // Only ban if we have MORE than threshold (not >=)
+      if (recentClicks.length > BAN_THRESHOLD) {
         return { banned: true, reason: `${recentClicks.length} clicks in 1 second` };
       }
 
+      // === Layer 2: Burst (8+ in 50ms) ===
       if (recentClicks.length >= BURST_SIZE) {
-        const last5 = recentClicks.slice(-BURST_SIZE);
-        const burstSpan = last5[last5.length - 1] - last5[0];
+        const lastBurst = recentClicks.slice(-BURST_SIZE);
+        const burstSpan = lastBurst[lastBurst.length - 1] - lastBurst[0];
         if (burstSpan <= BURST_WINDOW_MS) {
           return { banned: true, reason: `${BURST_SIZE} clicks in ${burstSpan}ms` };
         }
       }
 
+      // === Layer 3: Consistency check ===
       if (recentClicks.length >= 2) {
         const lastInterval = now - recentClicks[recentClicks.length - 2];
-        intervalHistory.push(lastInterval);
-        if (intervalHistory.length > CONSISTENCY_WINDOW) {
-          intervalHistory.shift();
-        }
-        if (intervalHistory.length >= CONSISTENCY_WINDOW) {
-          const mean = intervalHistory.reduce((a, b) => a + b, 0) / intervalHistory.length;
-          const variance = intervalHistory.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / intervalHistory.length;
-          const stdDev = Math.sqrt(variance);
-          const cv = stdDev / mean;
-          if (cv < 0.1 && mean < 100) {
-            return { banned: true, reason: 'Bot-like click pattern detected' };
+        // Only track intervals under 100ms for consistency analysis
+        if (lastInterval < 100) {
+          intervalHistory.push(lastInterval);
+          if (intervalHistory.length > CONSISTENCY_WINDOW) {
+            intervalHistory.shift();
+          }
+          if (intervalHistory.length >= CONSISTENCY_WINDOW) {
+            const mean = intervalHistory.reduce((a, b) => a + b, 0) / intervalHistory.length;
+            const variance = intervalHistory.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / intervalHistory.length;
+            const stdDev = Math.sqrt(variance);
+            const cv = mean > 0 ? stdDev / mean : 0;
+            // Very consistent AND very fast = bot
+            if (cv < 0.05 && mean < MIN_HUMAN_INTERVAL) {
+              return { banned: true, reason: 'Bot-like click pattern detected' };
+            }
           }
         }
       }
 
+      // === Layer 4: Absolute impossible speed ===
       if (recentClicks.length >= 2) {
         const lastInterval = now - recentClicks[recentClicks.length - 2];
-        if (lastInterval < MIN_HUMAN_INTERVAL) {
-          return { banned: true, reason: `Click interval ${lastInterval}ms (too fast)` };
+        if (lastInterval < ABSOLUTE_MIN_INTERVAL) {
+          return { banned: true, reason: `Click interval ${lastInterval}ms (impossible)` };
         }
       }
 
@@ -852,8 +864,6 @@
         clickQueue = 0;
         lastServerUpdate = now;
         
-        let newClickCount;
-        
         if (!myData) {
           const { data, error } = await supabase
             .from("clicker")
@@ -863,9 +873,7 @@
 
           if (error) throw error;
           myData = data;
-          newClickCount = clicksToSend;
           
-          // Add to local data
           const existingIdx = allData.findIndex(d => d.user_uuid === uuid);
           if (existingIdx >= 0) {
             allData[existingIdx] = data;
@@ -873,7 +881,7 @@
             allData.push(data);
           }
         } else {
-          newClickCount = (myData.clicks || 0) + clicksToSend;
+          const newClickCount = (myData.clicks || 0) + clicksToSend;
           
           const { data, error } = await supabase
             .from("clicker")
@@ -889,7 +897,6 @@
           if (idx !== -1) allData[idx] = data;
         }
 
-        // Recalculate and render
         totalClicks = allData.filter(d => !d.isban).reduce((sum, d) => sum + (d.clicks || 0), 0);
         allData.sort((a, b) => {
           if (a.isban && !b.isban) return 1;
@@ -899,7 +906,6 @@
 
         render();
         
-        // Animate my clicks
         const myClicksEl = document.getElementById('myClicks');
         if (myClicksEl) {
           myClicksEl.style.transform = 'scale(1.3)';
@@ -911,14 +917,12 @@
 
       } catch (err) {
         console.error('Queue processing error:', err);
-        // Put clicks back in queue
         clickQueue += clicksToSend;
       } finally {
         isProcessingQueue = false;
       }
     }
 
-    // Run queue processor frequently
     setInterval(processClickQueue, 50);
 
     // ===== BUILD APP =====
@@ -1259,7 +1263,7 @@
         return;
       }
 
-      // 4. Add to queue (click as fast as you want!)
+      // 4. Add to queue
       clickQueue++;
 
       // 5. Visual feedback
@@ -1271,7 +1275,7 @@
 
       showClickFeedback(e);
 
-      // 6. Update local display immediately
+      // 6. Update local display
       updateMyClicks();
     }
 
